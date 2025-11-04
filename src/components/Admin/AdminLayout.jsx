@@ -42,7 +42,7 @@ const AdminLayout = () => {
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex lg:flex-col w-64 bg-color1 text-white fixed h-full">
         <div className="p-6 border-b border-color2">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/admin/dashboard")}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
             <img src="/Logo_main.svg" alt="Wild Step Admin" className="h-8" />
           </div>
           <p className="text-sm text-gray-400 mt-2">Admin Panel</p>
@@ -55,7 +55,7 @@ const AdminLayout = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all hover:opacity-90 cursor-pointer ${
                   isActive(item.path)
                     ? "bg-color4 text-white"
                     : "text-gray-300 hover:bg-color2"
@@ -99,7 +99,7 @@ const AdminLayout = () => {
           />
           <aside className="fixed left-0 top-0 bottom-0 w-64 bg-color1 text-white z-50 lg:hidden flex flex-col">
             <div className="p-6 border-b border-color2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() => setSidebarOpen(false) || navigate("/") }>
                 <img src="/Logo_main.svg" alt="Wild Step Admin" className="h-8" />
               </div>
               <button onClick={() => setSidebarOpen(false)}>
@@ -117,7 +117,7 @@ const AdminLayout = () => {
                       navigate(item.path);
                       setSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all hover:opacity-90 cursor-pointer ${
                       isActive(item.path)
                         ? "bg-color4 text-white"
                         : "text-gray-300 hover:bg-color2"
@@ -133,7 +133,7 @@ const AdminLayout = () => {
             <div className="p-4 border-t border-color2">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-red-400 hover:bg-color2 transition-all"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-red-400 hover:bg-color2 transition-all hover:opacity-90 cursor-pointer"
               >
                 <LogOut className="w-5 h-5" />
                 <span>Đăng xuất</span>
