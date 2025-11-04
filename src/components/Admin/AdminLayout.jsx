@@ -55,7 +55,7 @@ const AdminLayout = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all hover:opacity-90 cursor-pointer ${
                   isActive(item.path)
                     ? "bg-color4 text-white"
                     : "text-gray-300 hover:bg-color2"
@@ -117,7 +117,7 @@ const AdminLayout = () => {
                       navigate(item.path);
                       setSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all ${
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all hover:opacity-90 cursor-pointer ${
                       isActive(item.path)
                         ? "bg-color4 text-white"
                         : "text-gray-300 hover:bg-color2"
@@ -133,7 +133,7 @@ const AdminLayout = () => {
             <div className="p-4 border-t border-color2">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-red-400 hover:bg-color2 transition-all"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-red-400 hover:bg-color2 transition-all hover:opacity-90 cursor-pointer"
               >
                 <LogOut className="w-5 h-5" />
                 <span>Đăng xuất</span>
