@@ -1,4 +1,7 @@
 import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleUser } from "@fortawesome/free-regular-svg-icons";
+import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -163,7 +166,7 @@ const Header = () => {
 
               {/* Dropdown Menu */}
               {showUserMenu && (
-                <div className="absolute right-0 top-full mt-2 min-w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                <div className="absolute p-0 right-0 top-full mt-2 min-w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                   <div className="px-4 py-2 border-b border-gray-100 w-full">
                     <p className="text-[1rem] font-medium text-gray-900">
                       {user?.displayName || "User"}
@@ -174,13 +177,19 @@ const Header = () => {
                     onClick={handleProfile}
                     className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-gray-900 hover:bg-gray-100 transition"
                   >
-                    Hồ sơ
+                    <span className="inline-flex items-center gap-2">
+                      <FontAwesomeIcon icon={faCircleUser} className="w-4 h-4" />
+                      Hồ sơ
+                    </span>
                   </button>
                   <button
                     onClick={handleLogout}
                     className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-red-600 hover:bg-red-50 transition"
                   >
-                    Đăng xuất
+                    <span className="inline-flex items-center gap-2">
+                      <FontAwesomeIcon icon={faRightFromBracket} className="w-4 h-4" />
+                      Đăng xuất
+                    </span>
                   </button>
                 </div>
               )}
