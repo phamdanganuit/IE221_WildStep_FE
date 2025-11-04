@@ -42,7 +42,7 @@ const AdminLayout = () => {
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex lg:flex-col w-64 bg-color1 text-white fixed h-full">
         <div className="p-6 border-b border-color2">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/admin/dashboard")}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
             <img src="/Logo_main.svg" alt="Wild Step Admin" className="h-8" />
           </div>
           <p className="text-sm text-gray-400 mt-2">Admin Panel</p>
@@ -99,7 +99,7 @@ const AdminLayout = () => {
           />
           <aside className="fixed left-0 top-0 bottom-0 w-64 bg-color1 text-white z-50 lg:hidden flex flex-col">
             <div className="p-6 border-b border-color2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() => setSidebarOpen(false) || navigate("/") }>
                 <img src="/Logo_main.svg" alt="Wild Step Admin" className="h-8" />
               </div>
               <button onClick={() => setSidebarOpen(false)}>

@@ -1,7 +1,7 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleUser } from "@fortawesome/free-regular-svg-icons";
-import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { faRightFromBracket, faGauge } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -173,6 +173,20 @@ const Header = () => {
                     </p>
                     <p className="text-[0.875rem] text-gray-500 w-full">{user?.email}</p>
                   </div>
+                  {user?.role === "admin" && (
+                    <button
+                      onClick={() => {
+                        navigate("/admin/dashboard");
+                        setShowUserMenu(false);
+                      }}
+                      className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-gray-900 hover:bg-gray-100 transition"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <FontAwesomeIcon icon={faGauge} className="w-4 h-4" />
+                        Quản lý
+                      </span>
+                    </button>
+                  )}
                   <button
                     onClick={handleProfile}
                     className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-gray-900 hover:bg-gray-100 transition"
