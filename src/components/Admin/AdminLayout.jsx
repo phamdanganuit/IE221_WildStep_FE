@@ -145,7 +145,16 @@ const AdminLayout = () => {
 
       {/* Main Content */}
       <div className="flex-1 lg:ml-64">
-        <main className="p-6">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden fixed top-4 left-4 z-30 bg-color1 text-white p-2 rounded-lg shadow-lg hover:opacity-90 transition"
+          aria-label="Mở menu"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+
+        <main className="p-4 md:p-6 lg:p-6 pt-14 lg:pt-6">
           <Outlet />
         </main>
       </div>

@@ -25,6 +25,9 @@ const ProductForm = () => {
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [brands, setBrands] = useState([]);
   const [images, setImages] = useState([]);
+  const [sizeInput, setSizeInput] = useState("");
+  const [colorInput, setColorInput] = useState("");
+  const [tagInput, setTagInput] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     categoryId: "",
@@ -186,20 +189,76 @@ const ProductForm = () => {
     setImages(files);
   };
 
-  const handleArrayInput = (field, value) => {
-    const array = value.split(",").map(item => item.trim()).filter(Boolean);
+  const handleAddSize = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const value = sizeInput.trim();
+      if (value && !formData.specifications.size.includes(value)) {
+        setFormData({
+          ...formData,
+          specifications: {
+            ...formData.specifications,
+            size: [...formData.specifications.size, value],
+          },
+        });
+        setSizeInput("");
+      }
+    }
+  };
+
+  const handleRemoveSize = (index) => {
     setFormData({
       ...formData,
       specifications: {
         ...formData.specifications,
-        [field]: array,
+        size: formData.specifications.size.filter((_, i) => i !== index),
       },
     });
   };
 
-  const handleTagsInput = (value) => {
-    const array = value.split(",").map(item => item.trim()).filter(Boolean);
-    setFormData({ ...formData, tags: array });
+  const handleAddColor = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const value = colorInput.trim();
+      if (value && !formData.specifications.color.includes(value)) {
+        setFormData({
+          ...formData,
+          specifications: {
+            ...formData.specifications,
+            color: [...formData.specifications.color, value],
+          },
+        });
+        setColorInput("");
+      }
+    }
+  };
+
+  const handleRemoveColor = (index) => {
+    setFormData({
+      ...formData,
+      specifications: {
+        ...formData.specifications,
+        color: formData.specifications.color.filter((_, i) => i !== index),
+      },
+    });
+  };
+
+  const handleAddTag = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const value = tagInput.trim();
+      if (value && !formData.tags.includes(value)) {
+        setFormData({ ...formData, tags: [...formData.tags, value] });
+        setTagInput("");
+      }
+    }
+  };
+
+  const handleRemoveTag = (index) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter((_, i) => i !== index),
+    });
   };
 
   if (loading && isEdit) {
@@ -365,24 +424,64 @@ const ProductForm = () => {
           <CardContent className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Size (phân cách bằng dấu phẩy)
+                Size (nhập từng giá trị và nhấn Enter)
               </label>
               <Input
-                value={formData.specifications.size.join(", ")}
-                onChange={(e) => handleArrayInput("size", e.target.value)}
-                placeholder="38, 39, 40, 41, 42"
+                value={sizeInput}
+                onChange={(e) => setSizeInput(e.target.value)}
+                onKeyDown={handleAddSize}
+                placeholder="Nhập size và nhấn Enter"
               />
+              {formData.specifications.size.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.specifications.size.map((size, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-color4 text-white text-sm rounded-full"
+                    >
+                      {size}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSize(index)}
+                        className="hover:bg-white/20 rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Màu sắc (phân cách bằng dấu phẩy)
+                Màu sắc (nhập từng giá trị và nhấn Enter)
               </label>
               <Input
-                value={formData.specifications.color.join(", ")}
-                onChange={(e) => handleArrayInput("color", e.target.value)}
-                placeholder="Đen, Trắng, Xám"
+                value={colorInput}
+                onChange={(e) => setColorInput(e.target.value)}
+                onKeyDown={handleAddColor}
+                placeholder="Nhập màu sắc và nhấn Enter"
               />
+              {formData.specifications.color.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.specifications.color.map((color, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-color4 text-white text-sm rounded-full"
+                    >
+                      {color}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveColor(index)}
+                        className="hover:bg-white/20 rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -417,13 +516,33 @@ const ProductForm = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tags (phân cách bằng dấu phẩy)
+                Tags (nhập từng giá trị và nhấn Enter)
               </label>
               <Input
-                value={formData.tags.join(", ")}
-                onChange={(e) => handleTagsInput(e.target.value)}
-                placeholder="nike, sports, running"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleAddTag}
+                placeholder="Nhập tag và nhấn Enter"
               />
+              {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-color4 text-white text-sm rounded-full"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(index)}
+                        className="hover:bg-white/20 rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -445,7 +564,7 @@ const ProductForm = () => {
                   <input
                     type="file"
                     multiple
-                    accept="image/jpeg,image/png,image/webp"
+                    accept="image/*"
                     onChange={handleImageChange}
                     className="hidden"
                   />
@@ -455,7 +574,7 @@ const ProductForm = () => {
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Định dạng: JPEG, PNG, WebP. Kích thước tối đa: 5MB mỗi ảnh.
+                Định dạng: Tất cả định dạng ảnh. Kích thước tối đa: 5MB mỗi ảnh.
               </p>
             </div>
           </CardContent>

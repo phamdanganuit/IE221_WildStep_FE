@@ -88,7 +88,7 @@ const Brands = () => {
     }
 
     const result = formDialog.brand
-      ? await updateBrand(formDialog.brand._id, formData)
+      ? await updateBrand(formDialog.brand._id || formDialog.brand.id, formData)
       : await createBrand(formData);
 
     if (result.success) {
@@ -109,7 +109,7 @@ const Brands = () => {
   const handleDelete = async () => {
     if (!deleteDialog.brand) return;
 
-    const result = await deleteBrand(deleteDialog.brand._id);
+    const result = await deleteBrand(deleteDialog.brand._id || deleteDialog.brand.id);
 
     if (result.success) {
       addToast({
