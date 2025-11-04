@@ -154,7 +154,7 @@ const AdminLayout = () => {
           <Menu className="w-6 h-6" />
         </button>
 
-        <main className="p-4 md:p-6 lg:p-6">
+        <main className="p-4 md:p-6 lg:p-6 pt-14 lg:pt-6">
           <Outlet />
         </main>
       </div>
