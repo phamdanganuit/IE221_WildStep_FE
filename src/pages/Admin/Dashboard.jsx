@@ -155,6 +155,30 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* Revenue line chart */}
+      {Array.isArray(stats?.revenueChart) && stats.revenueChart.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Doanh thu theo thời gian</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartLine data={stats.revenueChart} height={220} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Category distribution bar chart */}
+      {Array.isArray(stats?.categoryDistribution) && stats.categoryDistribution.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tỷ trọng danh mục</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartBar data={stats.categoryDistribution} height={240} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Recent Orders */}
       {stats?.recentOrders && stats.recentOrders.length > 0 && (
         <Card>
@@ -208,6 +232,117 @@ const Dashboard = () => {
     </div>
   );
 };
+
+// Lightweight SVG Line Chart (no external deps)
+function ChartLine({ data, height = 220 }) {
+  // data: [{ label: '2025-11-01', value: 12345 }, ...]
+  const padding = { top: 10, right: 10, bottom: 24, left: 36 };
+  const width = 800; // container width; svg is responsive via viewBox
+  const innerW = width - padding.left - padding.right;
+  const innerH = height - padding.top - padding.bottom;
+
+  const points = data.map((d, i) => ({ x: i, y: Number(d.value) || 0, label: d.label }));
+  const maxY = Math.max(1, ...points.map((p) => p.y));
+  const stepX = points.length > 1 ? innerW / (points.length - 1) : innerW;
+  const toX = (i) => padding.left + i * stepX;
+  const toY = (v) => padding.top + innerH - (v / maxY) * innerH;
+
+  const path = points
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${toX(i)} ${toY(p.y)}`)
+    .join(' ');
+
+  const yTicks = 4;
+  const lines = Array.from({ length: yTicks + 1 }, (_, i) => {
+    const y = padding.top + (innerH / yTicks) * i;
+    const value = Math.round(maxY - (maxY / yTicks) * i);
+    return { y, value };
+  });
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[${height}px]">
+        {/* grid */}
+        {lines.map((l, idx) => (
+          <g key={idx}>
+            <line x1={padding.left} x2={width - padding.right} y1={l.y} y2={l.y} stroke="#e5e7eb" strokeWidth="1" />
+            <text x={padding.left - 6} y={l.y + 4} textAnchor="end" fontSize="10" fill="#6b7280">
+              {new Intl.NumberFormat('vi-VN').format(l.value)}
+            </text>
+          </g>
+        ))}
+
+        {/* path */}
+        <path d={path} fill="none" stroke="#5BC0BE" strokeWidth="2.5" />
+
+        {/* points */}
+        {points.map((p, i) => (
+          <circle key={i} cx={toX(i)} cy={toY(p.y)} r="3" fill="#0B132B" />
+        ))}
+
+        {/* x labels */}
+        {points.map((p, i) => (
+          <text key={i} x={toX(i)} y={height - 4} fontSize="10" textAnchor="middle" fill="#6b7280">
+            {p.label}
+          </text>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+// Lightweight SVG Bar Chart
+function ChartBar({ data, height = 240 }) {
+  // data: [{ label: 'Running', value: 120 }, ...]
+  const padding = { top: 10, right: 10, bottom: 36, left: 36 };
+  const width = 800;
+  const innerW = width - padding.left - padding.right;
+  const innerH = height - padding.top - padding.bottom;
+
+  const items = data.map((d) => ({ label: d.label, value: Number(d.value) || 0 }));
+  const maxV = Math.max(1, ...items.map((i) => i.value));
+  const barW = items.length > 0 ? innerW / items.length - 12 : innerW;
+
+  const toX = (i) => padding.left + i * (barW + 12) + 6;
+  const toH = (v) => (v / maxV) * innerH;
+
+  const yTicks = 4;
+  const lines = Array.from({ length: yTicks + 1 }, (_, i) => {
+    const y = padding.top + (innerH / yTicks) * i;
+    const value = Math.round(maxV - (maxV / yTicks) * i);
+    return { y, value };
+  });
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[${height}px]">
+        {/* grid */}
+        {lines.map((l, idx) => (
+          <g key={idx}>
+            <line x1={padding.left} x2={width - padding.right} y1={l.y} y2={l.y} stroke="#e5e7eb" strokeWidth="1" />
+            <text x={padding.left - 6} y={l.y + 4} textAnchor="end" fontSize="10" fill="#6b7280">
+              {new Intl.NumberFormat('vi-VN').format(l.value)}
+            </text>
+          </g>
+        ))}
+
+        {/* bars */}
+        {items.map((it, i) => {
+          const h = toH(it.value);
+          const x = toX(i);
+          const y = padding.top + innerH - h;
+          return <rect key={i} x={x} y={y} width={barW} height={h} rx="6" fill="#5BC0BE" />;
+        })}
+
+        {/* x labels */}
+        {items.map((it, i) => (
+          <text key={i} x={toX(i) + barW / 2} y={height - 6} fontSize="10" textAnchor="middle" fill="#6b7280">
+            {it.label}
+          </text>
+        ))}
+      </svg>
+    </div>
+  );
+}
 
 export default Dashboard;
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getCategories, getBrands } from "@/service/adminService";
 import { useNavigate } from "react-router-dom";
 import { getProducts, deleteProduct } from "@/service/adminService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,21 +28,75 @@ const ProductList = () => {
     status: "",
     sort: "createdAt",
     order: "desc",
+    category: "",
+    brand: "",
   });
   const [totalPages, setTotalPages] = useState(1);
   const [deleteDialog, setDeleteDialog] = useState({ open: false, product: null });
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [brandOptions, setBrandOptions] = useState([]);
 
   useEffect(() => {
     fetchProducts();
   }, [filters]);
+
+  useEffect(() => {
+    // Load filter options once
+    const loadOptions = async () => {
+      const [catRes, brandRes] = await Promise.all([getCategories(), getBrands()]);
+
+      if (catRes.success) {
+        const payload = catRes.data;
+        const list = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : [];
+        const flattened = [];
+        list.forEach((parent) => {
+          if (Array.isArray(parent.children)) {
+            parent.children.forEach((child) =>
+              flattened.push({ id: child.id || child._id, name: `${parent.name} / ${child.name}` })
+            );
+          }
+        });
+        setCategoryOptions(flattened);
+      }
+
+      if (brandRes.success) {
+        const payload = brandRes.data;
+        const list = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : [];
+        setBrandOptions(list.map((b) => ({ id: b.id || b._id, name: b.name })));
+      }
+    };
+    loadOptions();
+  }, []);
 
   const fetchProducts = async () => {
     setLoading(true);
     const result = await getProducts(filters);
 
     if (result.success) {
-      setProducts(result.data.products || []);
-      setTotalPages(result.data.totalPages || 1);
+      const payload = result.data;
+      const list = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.data)
+          ? payload.data
+          : Array.isArray(payload?.products)
+            ? payload.products
+            : Array.isArray(payload?.items)
+              ? payload.items
+              : [];
+      setProducts(list);
+      const pages =
+        (payload?.pagination && typeof payload.pagination.totalPages === "number")
+          ? payload.pagination.totalPages
+          : (typeof payload?.totalPages === "number" ? payload.totalPages : 1);
+      setTotalPages(pages > 0 ? pages : 1);
     } else {
       addToast({
         type: "error",
@@ -59,7 +114,7 @@ const ProductList = () => {
   const handleDelete = async () => {
     if (!deleteDialog.product) return;
 
-    const result = await deleteProduct(deleteDialog.product._id);
+    const result = await deleteProduct(deleteDialog.product._id || deleteDialog.product.id);
 
     if (result.success) {
       addToast({
@@ -118,7 +173,7 @@ const ProductList = () => {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <form onSubmit={handleSearch} className="flex gap-4">
+          <form onSubmit={handleSearch} className="flex gap-4 flex-wrap items-center">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -131,6 +186,26 @@ const ProductList = () => {
               </div>
             </div>
             <select
+              value={filters.category}
+              onChange={(e) => setFilters({ ...filters, category: e.target.value, page: 1 })}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
+            >
+              <option value="">Tất cả danh mục</option>
+              {categoryOptions.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <select
+              value={filters.brand}
+              onChange={(e) => setFilters({ ...filters, brand: e.target.value, page: 1 })}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
+            >
+              <option value="">Tất cả thương hiệu</option>
+              {brandOptions.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+            <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
@@ -140,6 +215,25 @@ const ProductList = () => {
               <option value="inactive">Ngừng bán</option>
               <option value="out_of_stock">Hết hàng</option>
               <option value="low_stock">Sắp hết</option>
+            </select>
+            <select
+              value={filters.sort}
+              onChange={(e) => setFilters({ ...filters, sort: e.target.value, page: 1 })}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
+            >
+              <option value="createdAt">Mới nhất</option>
+              <option value="name">Tên</option>
+              <option value="price">Giá</option>
+              <option value="stock">Tồn kho</option>
+              <option value="sold">Đã bán</option>
+            </select>
+            <select
+              value={filters.order}
+              onChange={(e) => setFilters({ ...filters, order: e.target.value, page: 1 })}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
+            >
+              <option value="desc">Giảm dần</option>
+              <option value="asc">Tăng dần</option>
             </select>
             <Button type="submit">Tìm kiếm</Button>
           </form>
@@ -176,7 +270,7 @@ const ProductList = () => {
                   </thead>
                   <tbody>
                     {products.map((product) => (
-                      <tr key={product._id} className="border-b hover:bg-gray-50">
+                      <tr key={product._id || product.id} className="border-b hover:bg-gray-50">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             {product.images && product.images[0] ? (
@@ -198,10 +292,10 @@ const ProductList = () => {
                         </td>
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium text-gray-900">{formatCurrency(product.price)}</p>
-                            {product.discount > 0 && (
+                            <p className="font-medium text-gray-900">{formatCurrency(product.price || 0)}</p>
+                            {product.discountPrice != null && (
                               <p className="text-sm text-color4">
-                                -{product.discount}% ({formatCurrency(product.discountPrice)})
+                                {formatCurrency(product.discountPrice)}
                               </p>
                             )}
                           </div>
@@ -214,14 +308,14 @@ const ProductList = () => {
                             <Button
                               size="icon-sm"
                               variant="ghost"
-                              onClick={() => navigate(`/admin/products/${product._id}`)}
+                              onClick={() => navigate(`/admin/products/${product._id || product.id}`)}
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
                             <Button
                               size="icon-sm"
                               variant="ghost"
-                              onClick={() => navigate(`/admin/products/${product._id}/edit`)}
+                              onClick={() => navigate(`/admin/products/${product._id || product.id}/edit`)}
                             >
                               <Edit className="w-4 h-4" />
                             </Button>

@@ -145,30 +145,6 @@ const AdminLayout = () => {
 
       {/* Main Content */}
       <div className="flex-1 lg:ml-64">
-        {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
-          <div className="flex items-center justify-between px-6 py-4">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
-            >
-              <Menu className="w-6 h-6 text-gray-600" />
-            </button>
-            <h1 className="text-xl font-semibold text-gray-800">
-              {menuItems.find(item => isActive(item.path))?.label || "Admin Panel"}
-            </h1>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate("/")}
-                className="text-sm text-color4 hover:text-hover4 font-medium"
-              >
-                Về trang chủ
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
         <main className="p-6">
           <Outlet />
         </main>

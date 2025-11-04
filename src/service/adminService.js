@@ -34,7 +34,19 @@ const makeAuthRequest = async (endpoint, options = {}) => {
       };
     }
 
-    const data = await res.json();
+    // Handle No Content (e.g., DELETE 204)
+    if (res.status === 204) {
+      return { success: true, data: null };
+    }
+
+    // Some backends may return empty body with 200/202
+    const contentLength = res.headers.get("content-length");
+    const contentType = res.headers.get("content-type") || "";
+    if (contentLength === "0" || contentType.indexOf("application/json") === -1) {
+      return { success: true, data: null };
+    }
+
+    const data = await res.json().catch(() => null);
     return {
       success: true,
       data,
@@ -51,11 +63,11 @@ const makeAuthRequest = async (endpoint, options = {}) => {
 // ==================== DASHBOARD ====================
 
 export const getDashboardStats = async (period = "month") => {
-  return makeAuthRequest(`/api/admin/dashboard/stats?period=${period}`);
+  return makeAuthRequest(`/admin/dashboard/stats?period=${period}`);
 };
 
 export const getAnalytics = async (period = "month") => {
-  return makeAuthRequest(`/api/admin/analytics?period=${period}`);
+  return makeAuthRequest(`/admin/analytics?period=${period}`);
 };
 
 // ==================== PRODUCTS ====================
@@ -70,29 +82,29 @@ export const getProducts = async (params = {}) => {
   });
 
   const queryString = queryParams.toString();
-  return makeAuthRequest(`/api/admin/products${queryString ? `?${queryString}` : ""}`);
+  return makeAuthRequest(`/admin/products${queryString ? `?${queryString}` : ""}`);
 };
 
 export const getProduct = async (id) => {
-  return makeAuthRequest(`/api/admin/products/${id}`);
+  return makeAuthRequest(`/admin/products/${id}`);
 };
 
 export const createProduct = async (productData) => {
-  return makeAuthRequest("/api/admin/products", {
+  return makeAuthRequest("/admin/products", {
     method: "POST",
     body: JSON.stringify(productData),
   });
 };
 
 export const updateProduct = async (id, productData) => {
-  return makeAuthRequest(`/api/admin/products/${id}`, {
+  return makeAuthRequest(`/admin/products/${id}`, {
     method: "PUT",
     body: JSON.stringify(productData),
   });
 };
 
 export const deleteProduct = async (id) => {
-  return makeAuthRequest(`/api/admin/products/${id}`, {
+  return makeAuthRequest(`/admin/products/${id}`, {
     method: "DELETE",
   });
 };
@@ -103,7 +115,7 @@ export const uploadProductImages = async (id, files) => {
     formData.append("images", file);
   });
 
-  return makeAuthRequest(`/api/admin/products/${id}/images`, {
+  return makeAuthRequest(`/admin/products/${id}/images`, {
     method: "POST",
     body: formData,
   });
@@ -121,15 +133,15 @@ export const getOrders = async (params = {}) => {
   });
 
   const queryString = queryParams.toString();
-  return makeAuthRequest(`/api/admin/orders${queryString ? `?${queryString}` : ""}`);
+  return makeAuthRequest(`/admin/orders${queryString ? `?${queryString}` : ""}`);
 };
 
 export const getOrder = async (id) => {
-  return makeAuthRequest(`/api/admin/orders/${id}`);
+  return makeAuthRequest(`/admin/orders/${id}`);
 };
 
 export const updateOrderStatus = async (id, status) => {
-  return makeAuthRequest(`/api/admin/orders/${id}/status`, {
+  return makeAuthRequest(`/admin/orders/${id}/status`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
@@ -147,15 +159,15 @@ export const getCustomers = async (params = {}) => {
   });
 
   const queryString = queryParams.toString();
-  return makeAuthRequest(`/api/admin/customers${queryString ? `?${queryString}` : ""}`);
+  return makeAuthRequest(`/admin/customers${queryString ? `?${queryString}` : ""}`);
 };
 
 export const getCustomer = async (id) => {
-  return makeAuthRequest(`/api/admin/customers/${id}`);
+  return makeAuthRequest(`/admin/customers/${id}`);
 };
 
 export const updateCustomerStatus = async (id, status) => {
-  return makeAuthRequest(`/api/admin/customers/${id}/status`, {
+  return makeAuthRequest(`/admin/customers/${id}/status`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
@@ -164,25 +176,25 @@ export const updateCustomerStatus = async (id, status) => {
 // ==================== CATEGORIES ====================
 
 export const getCategories = async () => {
-  return makeAuthRequest("/api/admin/categories");
+  return makeAuthRequest("/admin/categories");
 };
 
 export const createCategory = async (categoryData) => {
-  return makeAuthRequest("/api/admin/categories", {
+  return makeAuthRequest("/admin/categories", {
     method: "POST",
     body: JSON.stringify(categoryData),
   });
 };
 
 export const updateCategory = async (id, categoryData) => {
-  return makeAuthRequest(`/api/admin/categories/${id}`, {
+  return makeAuthRequest(`/admin/categories/${id}`, {
     method: "PUT",
     body: JSON.stringify(categoryData),
   });
 };
 
 export const deleteCategory = async (id) => {
-  return makeAuthRequest(`/api/admin/categories/${id}`, {
+  return makeAuthRequest(`/admin/categories/${id}`, {
     method: "DELETE",
   });
 };
@@ -190,25 +202,25 @@ export const deleteCategory = async (id) => {
 // ==================== BRANDS ====================
 
 export const getBrands = async () => {
-  return makeAuthRequest("/api/admin/brands");
+  return makeAuthRequest("/admin/brands");
 };
 
 export const createBrand = async (brandData) => {
-  return makeAuthRequest("/api/admin/brands", {
+  return makeAuthRequest("/admin/brands", {
     method: "POST",
     body: JSON.stringify(brandData),
   });
 };
 
 export const updateBrand = async (id, brandData) => {
-  return makeAuthRequest(`/api/admin/brands/${id}`, {
+  return makeAuthRequest(`/admin/brands/${id}`, {
     method: "PUT",
     body: JSON.stringify(brandData),
   });
 };
 
 export const deleteBrand = async (id) => {
-  return makeAuthRequest(`/api/admin/brands/${id}`, {
+  return makeAuthRequest(`/admin/brands/${id}`, {
     method: "DELETE",
   });
 };
