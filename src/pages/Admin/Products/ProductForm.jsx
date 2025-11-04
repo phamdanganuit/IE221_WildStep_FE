@@ -564,7 +564,7 @@ const ProductForm = () => {
                   <input
                     type="file"
                     multiple
-                    accept="image/jpeg,image/png,image/webp"
+                    accept="image/*"
                     onChange={handleImageChange}
                     className="hidden"
                   />
@@ -574,7 +574,7 @@ const ProductForm = () => {
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Định dạng: JPEG, PNG, WebP. Kích thước tối đa: 5MB mỗi ảnh.
+                Định dạng: Tất cả định dạng ảnh. Kích thước tối đa: 5MB mỗi ảnh.
               </p>
             </div>
           </CardContent>
