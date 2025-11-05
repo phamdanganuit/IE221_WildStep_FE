@@ -39,6 +39,13 @@ export const login = async (email, password, rememberMe = false) => {
           type: "error"
         };
       }
+      if (res.status === 403) {
+        return {
+          success: false,
+          error: "Account is blocked",
+          type: "error"
+        };
+      }
       return {
         success: false,
         error: "Đăng nhập thất bại. Vui lòng thử lại.",
@@ -147,6 +154,13 @@ export const loginWithGoogle = async (accessToken, rememberMe = false) => {
           type: "error"
         };
       }
+      if (res.status === 403) {
+        return {
+          success: false,
+          error: "Account is blocked",
+          type: "error"
+        };
+      }
       return {
         success: false,
         error: "Đăng nhập Google thất bại. Vui lòng thử lại.",
@@ -193,6 +207,13 @@ export const loginWithFacebook = async (accessToken, rememberMe = false) => {
         return {
           success: false,
           error: "Token Facebook không hợp lệ",
+          type: "error"
+        };
+      }
+      if (res.status === 403) {
+        return {
+          success: false,
+          error: "Account is blocked",
           type: "error"
         };
       }
