@@ -11,11 +11,11 @@ const ProductCard = ({ image, name, price, oldPrice, className = "" }) => {
         transition-all duration-300 hover:-translate-y-1
         md:min-w-0 ${className}`}
     >
-      <div className="h-[16rem] max-md:h-[12rem] pt-6 flex items-center justify-center overflow-hidden bg-transparent">
+      <div className="w-full aspect-square flex items-center justify-center overflow-hidden bg-transparent">
         <img
           src={image}
           alt={name}
-          className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </div>
 
