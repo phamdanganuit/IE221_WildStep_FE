@@ -152,7 +152,7 @@ export default function BestSellers() {
 
               {/* Ảnh nền sản phẩm */}
               <div
-                className="w-full mt-0 rounded-t-2xl rounded-b-none aspect-square bg-cover bg-center bg-no-repeat"
+              className="w-full mt-0 rounded-t-2xl rounded-b-none aspect-[4/3] bg-cover bg-center bg-no-repeat"
                 style={{
                   backgroundImage: `url(${item.image})`,
                 }}
