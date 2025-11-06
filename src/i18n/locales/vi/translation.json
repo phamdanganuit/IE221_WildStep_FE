@@ -252,6 +252,17 @@
     "loadError": "Không thể tải dữ liệu dashboard"
   },
   "admin": {
+    "common": {
+      "nameVI": "Tên (VI)",
+      "nameEN": "Tên (EN)",
+      "nameJA": "Tên (JA)",
+      "descriptionVI": "Mô tả (VI)",
+      "descriptionEN": "Mô tả (EN)",
+      "descriptionJA": "Mô tả (JA)",
+      "titleVI": "Tiêu đề (VI)",
+      "titleEN": "Tiêu đề (EN)",
+      "titleJA": "Tiêu đề (JA)"
+    },
     "layout": {
       "logoAlt": "Wild Step Admin",
       "panel": "Bảng điều khiển",

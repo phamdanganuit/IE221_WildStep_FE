@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { getPublicHero } from '@/service/contentService';
+import { useTranslation } from 'react-i18next';
+import { safeText } from '@/lib/i18nUtils';
 
 const HeroSection = () => {
+  const { i18n } = useTranslation();
   const [hero, setHero] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +22,7 @@ const HeroSection = () => {
       setLoading(false);
     })();
     return () => { mounted = false };
-  }, []);
+  }, [i18n.language]);
 
   if (loading) return null;
   if (!hero) return null;
@@ -41,13 +44,13 @@ const HeroSection = () => {
 
       <div className="md:w-1/2 text-center md:text-left mb-10 md:mb-0 relative z-10 animate-fade-in-left">
         <h1 className="text-5xl md:text-6xl font-extrabold text-primary-dark leading-tight mb-4">
-          {hero?.headline}
+          {safeText(hero?.headline, i18n.language, 'N/A')}
         </h1>
         <p className="mt-4 text-lg text-gray-700 max-w-md mx-auto md:mx-0">
-          {hero?.subtext}
+          {safeText(hero?.subtext, i18n.language, '')}
         </p>
         <a href={hero?.cta_url || "#"} className="mt-8 inline-block px-8 py-3 bg-primary-dark text-white text-lg font-semibold rounded-full shadow-lg hover:bg-secondary-teal hover:text-primary-dark transition duration-300 transform hover:-translate-y-1">
-          {hero?.cta_text || "Mua ngay"}
+          {safeText(hero?.cta_text, i18n.language, 'N/A')}
         </a>
       </div>
       <div className="md:w-1/2 flex justify-center items-center relative z-10 animate-fade-in-right">

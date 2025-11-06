@@ -252,6 +252,17 @@
     "loadError": "ダッシュボードデータの読み込みに失敗しました"
   },
   "admin": {
+    "common": {
+      "nameVI": "名前 (VI)",
+      "nameEN": "名前 (EN)",
+      "nameJA": "名前 (JA)",
+      "descriptionVI": "説明 (VI)",
+      "descriptionEN": "説明 (EN)",
+      "descriptionJA": "説明 (JA)",
+      "titleVI": "タイトル (VI)",
+      "titleEN": "タイトル (EN)",
+      "titleJA": "タイトル (JA)"
+    },
     "layout": {
       "logoAlt": "Wild Step 管理",
       "panel": "管理パネル",

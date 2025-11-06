@@ -16,6 +16,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
+import i18n from "@/i18n/config";
 
 const ProductList = () => {
   const { t } = useTranslation();
@@ -57,9 +59,11 @@ const ProductList = () => {
         const flattened = [];
         list.forEach((parent) => {
           if (Array.isArray(parent.children)) {
-            parent.children.forEach((child) =>
-              flattened.push({ id: child.id || child._id, name: `${parent.name} / ${child.name}` })
-            );
+            parent.children.forEach((child) => {
+              const parentName = safeText(parent.name, i18n.language, 'N/A');
+              const childName = safeText(child.name, i18n.language, 'N/A');
+              flattened.push({ id: child.id || child._id, name: `${parentName} / ${childName}` });
+            });
           }
         });
         setCategoryOptions(flattened);
@@ -72,7 +76,7 @@ const ProductList = () => {
           : Array.isArray(payload?.data)
             ? payload.data
             : [];
-        setBrandOptions(list.map((b) => ({ id: b.id || b._id, name: b.name })));
+        setBrandOptions(list.map((b) => ({ id: b.id || b._id, name: safeText(b.name, i18n.language, 'N/A') })));
       }
     };
     loadOptions();
@@ -278,7 +282,7 @@ const ProductList = () => {
                             {product.images && product.images[0] ? (
                               <img
                                 src={product.images[0]}
-                                alt={product.name}
+                                alt={safeText(product.name, i18n.language, '')}
                                 className="w-12 h-12 object-cover rounded"
                               />
                             ) : (
@@ -287,8 +291,8 @@ const ProductList = () => {
                               </div>
                             )}
                             <div>
-                              <p className="font-medium text-gray-900">{product.name}</p>
-                              <p className="text-sm text-gray-500">{product.brand?.name}</p>
+                              <p className="font-medium text-gray-900">{safeText(product.name, i18n.language, 'N/A')}</p>
+                              <p className="text-sm text-gray-500">{safeText(product.brand?.name, i18n.language, '')}</p>
                             </div>
                           </div>
                         </td>
@@ -371,7 +375,7 @@ const ProductList = () => {
           <DialogHeader>
             <DialogTitle>{t('admin.products.list.deleteConfirm.title')}</DialogTitle>
             <DialogDescription>
-              {t('admin.products.list.deleteConfirm.description', { name: deleteDialog.product?.name })}
+              {t('admin.products.list.deleteConfirm.description', { name: safeText(deleteDialog.product?.name, i18n.language, '') })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

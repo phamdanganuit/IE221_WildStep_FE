@@ -4,8 +4,11 @@ import React, { useEffect, useState } from 'react'
 import { InfiniteSlider } from "@/components/ui/InfiniteSlider";
 import './BrandLogo.css'
 import { getPublicBrands } from "@/service/contentService";
+import { useTranslation } from 'react-i18next';
+import { safeText } from '@/lib/i18nUtils';
 
 export default function BrandLogos() {
+  const { i18n } = useTranslation();
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +25,7 @@ export default function BrandLogos() {
       setLoading(false);
     })();
     return () => { mounted = false };
-  }, []);
+  }, [i18n.language]);
 
   if (loading) {
     return (
@@ -34,7 +37,7 @@ export default function BrandLogos() {
 
   if (!brands.length) return null;
 
-  const logos = brands.map(b => ({ src: b.logo, alt: b.name, href: b.website }));
+  const logos = brands.map(b => ({ src: b.logo, alt: safeText(b.name, i18n.language, 'N/A'), href: b.website }));
 
   return (
     <section className="relative w-screen overflow-hidden py-8 px-0 md:px-0 bg-slate-900">

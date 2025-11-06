@@ -16,6 +16,8 @@ import { ArrowLeft, Upload, X } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
+import i18n from "@/i18n/config";
 
 const ProductForm = () => {
   const { t } = useTranslation();
@@ -34,11 +36,15 @@ const ProductForm = () => {
   const [colorInput, setColorInput] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [formData, setFormData] = useState({
-    name: "",
+    name_vi: "",
+    name_en: "",
+    name_ja: "",
+    description_vi: "",
+    description_en: "",
+    description_ja: "",
     categoryId: "",
     brandId: "",
     price: "",
-    description: "",
     stock: "",
     discount: "",
     status: "active",
@@ -115,7 +121,10 @@ const ProductForm = () => {
       list.forEach((parent) => {
         if (Array.isArray(parent.children) && parent.children.length > 0) {
           parent.children.forEach((child) => {
-            flattened.push({ id: child.id || child._id, name: `${parent.name} / ${child.name}` });
+            // parent.name / child.name may be localized objects; display safely
+            const parentName = safeText(parent.name, i18n.language, 'N/A');
+            const childName = safeText(child.name, i18n.language, 'N/A');
+            flattened.push({ id: child.id || child._id, name: `${parentName} / ${childName}` });
           });
         }
       });
@@ -144,12 +153,18 @@ const ProductForm = () => {
 
     if (result.success) {
       const product = result.data;
+      const name = product.name || {};
+      const desc = product.description || {};
       setFormData({
-        name: product.name || "",
+        name_vi: typeof name === 'object' ? (name.vi || '') : (name || ''),
+        name_en: typeof name === 'object' ? (name.en || '') : '',
+        name_ja: typeof name === 'object' ? (name.ja || '') : '',
         categoryId: product.categoryId || product.category?.id || "",
         brandId: product.brandId || "",
         price: product.price || "",
-        description: product.description || "",
+        description_vi: typeof desc === 'object' ? (desc.vi || '') : (desc || ''),
+        description_en: typeof desc === 'object' ? (desc.en || '') : '',
+        description_ja: typeof desc === 'object' ? (desc.ja || '') : '',
         stock: product.stock || "",
         discount: product.discount || "",
         status: product.status || "active",
@@ -177,7 +192,7 @@ const ProductForm = () => {
     setLoading(true);
 
     // Validate required fields
-    if (!formData.name || !formData.categoryId || !formData.brandId || !formData.price) {
+    if ((!formData.name_vi && !formData.name_en && !formData.name_ja) || !formData.categoryId || !formData.brandId || !formData.price) {
       addToast({
         type: "error",
         message: "Vui lòng điền đầy đủ thông tin bắt buộc",
@@ -187,10 +202,16 @@ const ProductForm = () => {
     }
 
     const submitData = {
-      ...formData,
+      name: { vi: formData.name_vi || '', en: formData.name_en || '', ja: formData.name_ja || '' },
+      description: { vi: formData.description_vi || '', en: formData.description_en || '', ja: formData.description_ja || '' },
+      categoryId: formData.categoryId,
+      brandId: formData.brandId,
       price: parseFloat(formData.price),
       stock: parseInt(formData.stock) || 0,
       discount: parseFloat(formData.discount) || 0,
+      status: formData.status,
+      specifications: formData.specifications,
+      tags: formData.tags,
     };
 
     const result = isEdit
@@ -370,16 +391,19 @@ const ProductForm = () => {
             <CardTitle>{t('admin.products.form.productInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('admin.products.form.productName')} <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder={t('admin.products.form.productNamePlaceholder')}
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameVI')} <span className="text-red-500">*</span></label>
+                <Input value={formData.name_vi} onChange={(e) => setFormData({ ...formData, name_vi: e.target.value })} placeholder={t('admin.products.form.productNamePlaceholder')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameEN')}</label>
+                <Input value={formData.name_en} onChange={(e) => setFormData({ ...formData, name_en: e.target.value })} placeholder={t('admin.products.form.productNamePlaceholder')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameJA')}</label>
+                <Input value={formData.name_ja} onChange={(e) => setFormData({ ...formData, name_ja: e.target.value })} placeholder={t('admin.products.form.productNamePlaceholder')} />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -415,22 +439,26 @@ const ProductForm = () => {
                   <option value="">{t('admin.products.form.selectBrand')}</option>
                   {Array.isArray(brands) && brands.map((brand) => (
                     <option key={brand._id || brand.id} value={brand._id || brand.id}>
-                      {brand.name}
+                      {safeText(brand.name, i18n.language, 'N/A')}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.description')}</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder={t('admin.products.form.descriptionPlaceholder')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
-                rows={4}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionVI')}</label>
+                <textarea value={formData.description_vi} onChange={(e) => setFormData({ ...formData, description_vi: e.target.value })} placeholder={t('admin.products.form.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={4} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionEN')}</label>
+                <textarea value={formData.description_en} onChange={(e) => setFormData({ ...formData, description_en: e.target.value })} placeholder={t('admin.products.form.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={4} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionJA')}</label>
+                <textarea value={formData.description_ja} onChange={(e) => setFormData({ ...formData, description_ja: e.target.value })} placeholder={t('admin.products.form.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={4} />
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -1,4 +1,6 @@
 const base_url = import.meta.env.VITE_BACKEND_URL;
+import i18n from '@/i18n/config';
+import { getCurrentLocale } from '@/lib/i18nUtils';
 
 const makeRequest = async (endpoint, options = {}) => {
   const headers = { ...options.headers };
@@ -8,7 +10,15 @@ const makeRequest = async (endpoint, options = {}) => {
   }
 
   try {
-    const res = await fetch(`${base_url}${endpoint}`, {
+    // Build URL and auto-append ?lang for public endpoints
+    const url = new URL(`${base_url}${endpoint}`);
+    const isAdmin = url.pathname.startsWith('/admin');
+    if (!isAdmin && !url.searchParams.has('lang')) {
+      const lang = (i18n?.language || getCurrentLocale() || 'vi').split('-')[0];
+      url.searchParams.set('lang', lang);
+    }
+
+    const res = await fetch(url.toString(), {
       ...options,
       headers,
     });

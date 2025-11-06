@@ -4,10 +4,11 @@ import { GoHeart, GoHeartFill } from "react-icons/go";
 import newLabel from "@/assets/new_label.svg";
 import { getPublicCategories, getPublicProducts } from "@/service/contentService";
 import { useTranslation } from "react-i18next";
-import { translateCategoryName } from "@/lib/i18nUtils";
+import { safeText } from "@/lib/i18nUtils";
+// import { translateCategoryName } from "@/lib/i18nUtils";
 
 export default function BestSellers() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [categoryTabs, setCategoryTabs] = useState([{ name: t('home.bestSellers.all'), slug: "" }]);
   const [activeCategorySlug, setActiveCategorySlug] = useState("");
   const [favorites, setFavorites] = useState([]);
@@ -31,7 +32,8 @@ export default function BestSellers() {
         list.forEach((parent) => {
           if (parent?.name && parent?.slug) {
             tabs.push({ 
-              name: translateCategoryName(parent.name, t), 
+              // Use raw name from BE; BE will handle localization
+              name: safeText(parent.name, i18n.language, 'N/A'), 
               originalName: parent.name,
               slug: parent.slug 
             });
@@ -43,7 +45,7 @@ export default function BestSellers() {
       }
     })();
     return () => { mounted = false };
-  }, [t]);
+  }, [t, i18n.language]);
 
   useEffect(() => {
     let mounted = true;
@@ -58,7 +60,7 @@ export default function BestSellers() {
           const oldPriceNumber = p.discountPrice ? p.price : null;
           return {
             id: p.id,
-            name: p.name,
+            name: safeText(p.name, i18n.language, 'N/A'),
             image: (Array.isArray(p.images) && p.images[0]) || "",
             price: typeof priceNumber === "number" ? currency.format(priceNumber) : String(priceNumber ?? ""),
             oldPrice: typeof oldPriceNumber === "number" ? currency.format(oldPriceNumber) : null,
@@ -74,7 +76,7 @@ export default function BestSellers() {
       setLoading(false);
     })();
     return () => { mounted = false };
-  }, [activeCategorySlug]);
+  }, [activeCategorySlug, i18n.language]);
 
   const toggleFavorite = (id) => {
     setFavorites((prev) =>

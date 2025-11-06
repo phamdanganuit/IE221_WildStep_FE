@@ -14,9 +14,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
 
 const Brands = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { addToast } = useToast();
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,8 +26,12 @@ const Brands = () => {
   const [uploading, setUploading] = useState({});
   const fileInputsRef = useRef({});
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
+    name_vi: "",
+    name_en: "",
+    name_ja: "",
+    description_vi: "",
+    description_en: "",
+    description_ja: "",
     website: "",
     country: "",
     status: "active",
@@ -61,17 +66,27 @@ const Brands = () => {
 
   const handleOpenForm = (brand = null) => {
     if (brand) {
+      const name = brand.name || {};
+      const desc = brand.description || {};
       setFormData({
-        name: brand.name || "",
-        description: brand.description || "",
+        name_vi: typeof name === 'object' ? (name.vi || '') : (name || ''),
+        name_en: typeof name === 'object' ? (name.en || '') : '',
+        name_ja: typeof name === 'object' ? (name.ja || '') : '',
+        description_vi: typeof desc === 'object' ? (desc.vi || '') : (desc || ''),
+        description_en: typeof desc === 'object' ? (desc.en || '') : '',
+        description_ja: typeof desc === 'object' ? (desc.ja || '') : '',
         website: brand.website || "",
         country: brand.country || "",
         status: brand.status || "active",
       });
     } else {
       setFormData({
-        name: "",
-        description: "",
+        name_vi: "",
+        name_en: "",
+        name_ja: "",
+        description_vi: "",
+        description_en: "",
+        description_ja: "",
         website: "",
         country: "",
         status: "active",
@@ -83,7 +98,7 @@ const Brands = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name) {
+    if (!formData.name_vi && !formData.name_en && !formData.name_ja) {
       addToast({
         type: "error",
         message: t('admin.brands.nameRequired'),
@@ -91,9 +106,17 @@ const Brands = () => {
       return;
     }
 
+    const payload = {
+      name: { vi: formData.name_vi || '', en: formData.name_en || '', ja: formData.name_ja || '' },
+      description: { vi: formData.description_vi || '', en: formData.description_en || '', ja: formData.description_ja || '' },
+      website: formData.website || '',
+      country: formData.country || '',
+      status: formData.status || 'active',
+    };
+
     const result = formDialog.brand
-      ? await updateBrand(formDialog.brand._id || formDialog.brand.id, formData)
-      : await createBrand(formData);
+      ? await updateBrand(formDialog.brand._id || formDialog.brand.id, payload)
+      : await createBrand(payload);
 
     if (result.success) {
       addToast({
@@ -205,7 +228,7 @@ const Brands = () => {
                       {getBrandLogoUrl(brand) ? (
                         <img
                           src={getBrandLogoUrl(brand)}
-                          alt={brand.name}
+                          alt={safeText(brand.name, i18n.language, "")}
                           className="w-12 h-12 rounded-full object-cover border"
                         />
                       ) : (
@@ -214,7 +237,7 @@ const Brands = () => {
                         </div>
                       )}
                       <div>
-                        <p className="font-semibold text-gray-900">{brand.name}</p>
+                        <p className="font-semibold text-gray-900">{safeText(brand.name, i18n.language, "N/A")}</p>
                         {brand.country && (
                           <p className="text-sm text-gray-500">{brand.country}</p>
                         )}
@@ -224,7 +247,7 @@ const Brands = () => {
                   </div>
 
                   {brand.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{brand.description}</p>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{safeText(brand.description, i18n.language, "")}</p>
                   )}
 
                   {brand.website && (
@@ -293,27 +316,34 @@ const Brands = () => {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('admin.brands.name')} <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={t('admin.brands.namePlaceholder')}
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameVI')}</label>
+                <Input value={formData.name_vi} onChange={(e) => setFormData({ ...formData, name_vi: e.target.value })} placeholder={t('admin.brands.namePlaceholder')} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.brands.description')}</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder={t('admin.brands.descriptionPlaceholder')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
-                  rows={3}
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameEN')}</label>
+                <Input value={formData.name_en} onChange={(e) => setFormData({ ...formData, name_en: e.target.value })} placeholder={t('admin.brands.namePlaceholder')} />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameJA')}</label>
+                <Input value={formData.name_ja} onChange={(e) => setFormData({ ...formData, name_ja: e.target.value })} placeholder={t('admin.brands.namePlaceholder')} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionVI')}</label>
+                <textarea value={formData.description_vi} onChange={(e) => setFormData({ ...formData, description_vi: e.target.value })} placeholder={t('admin.brands.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionEN')}</label>
+                <textarea value={formData.description_en} onChange={(e) => setFormData({ ...formData, description_en: e.target.value })} placeholder={t('admin.brands.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionJA')}</label>
+                <textarea value={formData.description_ja} onChange={(e) => setFormData({ ...formData, description_ja: e.target.value })} placeholder={t('admin.brands.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+              </div>
+            </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.brands.website')}</label>
                 <Input

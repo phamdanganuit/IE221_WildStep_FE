@@ -252,6 +252,17 @@
     "loadError": "Failed to load dashboard data"
   },
   "admin": {
+    "common": {
+      "nameVI": "Name (VI)",
+      "nameEN": "Name (EN)",
+      "nameJA": "Name (JA)",
+      "descriptionVI": "Description (VI)",
+      "descriptionEN": "Description (EN)",
+      "descriptionJA": "Description (JA)",
+      "titleVI": "Title (VI)",
+      "titleEN": "Title (EN)",
+      "titleJA": "Title (JA)"
+    },
     "layout": {
       "logoAlt": "Wild Step Admin",
       "panel": "Admin Panel",

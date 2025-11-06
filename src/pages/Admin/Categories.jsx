@@ -14,17 +14,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
 
 const Categories = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { addToast } = useToast();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formDialog, setFormDialog] = useState({ open: false, category: null, parentId: null });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, category: null });
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
+    name_vi: "",
+    name_en: "",
+    name_ja: "",
+    description_vi: "",
+    description_en: "",
+    description_ja: "",
     status: "active",
   });
 
@@ -57,15 +62,25 @@ const Categories = () => {
 
   const handleOpenForm = (category = null, parentId = null) => {
     if (category) {
+      const name = category.name || {};
+      const desc = category.description || {};
       setFormData({
-        name: category.name || "",
-        description: category.description || "",
+        name_vi: typeof name === 'object' ? (name.vi || '') : (name || ''),
+        name_en: typeof name === 'object' ? (name.en || '') : '',
+        name_ja: typeof name === 'object' ? (name.ja || '') : '',
+        description_vi: typeof desc === 'object' ? (desc.vi || '') : (desc || ''),
+        description_en: typeof desc === 'object' ? (desc.en || '') : '',
+        description_ja: typeof desc === 'object' ? (desc.ja || '') : '',
         status: category.status || "active",
       });
     } else {
       setFormData({
-        name: "",
-        description: "",
+        name_vi: "",
+        name_en: "",
+        name_ja: "",
+        description_vi: "",
+        description_en: "",
+        description_ja: "",
         status: "active",
       });
     }
@@ -75,7 +90,7 @@ const Categories = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name) {
+    if (!formData.name_vi && !formData.name_en && !formData.name_ja) {
       addToast({
         type: "error",
         message: t('admin.categories.nameRequired'),
@@ -84,7 +99,9 @@ const Categories = () => {
     }
 
     const submitData = {
-      ...formData,
+      name: { vi: formData.name_vi || '', en: formData.name_en || '', ja: formData.name_ja || '' },
+      description: { vi: formData.description_vi || '', en: formData.description_en || '', ja: formData.description_ja || '' },
+      status: formData.status || 'active',
       type: formDialog.parentId ? "child" : "parent",
       ...(formDialog.parentId && { parentId: formDialog.parentId }),
     };
@@ -178,9 +195,9 @@ const Categories = () => {
                     <div className="flex items-center gap-3">
                       <FolderTree className="w-5 h-5 text-color4" />
                       <div>
-                        <p className="font-semibold text-gray-900">{parent.name}</p>
+                        <p className="font-semibold text-gray-900">{safeText(parent.name, i18n.language, "N/A")}</p>
                         {parent.description && (
-                          <p className="text-sm text-gray-500">{parent.description}</p>
+                          <p className="text-sm text-gray-500">{safeText(parent.description, i18n.language, "")}</p>
                         )}
                       </div>
                     </div>
@@ -219,9 +236,9 @@ const Categories = () => {
                           className="flex items-center justify-between p-3 bg-gray-50 rounded"
                         >
                           <div>
-                            <p className="font-medium text-gray-900">{child.name}</p>
+                            <p className="font-medium text-gray-900">{safeText(child.name, i18n.language, "N/A")}</p>
                             {child.description && (
-                              <p className="text-sm text-gray-500">{child.description}</p>
+                              <p className="text-sm text-gray-500">{safeText(child.description, i18n.language, "")}</p>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
@@ -269,26 +286,33 @@ const Categories = () => {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('admin.categories.name')} <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={t('admin.categories.name')}
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameVI')}</label>
+                  <Input value={formData.name_vi} onChange={(e) => setFormData({ ...formData, name_vi: e.target.value })} placeholder={t('admin.categories.name')} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameEN')}</label>
+                  <Input value={formData.name_en} onChange={(e) => setFormData({ ...formData, name_en: e.target.value })} placeholder={t('admin.categories.name')} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameJA')}</label>
+                  <Input value={formData.name_ja} onChange={(e) => setFormData({ ...formData, name_ja: e.target.value })} placeholder={t('admin.categories.name')} />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.categories.description')}</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder={t('admin.categories.descriptionPlaceholder')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
-                  rows={3}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionVI')}</label>
+                  <textarea value={formData.description_vi} onChange={(e) => setFormData({ ...formData, description_vi: e.target.value })} placeholder={t('admin.categories.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionEN')}</label>
+                  <textarea value={formData.description_en} onChange={(e) => setFormData({ ...formData, description_en: e.target.value })} placeholder={t('admin.categories.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionJA')}</label>
+                  <textarea value={formData.description_ja} onChange={(e) => setFormData({ ...formData, description_ja: e.target.value })} placeholder={t('admin.categories.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.categories.status')}</label>

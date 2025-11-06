@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
 import { getPublicReviews } from "@/service/contentService";
 import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
 const allReviews = [
   // --- Trang 1 ---
   [
@@ -142,7 +143,7 @@ const StarRating = ({ rating }) => {
 };
 
 const CustomerReviews = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1); // 1-based UI pagination
   const PAGE_SIZE_UI = 2; // số review hiển thị mỗi trang trên UI
@@ -166,9 +167,9 @@ const CustomerReviews = () => {
 
       const mapReviews = (list) => (Array.isArray(list) ? list : []).map((r) => ({
         id: r.id,
-        name: r.author_name,
+        name: safeText(r.author_name, i18n.language, 'N/A'),
         avatar: r.author_avatar,
-        review: r.content,
+        review: safeText(r.content, i18n.language, ''),
         rating: r.rating,
         createdAt: r.createdAt || r.created_at || null,
       }));
@@ -190,7 +191,7 @@ const CustomerReviews = () => {
       setLoading(false);
     })();
     return () => { mounted = false };
-  }, []);
+  }, [i18n.language]);
 
   if (loading) return null;
   if (!allFetchedReviews.length) return null;

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { getPublicProducts } from "@/service/contentService";
 import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
 
 const CARDS_PER_PAGE = 3;
 
@@ -52,7 +53,7 @@ const ProductCard = ({ image, name, price, oldPrice, className = "" }) => {
 };
 
 const PopularProducts = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
@@ -81,7 +82,7 @@ const PopularProducts = () => {
           const oldPriceNumber = p.discountPrice ? p.price : null;
           return {
             id: p.id,
-            name: p.name,
+            name: safeText(p.name, i18n.language, 'N/A'),
             image: (Array.isArray(p.images) && p.images[0]) || "",
             price: typeof priceNumber === 'number' ? currency.format(priceNumber) : String(priceNumber ?? ""),
             oldPrice: typeof oldPriceNumber === 'number' ? currency.format(oldPriceNumber) : null,
@@ -95,7 +96,7 @@ const PopularProducts = () => {
       setLoading(false);
     })();
     return () => { mounted = false };
-  }, []);
+  }, [i18n.language]);
 
   if (loading) {
     return (

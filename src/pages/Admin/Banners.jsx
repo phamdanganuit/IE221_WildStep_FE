@@ -20,10 +20,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Image as ImageIcon, Plus, Edit, Trash2, Upload } from "lucide-react";
+import { safeText } from "@/lib/i18nUtils";
 
 const emptyForm = {
   image: "",
-  title: "",
+  title_vi: "",
+  title_en: "",
+  title_ja: "",
   link: "",
   order: 0,
   status: "active",
@@ -32,7 +35,7 @@ const emptyForm = {
 import { useTranslation } from "react-i18next";
 
 export default function Banners() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { addToast } = useToast();
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +73,9 @@ export default function Banners() {
   const openEdit = (banner) => {
     setFormData({
       image: banner.image || "",
-      title: banner.title || "",
+      title_vi: typeof banner.title === 'object' ? (banner.title.vi || '') : (banner.title || ''),
+      title_en: typeof banner.title === 'object' ? (banner.title.en || '') : '',
+      title_ja: typeof banner.title === 'object' ? (banner.title.ja || '') : '',
       link: banner.link || "",
       order: banner.order ?? 0,
       status: banner.status || "active",
@@ -85,15 +90,18 @@ export default function Banners() {
     // If user selected a file in the top-level file input (create only)
     if (!isEdit && fileInputRef.current && fileInputRef.current.files?.[0]) {
       const file = fileInputRef.current.files[0];
+      // Append dot fields for multipart
       result = await createAdminBannerForm(file, {
-        title: formData.title,
+        'title.vi': formData.title_vi || '',
+        'title.en': formData.title_en || '',
+        'title.ja': formData.title_ja || '',
         link: formData.link,
         order: formData.order,
         status: formData.status,
       });
     } else if (isEdit) {
       result = await updateAdminBanner(formDialog.banner.id || formDialog.banner._id, {
-        title: formData.title,
+        title: { vi: formData.title_vi || '', en: formData.title_en || '', ja: formData.title_ja || '' },
         link: formData.link,
         order: formData.order,
         status: formData.status,
@@ -107,7 +115,7 @@ export default function Banners() {
       }
       result = await createAdminBanner({
         image: formData.image,
-        title: formData.title,
+        title: { vi: formData.title_vi || '', en: formData.title_en || '', ja: formData.title_ja || '' },
         link: formData.link,
         order: formData.order,
         status: formData.status,
@@ -191,13 +199,13 @@ export default function Banners() {
                           <ImageIcon className="w-6 h-6 text-color4" />
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900 line-clamp-1">{b.title || t('admin.banners.noTitle')}</p>
+                          <p className="font-semibold text-gray-900 line-clamp-1">{safeText(b.title, i18n.language, t('admin.banners.noTitle'))}</p>
                           <p className="text-sm text-gray-500">{t('admin.banners.order')}: {b.order ?? 0} · {t('admin.banners.status')}: {b.status}</p>
                         </div>
                       </div>
                     </div>
                     {b.image && (
-                      <img src={b.image} alt={b.title || id} className="w-full h-36 object-cover rounded-md mb-3" />
+                      <img src={b.image} alt={safeText(b.title, i18n.language, String(id))} className="w-full h-36 object-cover rounded-md mb-3" />
                     )}
 
                     <div className="flex items-center gap-2">
@@ -253,13 +261,19 @@ export default function Banners() {
                   placeholder={t('admin.banners.imageUrlPlaceholder')}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.banners.title_field')}</label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder={t('admin.banners.titlePlaceholder')}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.titleVI')}</label>
+                  <Input value={formData.title_vi} onChange={(e) => setFormData({ ...formData, title_vi: e.target.value })} placeholder={t('admin.banners.titlePlaceholder')} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.titleEN')}</label>
+                  <Input value={formData.title_en} onChange={(e) => setFormData({ ...formData, title_en: e.target.value })} placeholder={t('admin.banners.titlePlaceholder')} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.titleJA')}</label>
+                  <Input value={formData.title_ja} onChange={(e) => setFormData({ ...formData, title_ja: e.target.value })} placeholder={t('admin.banners.titlePlaceholder')} />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.banners.link')}</label>

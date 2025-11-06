@@ -61,3 +61,46 @@ export const translateStatus = (status, t, context = 'dashboard.orderStatus') =>
   }
 };
 
+// ================== I18N helpers for API ==================
+
+import i18n from '@/i18n/config';
+
+/**
+ * Get current locale from URL prefix (/vi|/en|/ja), i18n, or fallback 'vi'.
+ */
+export const getCurrentLocale = () => {
+  try {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    const match = path.match(/^\/(vi|en|ja)(\/|$)/);
+    if (match) return match[1];
+  } catch {}
+  if (i18n?.language) return i18n.language.split('-')[0];
+  return 'vi';
+};
+
+/**
+ * Pick localized text with fallback chain. Accepts string or {vi,en,ja}.
+ */
+export const pickLocalized = (value, lang, fallbacks = ['vi', 'en', 'ja']) => {
+  if (value == null) return '';
+  if (typeof value === 'string') return value || '';
+  if (typeof value === 'object') {
+    const primary = value[lang];
+    if (primary) return primary;
+    for (const fb of fallbacks) {
+      if (value[fb]) return value[fb];
+    }
+    const any = Object.values(value).find((v) => !!v);
+    return any || '';
+  }
+  return String(value ?? '');
+};
+
+/**
+ * Safe display text: try localized pick then default fallback string.
+ */
+export const safeText = (value, lang, fallbackDisplay = 'N/A') => {
+  const picked = pickLocalized(value, lang);
+  return picked && String(picked).trim() ? picked : fallbackDisplay;
+};
+

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
+import i18n from "@/i18n/config";
 
 const ProductDetail = () => {
   const { t } = useTranslation();
@@ -14,6 +16,8 @@ const ProductDetail = () => {
   const { addToast } = useToast();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [maxImageHeight, setMaxImageHeight] = useState(0);
+  const imageRefs = useRef([]);
 
   useEffect(() => {
     fetchProduct();
@@ -82,7 +86,7 @@ const ProductDetail = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{safeText(product.name, i18n.language, 'N/A')}</h1>
             <p className="text-gray-600 mt-1">{t('admin.products.detail.title')}</p>
           </div>
         </div>
@@ -112,7 +116,7 @@ const ProductDetail = () => {
                       <img
                         ref={(el) => (imageRefs.current[index] = el)}
                         src={img}
-                        alt={`${product.name} ${index + 1}`}
+                        alt={`${safeText(product.name, i18n.language, '')} ${index + 1}`}
                         className="max-w-full max-h-full object-contain"
                         onLoad={(e) => {
                           // Measure rendered height after image loads
@@ -136,7 +140,7 @@ const ProductDetail = () => {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 whitespace-pre-wrap">
-                {product.description || t('admin.products.form.noDescription')}
+                {safeText(product.description, i18n.language, t('admin.products.form.noDescription'))}
               </p>
             </CardContent>
           </Card>
@@ -286,13 +290,13 @@ const ProductDetail = () => {
               <div>
                 <span className="text-sm text-gray-600">{t('admin.products.detail.categoryInfo')}</span>
                 <p className="text-base font-medium text-gray-900 mt-1">
-                  {product.category?.name || "N/A"}
+                  {safeText(product.category?.name, i18n.language, "N/A")}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-gray-600">{t('admin.products.detail.brandInfo')}</span>
                 <p className="text-base font-medium text-gray-900 mt-1">
-                  {product.brand?.name || "N/A"}
+                  {safeText(product.brand?.name, i18n.language, "N/A")}
                 </p>
               </div>
             </CardContent>

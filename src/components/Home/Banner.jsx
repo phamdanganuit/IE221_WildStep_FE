@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { getPublicBanners } from "@/service/contentService";
+import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
 
 const Banner = () => {
+  const { i18n } = useTranslation();
   const [current, setCurrent] = useState(0);
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +33,7 @@ const Banner = () => {
       setLoading(false);
     })();
     return () => { isMounted = false; };
-  }, []);
+  }, [i18n.language]);
 
   useEffect(() => {
     if (!banners.length) return;
@@ -62,7 +65,7 @@ const Banner = () => {
         >
           {banners.map((banner) => {
             const imageUrl = banner.image || banner.img || banner.url;
-            const title = banner.title || `Banner ${banner.id}`;
+            const title = safeText(banner.title, i18n.language, `Banner ${banner.id}`);
             const content = (
               <img
                 src={imageUrl}
