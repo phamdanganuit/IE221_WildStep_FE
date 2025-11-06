@@ -15,8 +15,10 @@ import {
   import { Button } from "../ui/button";
   import { ChevronLeftIcon } from "lucide-react";  
   import React, { useState } from "react";
+  import { useTranslation } from "react-i18next";
 
 export default function AddressDialog({address , title, submitText, submitIcon, onSubmit}) {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const [receiver, setReceiver] = useState(address ? address.receiver : "");
     const [detail, setDetail] = useState(address ? address.detail : "");
@@ -66,7 +68,7 @@ export default function AddressDialog({address , title, submitText, submitIcon, 
                       <div className="flex grid grid-cols-2 gap-2">
                         <div className="col-span-1 flex-col space-y-[10px]">
                           <p className="font-semibold">
-                            Tên người nhận <span className="text-red-500">*</span>
+                            {t('profile.addressPage.receiver')} <span className="text-red-500">*</span>
                           </p>
                           <Input
                             value={receiver}
@@ -76,7 +78,7 @@ export default function AddressDialog({address , title, submitText, submitIcon, 
                         </div>
                         <div className="col-span-1 flex-col space-y-[10px]">
                           <p className="font-semibold">
-                            Số điện thoại <span className="text-red-500">*</span>
+                            {t('profile.addressPage.phoneNumber')} <span className="text-red-500">*</span>
                           </p>
                           <Input
                             value={phone}
@@ -87,7 +89,7 @@ export default function AddressDialog({address , title, submitText, submitIcon, 
                       </div>
   
                       <p className="font-semibold">
-                        Địa chỉ <span className="text-red-500">*</span>
+                        {t('profile.addressPage.addressDetail')} <span className="text-red-500">*</span>
                       </p>
                       <Input
                         value={detail}
@@ -95,7 +97,7 @@ export default function AddressDialog({address , title, submitText, submitIcon, 
                         className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
                       />
                       <p className="font-semibold">
-                        Phường/Xã <span className="text-red-500">*</span>
+                        {t('profile.addressPage.ward')} <span className="text-red-500">*</span>
                       </p>
                       <Input
                         value={ward}
@@ -103,7 +105,7 @@ export default function AddressDialog({address , title, submitText, submitIcon, 
                         className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
                       />
                       <p className="font-semibold">
-                        Quận/Huyện <span className="text-red-500">*</span>
+                        {t('profile.addressPage.district')} <span className="text-red-500">*</span>
                       </p>
                       <Input
                         value={district}
@@ -111,7 +113,7 @@ export default function AddressDialog({address , title, submitText, submitIcon, 
                         className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
                       />
                       <p className="font-semibold">
-                        Thành phố/Tỉnh <span className="text-red-500">*</span>
+                        {t('profile.addressPage.province')} <span className="text-red-500">*</span>
                       </p>
                       <Input
                         value={province}
@@ -129,7 +131,7 @@ export default function AddressDialog({address , title, submitText, submitIcon, 
                           aria-label="Medium switch"
                           className="h-6 w-10 [&_span]:size-5 data-[state=checked]:[&_span]:translate-x-4.5 data-[state=checked]:[&_span]:rtl:-translate-x-4.5"
                         />
-                        <Label htmlFor="default-address">Địa chỉ mặc định?</Label>
+                        <Label htmlFor="default-address">{t('profile.addressPage.setDefault')}</Label>
                       </div>
                     </div>
                   </div>
@@ -141,7 +143,7 @@ export default function AddressDialog({address , title, submitText, submitIcon, 
             <DialogClose asChild>
               <Button variant="outline">
                 <ChevronLeftIcon />
-                Quay lại
+                {t('profile.addressPage.cancel')}
               </Button>
             </DialogClose>
             <Button onClick={handleSubmit}>

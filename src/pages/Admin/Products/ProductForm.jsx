@@ -7,14 +7,20 @@ import {
   uploadProductImages,
   getCategories,
   getBrands,
+  removeProductImage,
 } from "@/service/adminService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
+import i18n from "@/i18n/config";
 
 const ProductForm = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const { addToast } = useToast();
@@ -24,16 +30,21 @@ const ProductForm = () => {
   const [categories, setCategories] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]); // new images (create mode)
+  const [existingImages, setExistingImages] = useState([]); // urls from server (edit mode)
   const [sizeInput, setSizeInput] = useState("");
   const [colorInput, setColorInput] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [formData, setFormData] = useState({
-    name: "",
+    name_vi: "",
+    name_en: "",
+    name_ja: "",
+    description_vi: "",
+    description_en: "",
+    description_ja: "",
     categoryId: "",
     brandId: "",
     price: "",
-    description: "",
     stock: "",
     discount: "",
     status: "active",
@@ -47,6 +58,41 @@ const ProductForm = () => {
   });
 
   const initializedRef = useRef(false);
+  const [previewImage, setPreviewImage] = useState("");
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [dragIndex, setDragIndex] = useState(null);
+  const [imagesReordered, setImagesReordered] = useState(false);
+
+  const handleDragStart = (index) => {
+    setDragIndex(index);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (index) => {
+    if (dragIndex === null || dragIndex === index) return;
+    setExistingImages((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(dragIndex, 1);
+      next.splice(index, 0, moved);
+      return next;
+    });
+    setImagesReordered(true);
+    setDragIndex(null);
+  };
+
+  const handleSaveImagesOrder = async () => {
+    if (!isEdit) return;
+    const result = await updateProduct(id, { images: existingImages });
+    if (result.success) {
+      setImagesReordered(false);
+      addToast({ type: "success", message: t('admin.products.form.saveImageOrderSuccess') });
+    } else {
+      addToast({ type: "error", message: result.error || t('admin.products.form.saveImageOrderError') });
+    }
+  };
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -75,7 +121,10 @@ const ProductForm = () => {
       list.forEach((parent) => {
         if (Array.isArray(parent.children) && parent.children.length > 0) {
           parent.children.forEach((child) => {
-            flattened.push({ id: child.id || child._id, name: `${parent.name} / ${child.name}` });
+            // parent.name / child.name may be localized objects; display safely
+            const parentName = safeText(parent.name, i18n.language, 'N/A');
+            const childName = safeText(child.name, i18n.language, 'N/A');
+            flattened.push({ id: child.id || child._id, name: `${parentName} / ${childName}` });
           });
         }
       });
@@ -104,12 +153,18 @@ const ProductForm = () => {
 
     if (result.success) {
       const product = result.data;
+      const name = product.name || {};
+      const desc = product.description || {};
       setFormData({
-        name: product.name || "",
+        name_vi: typeof name === 'object' ? (name.vi || '') : (name || ''),
+        name_en: typeof name === 'object' ? (name.en || '') : '',
+        name_ja: typeof name === 'object' ? (name.ja || '') : '',
         categoryId: product.categoryId || product.category?.id || "",
         brandId: product.brandId || "",
         price: product.price || "",
-        description: product.description || "",
+        description_vi: typeof desc === 'object' ? (desc.vi || '') : (desc || ''),
+        description_en: typeof desc === 'object' ? (desc.en || '') : '',
+        description_ja: typeof desc === 'object' ? (desc.ja || '') : '',
         stock: product.stock || "",
         discount: product.discount || "",
         status: product.status || "active",
@@ -121,10 +176,11 @@ const ProductForm = () => {
         },
         tags: product.tags || [],
       });
+      setExistingImages(Array.isArray(product.images) ? product.images : []);
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể tải thông tin sản phẩm",
+        message: result.error || t('admin.products.loadProductError'),
       });
       navigate("/admin/products");
     }
@@ -136,7 +192,7 @@ const ProductForm = () => {
     setLoading(true);
 
     // Validate required fields
-    if (!formData.name || !formData.categoryId || !formData.brandId || !formData.price) {
+    if ((!formData.name_vi && !formData.name_en && !formData.name_ja) || !formData.categoryId || !formData.brandId || !formData.price) {
       addToast({
         type: "error",
         message: "Vui lòng điền đầy đủ thông tin bắt buộc",
@@ -146,10 +202,16 @@ const ProductForm = () => {
     }
 
     const submitData = {
-      ...formData,
+      name: { vi: formData.name_vi || '', en: formData.name_en || '', ja: formData.name_ja || '' },
+      description: { vi: formData.description_vi || '', en: formData.description_en || '', ja: formData.description_ja || '' },
+      categoryId: formData.categoryId,
+      brandId: formData.brandId,
       price: parseFloat(formData.price),
       stock: parseInt(formData.stock) || 0,
       discount: parseFloat(formData.discount) || 0,
+      status: formData.status,
+      specifications: formData.specifications,
+      tags: formData.tags,
     };
 
     const result = isEdit
@@ -165,13 +227,13 @@ const ProductForm = () => {
 
       addToast({
         type: "success",
-        message: isEdit ? "Cập nhật sản phẩm thành công" : "Tạo sản phẩm thành công",
+        message: isEdit ? t('admin.products.form.updateSuccess') : t('admin.products.form.createSuccess'),
       });
       navigate("/admin/products");
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể lưu sản phẩm",
+        message: result.error || t('admin.products.form.saveError'),
       });
     }
     setLoading(false);
@@ -186,7 +248,43 @@ const ProductForm = () => {
       });
       return;
     }
-    setImages(files);
+    // If editing, upload immediately and merge; otherwise store for upload after create
+    if (isEdit) {
+      const doUpload = async () => {
+        const productId = id;
+        const result = await uploadProductImages(productId, files);
+        if (result.success) {
+          const newImages = Array.isArray(result.data?.images) ? result.data.images : [];
+          setExistingImages((prev) => {
+            // Merge and de-duplicate
+            const merged = [...prev];
+            newImages.forEach((url) => {
+              if (!merged.includes(url)) merged.push(url);
+            });
+            return merged;
+          });
+          addToast({ type: "success", message: t('admin.products.form.uploadSuccess') });
+        } else {
+          addToast({ type: "error", message: result.error || t('admin.products.form.uploadImageError') });
+        }
+      };
+      doUpload();
+      // reset input
+      e.target.value = "";
+    } else {
+      setImages(files);
+    }
+  };
+
+  const handleDeleteExistingImage = async (imageUrl) => {
+    if (!isEdit) return;
+    const result = await removeProductImage(id, imageUrl);
+    if (result.success) {
+      setExistingImages((prev) => prev.filter((url) => url !== imageUrl));
+      addToast({ type: "success", message: t('admin.products.form.deleteImageSuccess') });
+    } else {
+      addToast({ type: "error", message: result.error || t('admin.products.form.deleteImageError') });
+    }
   };
 
   const handleAddSize = (e) => {
@@ -278,10 +376,10 @@ const ProductForm = () => {
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {isEdit ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}
+            {isEdit ? t('admin.products.editProduct') : t('admin.products.addNew')}
           </h1>
           <p className="text-gray-600 mt-1">
-            {isEdit ? "Cập nhật thông tin sản phẩm" : "Tạo sản phẩm mới trong cửa hàng"}
+            {isEdit ? t('admin.products.subtitle') : t('admin.products.subtitle')}
           </p>
         </div>
       </div>
@@ -290,25 +388,28 @@ const ProductForm = () => {
         {/* Basic Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Thông tin cơ bản</CardTitle>
+            <CardTitle>{t('admin.products.form.productInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tên sản phẩm <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Nike Air Max 270"
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameVI')} <span className="text-red-500">*</span></label>
+                <Input value={formData.name_vi} onChange={(e) => setFormData({ ...formData, name_vi: e.target.value })} placeholder={t('admin.products.form.productNamePlaceholder')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameEN')}</label>
+                <Input value={formData.name_en} onChange={(e) => setFormData({ ...formData, name_en: e.target.value })} placeholder={t('admin.products.form.productNamePlaceholder')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameJA')}</label>
+                <Input value={formData.name_ja} onChange={(e) => setFormData({ ...formData, name_ja: e.target.value })} placeholder={t('admin.products.form.productNamePlaceholder')} />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Danh mục <span className="text-red-500">*</span>
+                  {t('admin.products.category')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.categoryId}
@@ -316,7 +417,7 @@ const ProductForm = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
                   required
                 >
-                  <option value="">Chọn danh mục (chọn danh mục con)</option>
+                  <option value="">{t('admin.products.form.selectCategory')}</option>
                   {Array.isArray(categoryOptions) && categoryOptions.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -327,7 +428,7 @@ const ProductForm = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Thương hiệu <span className="text-red-500">*</span>
+                  {t('admin.products.brand')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.brandId}
@@ -335,25 +436,29 @@ const ProductForm = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
                   required
                 >
-                  <option value="">Chọn thương hiệu</option>
+                  <option value="">{t('admin.products.form.selectBrand')}</option>
                   {Array.isArray(brands) && brands.map((brand) => (
                     <option key={brand._id || brand.id} value={brand._id || brand.id}>
-                      {brand.name}
+                      {safeText(brand.name, i18n.language, 'N/A')}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Mô tả chi tiết về sản phẩm..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
-                rows={4}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionVI')}</label>
+                <textarea value={formData.description_vi} onChange={(e) => setFormData({ ...formData, description_vi: e.target.value })} placeholder={t('admin.products.form.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={4} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionEN')}</label>
+                <textarea value={formData.description_en} onChange={(e) => setFormData({ ...formData, description_en: e.target.value })} placeholder={t('admin.products.form.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={4} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionJA')}</label>
+                <textarea value={formData.description_ja} onChange={(e) => setFormData({ ...formData, description_ja: e.target.value })} placeholder={t('admin.products.form.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={4} />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -361,56 +466,56 @@ const ProductForm = () => {
         {/* Pricing & Stock */}
         <Card>
           <CardHeader>
-            <CardTitle>Giá & Tồn kho</CardTitle>
+            <CardTitle>{t('admin.products.form.priceAndStock')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Giá (VND) <span className="text-red-500">*</span>
+                  {t('admin.products.priceVND')} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="number"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="3500000"
+                  placeholder={t('admin.products.form.pricePlaceholder')}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Giảm giá (%)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.discount')}</label>
                 <Input
                   type="number"
                   value={formData.discount}
                   onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
-                  placeholder="10"
+                  placeholder={t('admin.products.form.discountPlaceholder')}
                   min="0"
                   max="100"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tồn kho</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.stock')}</label>
                 <Input
                   type="number"
                   value={formData.stock}
                   onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  placeholder="45"
+                  placeholder={t('admin.products.form.stockPlaceholder')}
                   min="0"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.status')}</label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
               >
-                <option value="active">Đang bán</option>
-                <option value="inactive">Ngừng bán</option>
+                <option value="active">{t('admin.products.active')}</option>
+                <option value="inactive">{t('admin.products.inactive')}</option>
               </select>
             </div>
           </CardContent>
@@ -419,18 +524,18 @@ const ProductForm = () => {
         {/* Specifications */}
         <Card>
           <CardHeader>
-            <CardTitle>Thông số kỹ thuật</CardTitle>
+            <CardTitle>{t('admin.products.form.specifications')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Size (nhập từng giá trị và nhấn Enter)
+                {t('admin.products.form.size')}
               </label>
               <Input
                 value={sizeInput}
                 onChange={(e) => setSizeInput(e.target.value)}
                 onKeyDown={handleAddSize}
-                placeholder="Nhập size và nhấn Enter"
+                placeholder={t('admin.products.form.size')}
               />
               {formData.specifications.size.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -455,13 +560,13 @@ const ProductForm = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Màu sắc (nhập từng giá trị và nhấn Enter)
+                {t('admin.products.form.color')}
               </label>
               <Input
                 value={colorInput}
                 onChange={(e) => setColorInput(e.target.value)}
                 onKeyDown={handleAddColor}
-                placeholder="Nhập màu sắc và nhấn Enter"
+                placeholder={t('admin.products.form.color')}
               />
               {formData.specifications.color.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -486,7 +591,7 @@ const ProductForm = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Chất liệu</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.material')}</label>
                 <Input
                   value={formData.specifications.material}
                   onChange={(e) =>
@@ -495,12 +600,12 @@ const ProductForm = () => {
                       specifications: { ...formData.specifications, material: e.target.value },
                     })
                   }
-                  placeholder="Da tổng hợp"
+                  placeholder={t('admin.products.form.materialPlaceholder')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Trọng lượng</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.weight')}</label>
                 <Input
                   value={formData.specifications.weight}
                   onChange={(e) =>
@@ -509,20 +614,20 @@ const ProductForm = () => {
                       specifications: { ...formData.specifications, weight: e.target.value },
                     })
                   }
-                  placeholder="300g"
+                  placeholder={t('admin.products.form.weightPlaceholder')}
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tags (nhập từng giá trị và nhấn Enter)
+                {t('admin.products.form.tags')}
               </label>
               <Input
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleAddTag}
-                placeholder="Nhập tag và nhấn Enter"
+                placeholder={t('admin.products.form.enterTag')}
               />
               {formData.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -550,17 +655,54 @@ const ProductForm = () => {
         {/* Images */}
         <Card>
           <CardHeader>
-            <CardTitle>Hình ảnh</CardTitle>
+            <CardTitle>{t('admin.products.form.images')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div>
+              {isEdit && existingImages.length > 0 && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.images')}</label>
+                  {imagesReordered && (
+                    <div className="flex justify-end mb-3">
+                      <Button type="button" onClick={handleSaveImagesOrder}>{t('admin.products.form.saveImageOrder')}</Button>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {existingImages.map((url, idx) => (
+                      <div
+                        key={idx}
+                        className="relative group cursor-move"
+                        draggable
+                        onDragStart={() => handleDragStart(idx)}
+                        onDragOver={handleDragOver}
+                        onDrop={() => handleDrop(idx)}
+                        title={t('admin.products.form.dragToSort')}
+                      >
+                        <button type="button" onClick={() => { setPreviewImage(url); setIsPreviewOpen(true); }} className="block w-full">
+                          <div className="relative w-full aspect-square">
+                            <img src={url} alt={`image-${idx}`} className="absolute inset-0 w-full h-full object-cover rounded-md" />
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteExistingImage(url)}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-white rounded-full p-1"
+                          aria-label={t('admin.products.form.deleteImage')}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Upload ảnh (tối đa 5 ảnh)
               </label>
               <div className="mt-2 flex items-center gap-4">
                 <label className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
                   <Upload className="w-4 h-4" />
-                  <span className="text-sm">Chọn ảnh</span>
+                  <span className="text-sm">{t('admin.products.form.selectImages')}</span>
                   <input
                     type="file"
                     multiple
@@ -569,24 +711,39 @@ const ProductForm = () => {
                     className="hidden"
                   />
                 </label>
-                {images.length > 0 && (
-                  <span className="text-sm text-gray-600">{images.length} ảnh đã chọn</span>
+                {!isEdit && images.length > 0 && (
+                  <span className="text-sm text-gray-600">{images.length} {t('admin.products.form.imagesSelected')}</span>
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Định dạng: Tất cả định dạng ảnh. Kích thước tối đa: 5MB mỗi ảnh.
+                {t('admin.products.form.imageFormats')}
               </p>
             </div>
           </CardContent>
         </Card>
 
+        {/* Image Preview Dialog */}
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <DialogContent className="sm:max-w-[90vw] max-w-[90vw] p-0 bg-transparent border-none shadow-none">
+            <DialogHeader className="sr-only">
+              <DialogTitle>{t('admin.products.form.viewImage')}</DialogTitle>
+              <DialogDescription>{t('admin.products.form.imagePreview')}</DialogDescription>
+            </DialogHeader>
+            {previewImage && (
+              <div className="flex items-center justify-center">
+                <img src={previewImage} alt="Preview" className="max-w-[90vw] max-h-[90vh] object-contain rounded" />
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* Actions */}
         <div className="flex items-center justify-end gap-4">
           <Button type="button" variant="outline" onClick={() => navigate("/admin/products")}>
-            Hủy
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Đang lưu..." : isEdit ? "Cập nhật" : "Tạo sản phẩm"}
+            {loading ? t('common.loading') : isEdit ? t('common.save') : t('admin.products.addNew')}
           </Button>
         </div>
       </form>

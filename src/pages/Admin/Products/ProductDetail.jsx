@@ -1,17 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getProduct } from "@/service/adminService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
+import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
+import i18n from "@/i18n/config";
 
 const ProductDetail = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const { addToast } = useToast();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [maxImageHeight, setMaxImageHeight] = useState(0);
+  const imageRefs = useRef([]);
 
   useEffect(() => {
     fetchProduct();
@@ -23,10 +29,12 @@ const ProductDetail = () => {
 
     if (result.success) {
       setProduct(result.data);
+      setMaxImageHeight(0);
+      imageRefs.current = [];
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể tải thông tin sản phẩm",
+        message: result.error || t('admin.products.loadProductError'),
       });
       navigate("/admin/products");
     }
@@ -42,10 +50,10 @@ const ProductDetail = () => {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      active: { label: "Đang bán", class: "bg-green-100 text-green-800" },
-      inactive: { label: "Ngừng bán", class: "bg-gray-100 text-gray-800" },
-      out_of_stock: { label: "Hết hàng", class: "bg-red-100 text-red-800" },
-      low_stock: { label: "Sắp hết", class: "bg-yellow-100 text-yellow-800" },
+      active: { label: t('admin.products.active'), class: "bg-green-100 text-green-800" },
+      inactive: { label: t('admin.products.inactive'), class: "bg-gray-100 text-gray-800" },
+      out_of_stock: { label: t('admin.products.outOfStock'), class: "bg-red-100 text-red-800" },
+      low_stock: { label: t('admin.products.lowStock'), class: "bg-yellow-100 text-yellow-800" },
     };
 
     const statusInfo = statusMap[status] || { label: status, class: "bg-gray-100 text-gray-800" };
@@ -78,13 +86,13 @@ const ProductDetail = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
-            <p className="text-gray-600 mt-1">Chi tiết sản phẩm</p>
+            <h1 className="text-2xl font-bold text-gray-900">{safeText(product.name, i18n.language, 'N/A')}</h1>
+            <p className="text-gray-600 mt-1">{t('admin.products.detail.title')}</p>
           </div>
         </div>
         <Button onClick={() => navigate(`/admin/products/${id}/edit`)}>
           <Edit className="w-4 h-4 mr-2" />
-          Chỉnh sửa
+          {t('admin.products.edit')}
         </Button>
       </div>
 
@@ -95,17 +103,30 @@ const ProductDetail = () => {
           {product.images && product.images.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Hình ảnh</CardTitle>
+                <CardTitle>{t('admin.products.detail.images')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {product.images.map((img, index) => (
-                    <img
+                    <div
                       key={index}
-                      src={img}
-                      alt={`${product.name} ${index + 1}`}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
+                      className="w-full bg-white rounded-lg flex items-center justify-center overflow-hidden border border-gray-100"
+                      style={{ height: maxImageHeight ? `${maxImageHeight}px` : undefined }}
+                    >
+                      <img
+                        ref={(el) => (imageRefs.current[index] = el)}
+                        src={img}
+                        alt={`${safeText(product.name, i18n.language, '')} ${index + 1}`}
+                        className="max-w-full max-h-full object-contain"
+                        onLoad={(e) => {
+                          // Measure rendered height after image loads
+                          const renderedHeight = e.currentTarget?.naturalHeight && e.currentTarget?.naturalWidth
+                            ? (e.currentTarget.naturalHeight / e.currentTarget.naturalWidth) * e.currentTarget.clientWidth
+                            : e.currentTarget.clientHeight;
+                          setMaxImageHeight((prev) => Math.max(prev, Math.ceil(renderedHeight)));
+                        }}
+                      />
+                    </div>
                   ))}
                 </div>
               </CardContent>
@@ -115,11 +136,11 @@ const ProductDetail = () => {
           {/* Description */}
           <Card>
             <CardHeader>
-              <CardTitle>Mô tả sản phẩm</CardTitle>
+              <CardTitle>{t('admin.products.detail.description')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 whitespace-pre-wrap">
-                {product.description || "Chưa có mô tả"}
+                {safeText(product.description, i18n.language, t('admin.products.form.noDescription'))}
               </p>
             </CardContent>
           </Card>
@@ -209,7 +230,7 @@ const ProductDetail = () => {
           {/* Status */}
           <Card>
             <CardHeader>
-              <CardTitle>Trạng thái</CardTitle>
+              <CardTitle>{t('admin.products.detail.status')}</CardTitle>
             </CardHeader>
             <CardContent>
               {getStatusBadge(product.status)}
@@ -219,21 +240,21 @@ const ProductDetail = () => {
           {/* Pricing */}
           <Card>
             <CardHeader>
-              <CardTitle>Giá bán</CardTitle>
+              <CardTitle>{t('admin.products.detail.pricing')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <span className="text-sm text-gray-600">Giá gốc:</span>
+                <span className="text-sm text-gray-600">{t('admin.products.detail.originalPrice')}</span>
                 <p className="text-xl font-bold text-gray-900 mt-1">{formatCurrency(product.price)}</p>
               </div>
               {product.discount > 0 && (
                 <>
                   <div>
-                    <span className="text-sm text-gray-600">Giảm giá:</span>
+                    <span className="text-sm text-gray-600">{t('admin.products.detail.discount')}</span>
                     <p className="text-lg font-semibold text-red-600 mt-1">{product.discount}%</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-600">Giá sau giảm:</span>
+                    <span className="text-sm text-gray-600">{t('admin.products.detail.finalPrice')}</span>
                     <p className="text-xl font-bold text-color4 mt-1">
                       {formatCurrency(product.discountPrice)}
                     </p>
@@ -246,15 +267,15 @@ const ProductDetail = () => {
           {/* Stock */}
           <Card>
             <CardHeader>
-              <CardTitle>Tồn kho</CardTitle>
+              <CardTitle>{t('admin.products.detail.inventory')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <span className="text-sm text-gray-600">Số lượng:</span>
+                <span className="text-sm text-gray-600">{t('admin.products.detail.quantity')}</span>
                 <p className="text-2xl font-bold text-gray-900 mt-1">{product.stock}</p>
               </div>
               <div>
-                <span className="text-sm text-gray-600">Đã bán:</span>
+                <span className="text-sm text-gray-600">{t('admin.products.detail.sold')}</span>
                 <p className="text-xl font-semibold text-gray-900 mt-1">{product.sold || 0}</p>
               </div>
             </CardContent>
@@ -263,19 +284,19 @@ const ProductDetail = () => {
           {/* Category & Brand */}
           <Card>
             <CardHeader>
-              <CardTitle>Phân loại</CardTitle>
+              <CardTitle>{t('admin.products.detail.classification')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <span className="text-sm text-gray-600">Danh mục:</span>
+                <span className="text-sm text-gray-600">{t('admin.products.detail.categoryInfo')}</span>
                 <p className="text-base font-medium text-gray-900 mt-1">
-                  {product.category?.name || "N/A"}
+                  {safeText(product.category?.name, i18n.language, "N/A")}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-600">Thương hiệu:</span>
+                <span className="text-sm text-gray-600">{t('admin.products.detail.brandInfo')}</span>
                 <p className="text-base font-medium text-gray-900 mt-1">
-                  {product.brand?.name || "N/A"}
+                  {safeText(product.brand?.name, i18n.language, "N/A")}
                 </p>
               </div>
             </CardContent>
@@ -284,17 +305,17 @@ const ProductDetail = () => {
           {/* Dates */}
           <Card>
             <CardHeader>
-              <CardTitle>Thông tin khác</CardTitle>
+              <CardTitle>{t('admin.products.detail.otherInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <span className="text-sm text-gray-600">Ngày tạo:</span>
+                <span className="text-sm text-gray-600">{t('admin.products.detail.createdAt')}</span>
                 <p className="text-sm text-gray-900 mt-1">
                   {new Date(product.createdAt).toLocaleDateString("vi-VN")}
                 </p>
               </div>
               <div>
-                <span className="text-sm text-gray-600">Cập nhật lần cuối:</span>
+                <span className="text-sm text-gray-600">{t('admin.products.detail.updatedAt')}</span>
                 <p className="text-sm text-gray-900 mt-1">
                   {new Date(product.updatedAt).toLocaleDateString("vi-VN")}
                 </p>

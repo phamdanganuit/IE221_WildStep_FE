@@ -2,8 +2,10 @@ import React, { useRef, useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Image } from "lucide-react";
 import { getFullAvatarUrl } from "@/lib/avatarUtils";
+import { useTranslation } from "react-i18next";
 
 function ChangeAvatar({ avatar, setAvatar }) {
+  const { t } = useTranslation();
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -66,7 +68,7 @@ function ChangeAvatar({ avatar, setAvatar }) {
       />
       <Button variant={"outline"} onClick={handleClick}>
         <Image />
-        Chọn ảnh
+        {t('avatar.selectImage')}
       </Button>
       <input
         type="file"
@@ -76,9 +78,9 @@ function ChangeAvatar({ avatar, setAvatar }) {
         className="hidden"
       />
       <p className="max-w-[200px] text-center">
-        Dụng lượng file tối đa 1 MB.
+        {t('avatar.maxFileSize')}
         <br />
-        Định dạng: .JPEG, .PNG
+        {t('avatar.formats')}
       </p>
     </div>
   );

@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { getBrands, createBrand, updateBrand, deleteBrand } from "@/service/adminService";
+import { useEffect, useRef, useState } from "react";
+import { getBrands, createBrand, updateBrand, deleteBrand, uploadBrandLogo } from "@/service/adminService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Edit, Trash2, Award } from "lucide-react";
+import { Plus, Edit, Trash2, Award, Upload } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import {
   Dialog,
@@ -13,16 +13,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
 
 const Brands = () => {
+  const { t, i18n } = useTranslation();
   const { addToast } = useToast();
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formDialog, setFormDialog] = useState({ open: false, brand: null });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, brand: null });
+  const [uploading, setUploading] = useState({});
+  const fileInputsRef = useRef({});
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
+    name_vi: "",
+    name_en: "",
+    name_ja: "",
+    description_vi: "",
+    description_en: "",
+    description_ja: "",
     website: "",
     country: "",
     status: "active",
@@ -49,7 +58,7 @@ const Brands = () => {
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể tải danh sách thương hiệu",
+        message: result.error || t('admin.brands.loadError'),
       });
     }
     setLoading(false);
@@ -57,17 +66,27 @@ const Brands = () => {
 
   const handleOpenForm = (brand = null) => {
     if (brand) {
+      const name = brand.name || {};
+      const desc = brand.description || {};
       setFormData({
-        name: brand.name || "",
-        description: brand.description || "",
+        name_vi: typeof name === 'object' ? (name.vi || '') : (name || ''),
+        name_en: typeof name === 'object' ? (name.en || '') : '',
+        name_ja: typeof name === 'object' ? (name.ja || '') : '',
+        description_vi: typeof desc === 'object' ? (desc.vi || '') : (desc || ''),
+        description_en: typeof desc === 'object' ? (desc.en || '') : '',
+        description_ja: typeof desc === 'object' ? (desc.ja || '') : '',
         website: brand.website || "",
         country: brand.country || "",
         status: brand.status || "active",
       });
     } else {
       setFormData({
-        name: "",
-        description: "",
+        name_vi: "",
+        name_en: "",
+        name_ja: "",
+        description_vi: "",
+        description_en: "",
+        description_ja: "",
         website: "",
         country: "",
         status: "active",
@@ -79,29 +98,37 @@ const Brands = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name) {
+    if (!formData.name_vi && !formData.name_en && !formData.name_ja) {
       addToast({
         type: "error",
-        message: "Vui lòng nhập tên thương hiệu",
+        message: t('admin.brands.nameRequired'),
       });
       return;
     }
 
+    const payload = {
+      name: { vi: formData.name_vi || '', en: formData.name_en || '', ja: formData.name_ja || '' },
+      description: { vi: formData.description_vi || '', en: formData.description_en || '', ja: formData.description_ja || '' },
+      website: formData.website || '',
+      country: formData.country || '',
+      status: formData.status || 'active',
+    };
+
     const result = formDialog.brand
-      ? await updateBrand(formDialog.brand._id || formDialog.brand.id, formData)
-      : await createBrand(formData);
+      ? await updateBrand(formDialog.brand._id || formDialog.brand.id, payload)
+      : await createBrand(payload);
 
     if (result.success) {
       addToast({
         type: "success",
-        message: formDialog.brand ? "Cập nhật thương hiệu thành công" : "Tạo thương hiệu thành công",
+        message: formDialog.brand ? t('admin.brands.updateSuccess') : t('admin.brands.createSuccess'),
       });
       fetchBrands();
       setFormDialog({ open: false, brand: null });
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể lưu thương hiệu",
+        message: result.error || t('admin.brands.saveError'),
       });
     }
   };
@@ -114,13 +141,13 @@ const Brands = () => {
     if (result.success) {
       addToast({
         type: "success",
-        message: "Xóa thương hiệu thành công",
+        message: t('admin.brands.deleteSuccess'),
       });
       fetchBrands();
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể xóa thương hiệu",
+        message: result.error || t('admin.brands.deleteError'),
       });
     }
 
@@ -130,13 +157,38 @@ const Brands = () => {
   const getStatusBadge = (status) => {
     return status === "active" ? (
       <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-        Hoạt động
+        {t('admin.brands.active')}
       </span>
     ) : (
       <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-        Không hoạt động
+        {t('admin.brands.inactive')}
       </span>
     );
+  };
+
+  const getBrandLogoUrl = (brand) => {
+    return brand.logo || brand.logoUrl || brand.image || brand.icon || "";
+  };
+
+  const handleTriggerUpload = (brand) => {
+    const id = brand._id || brand.id;
+    if (fileInputsRef.current[id]) fileInputsRef.current[id].click();
+  };
+
+  const handleUploadLogo = async (brand, e) => {
+    const id = brand._id || brand.id;
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading((prev) => ({ ...prev, [id]: true }));
+    const res = await uploadBrandLogo(id, file);
+    if (res.success) {
+      addToast({ type: "success", message: t('admin.brands.uploadLogoSuccess') });
+      fetchBrands();
+    } else {
+      addToast({ type: "error", message: res.error || t('admin.brands.uploadLogoError') });
+    }
+    setUploading((prev) => ({ ...prev, [id]: false }));
+    e.target.value = "";
   };
 
   return (
@@ -144,19 +196,19 @@ const Brands = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý thương hiệu</h1>
-          <p className="text-gray-600 mt-1">Quản lý thương hiệu sản phẩm</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.brands.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('admin.brands.subtitle')}</p>
         </div>
         <Button onClick={() => handleOpenForm()}>
           <Plus className="w-4 h-4 mr-2" />
-          Thêm thương hiệu
+          {t('admin.brands.addNew')}
         </Button>
       </div>
 
       {/* Brands List */}
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách thương hiệu ({brands.length})</CardTitle>
+          <CardTitle>{t('admin.brands.title')} ({brands.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -165,7 +217,7 @@ const Brands = () => {
             </div>
           ) : brands.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Chưa có thương hiệu nào</p>
+              <p className="text-gray-500">{t('admin.brands.noBrands')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -173,11 +225,19 @@ const Brands = () => {
                 <div key={brand._id || brand.id} className="border rounded-lg p-4 hover:shadow-md transition">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-color4/10 rounded-lg">
-                        <Award className="w-6 h-6 text-color4" />
-                      </div>
+                      {getBrandLogoUrl(brand) ? (
+                        <img
+                          src={getBrandLogoUrl(brand)}
+                          alt={safeText(brand.name, i18n.language, "")}
+                          className="w-12 h-12 rounded-full object-cover border"
+                        />
+                      ) : (
+                        <div className="p-2 bg-color4/10 rounded-lg">
+                          <Award className="w-6 h-6 text-color4" />
+                        </div>
+                      )}
                       <div>
-                        <p className="font-semibold text-gray-900">{brand.name}</p>
+                        <p className="font-semibold text-gray-900">{safeText(brand.name, i18n.language, "N/A")}</p>
                         {brand.country && (
                           <p className="text-sm text-gray-500">{brand.country}</p>
                         )}
@@ -187,7 +247,7 @@ const Brands = () => {
                   </div>
 
                   {brand.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{brand.description}</p>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{safeText(brand.description, i18n.language, "")}</p>
                   )}
 
                   {brand.website && (
@@ -209,7 +269,7 @@ const Brands = () => {
                       className="flex-1"
                     >
                       <Edit className="w-4 h-4 mr-2" />
-                      Sửa
+                      {t('common.edit')}
                     </Button>
                     <Button
                       size="sm"
@@ -217,6 +277,23 @@ const Brands = () => {
                       onClick={() => setDeleteDialog({ open: true, brand })}
                     >
                       <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={(el) => (fileInputsRef.current[brand._id || brand.id] = el)}
+                      onChange={(e) => handleUploadLogo(brand, e)}
+                      className="hidden"
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleTriggerUpload(brand)}
+                      disabled={!!uploading[brand._id || brand.id]}
+                      className="cursor-pointer"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {uploading[brand._id || brand.id] ? t('admin.brands.uploading') : t('admin.brands.uploadLogo')}
                     </Button>
                   </div>
                 </div>
@@ -235,57 +312,64 @@ const Brands = () => {
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>
-                {formDialog.brand ? "Chỉnh sửa thương hiệu" : "Thêm thương hiệu mới"}
+                {formDialog.brand ? t('admin.brands.editBrand') : t('admin.brands.addNew')}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tên thương hiệu <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Nike"
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameVI')}</label>
+                <Input value={formData.name_vi} onChange={(e) => setFormData({ ...formData, name_vi: e.target.value })} placeholder={t('admin.brands.namePlaceholder')} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Mô tả thương hiệu..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
-                  rows={3}
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameEN')}</label>
+                <Input value={formData.name_en} onChange={(e) => setFormData({ ...formData, name_en: e.target.value })} placeholder={t('admin.brands.namePlaceholder')} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameJA')}</label>
+                <Input value={formData.name_ja} onChange={(e) => setFormData({ ...formData, name_ja: e.target.value })} placeholder={t('admin.brands.namePlaceholder')} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionVI')}</label>
+                <textarea value={formData.description_vi} onChange={(e) => setFormData({ ...formData, description_vi: e.target.value })} placeholder={t('admin.brands.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionEN')}</label>
+                <textarea value={formData.description_en} onChange={(e) => setFormData({ ...formData, description_en: e.target.value })} placeholder={t('admin.brands.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionJA')}</label>
+                <textarea value={formData.description_ja} onChange={(e) => setFormData({ ...formData, description_ja: e.target.value })} placeholder={t('admin.brands.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+              </div>
+            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.brands.website')}</label>
                 <Input
                   value={formData.website}
                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                  placeholder="https://www.nike.com"
+                  placeholder={t('admin.brands.websitePlaceholder')}
                   type="url"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Quốc gia</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.brands.country')}</label>
                 <Input
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  placeholder="USA"
+                  placeholder={t('admin.brands.countryPlaceholder')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.brands.status')}</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
                 >
-                  <option value="active">Hoạt động</option>
-                  <option value="inactive">Không hoạt động</option>
+                  <option value="active">{t('admin.brands.active')}</option>
+                  <option value="inactive">{t('admin.brands.inactive')}</option>
                 </select>
               </div>
             </div>
@@ -295,10 +379,10 @@ const Brands = () => {
                 variant="outline"
                 onClick={() => setFormDialog({ open: false, brand: null })}
               >
-                Hủy
+                {t('common.cancel')}
               </Button>
               <Button type="submit">
-                {formDialog.brand ? "Cập nhật" : "Tạo mới"}
+                {formDialog.brand ? t('common.save') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>
@@ -312,18 +396,17 @@ const Brands = () => {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Xác nhận xóa thương hiệu</DialogTitle>
+            <DialogTitle>{t('common.confirm')}</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn xóa thương hiệu <strong>{deleteDialog.brand?.name}</strong>?
-              Lưu ý: Không thể xóa nếu có sản phẩm đang sử dụng thương hiệu này.
+              {t('admin.brands.deleteConfirm', { name: deleteDialog.brand?.name || '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialog({ open: false, brand: null })}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Xóa
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

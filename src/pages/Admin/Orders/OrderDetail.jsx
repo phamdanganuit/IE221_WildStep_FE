@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 const OrderDetail = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const { addToast } = useToast();
@@ -27,7 +29,7 @@ const OrderDetail = () => {
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể tải thông tin đơn hàng",
+        message: result.error || t('admin.orders.detail.loadError'),
       });
       navigate("/admin/orders");
     }
@@ -41,13 +43,13 @@ const OrderDetail = () => {
     if (result.success) {
       addToast({
         type: "success",
-        message: "Cập nhật trạng thái thành công",
+        message: t('admin.orders.detail.updateSuccess'),
       });
       fetchOrder();
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể cập nhật trạng thái",
+        message: result.error || t('admin.orders.detail.updateError'),
       });
     }
     setUpdating(false);
@@ -62,11 +64,11 @@ const OrderDetail = () => {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      pending: { label: "Chờ xử lý", class: "bg-yellow-100 text-yellow-800" },
-      processing: { label: "Đang xử lý", class: "bg-blue-100 text-blue-800" },
-      shipping: { label: "Đang giao", class: "bg-purple-100 text-purple-800" },
-      completed: { label: "Hoàn thành", class: "bg-green-100 text-green-800" },
-      cancelled: { label: "Đã hủy", class: "bg-red-100 text-red-800" },
+      pending: { label: t('dashboard.orderStatus.pending'), class: "bg-yellow-100 text-yellow-800" },
+      processing: { label: t('dashboard.orderStatus.processing'), class: "bg-blue-100 text-blue-800" },
+      shipping: { label: t('dashboard.orderStatus.shipping'), class: "bg-purple-100 text-purple-800" },
+      completed: { label: t('dashboard.orderStatus.completed'), class: "bg-green-100 text-green-800" },
+      cancelled: { label: t('dashboard.orderStatus.cancelled'), class: "bg-red-100 text-red-800" },
     };
 
     const statusInfo = statusMap[status] || { label: status, class: "bg-gray-100 text-gray-800" };
@@ -159,7 +161,7 @@ const OrderDetail = () => {
                       />
                     ) : (
                       <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
-                        <span className="text-gray-400 text-xs">No img</span>
+                        <span className="text-gray-400 text-xs">{t('common.noImage')}</span>
                       </div>
                     )}
                     <div className="flex-1">
