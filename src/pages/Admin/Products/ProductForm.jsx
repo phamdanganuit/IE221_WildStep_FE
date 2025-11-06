@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const ProductForm = () => {
   const navigate = useNavigate();
@@ -695,6 +695,10 @@ const ProductForm = () => {
         {/* Image Preview Dialog */}
         <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
           <DialogContent className="sm:max-w-[90vw] max-w-[90vw] p-0 bg-transparent border-none shadow-none">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Xem ảnh sản phẩm</DialogTitle>
+              <DialogDescription>Bản xem trước ảnh ở kích thước lớn</DialogDescription>
+            </DialogHeader>
             {previewImage && (
               <div className="flex items-center justify-center">
                 <img src={previewImage} alt="Preview" className="max-w-[90vw] max-h-[90vh] object-contain rounded" />
