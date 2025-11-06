@@ -92,7 +92,7 @@ const PopularProducts = () => {
           </div>
 
           <p className="text-[1.125rem] text-[#000000]/75 leading-relaxed">
-            Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit
+          Khám phá những đôi giày WildStep được yêu thích nhất mùa này.
           </p>
 
           <button className="px-8 py-3 bg-color4 text-white font-semibold rounded hover:bg-hover4 transition-colors shadow-md hover:shadow-lg self-center md:self-start cursor-pointer">

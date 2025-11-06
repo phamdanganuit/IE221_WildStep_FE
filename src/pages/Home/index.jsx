@@ -44,8 +44,7 @@ export default function Home() {
             </div>
 
             <p className="text-[#000000]/75 mb-8 w-full font-normal text-[1.5rem] tracking-wide">
-              Lorem Ipsum Dolor Sit Amet, Consectetur Adipisicing Elit, Sed Do
-              Eiusmod.
+            Khám phá những đôi giày được thiết kế để nâng tầm phong cách và mang lại sự thoải mái tối đa mỗi bước chân.
             </p>
 
             <button className="px-8 py-3 bg-color4 text-white font-semibold rounded hover:bg-hover4 transition-colors shadow-xl hover:shadow-lg self-center md:self-start cursor-pointer">

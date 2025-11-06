@@ -45,8 +45,14 @@ export const getPublicBanners = async () => {
   return makeRequest(`/content/banners`);
 };
 
+export const getPublicBrands = async () => {
+  // GET /api/brands → { data: Brand[] }
+  return makeRequest(`/brands`);
+};
+
 export default {
   getPublicBanners,
+  getPublicBrands,
 };
 
 

@@ -9,8 +9,7 @@ const Footer = () => {
             <div className="text-white min-w-60 w-[409px]">
               <img src='/Logo_main.svg' alt='Wild Step Logo' className='w-[20rem] mb-6'/>
               <p className="mt-12 text-lg leading-7 max-md:mt-10">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              WildStep – đồng hành trên mọi hành trình, mang phong cách và sự tự tin trong từng bước chân.
               </p>
             </div>
             <div className="min-w-60 w-[497px] max-md:max-w-full">
@@ -50,7 +49,7 @@ const Footer = () => {
         </div>
         <div className="self-center mt-9 border border-white border-solid min-h-px w-[66px]" />
         <p className="mt-9 text-lg text-center text-white max-md:max-w-full">
-          www.wildstep.com©All rights reserved
+          www.shoe-shop.app©All rights reserved
         </p>
       </div>
     </footer>
