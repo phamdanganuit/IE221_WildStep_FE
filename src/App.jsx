@@ -22,6 +22,7 @@ import CustomerList from "./pages/Admin/Customers/CustomerList";
 import CustomerDetail from "./pages/Admin/Customers/CustomerDetail";
 import Categories from "./pages/Admin/Categories";
 import Brands from "./pages/Admin/Brands";
+import Catalog from "./pages/Catalog";
 
 function AppContent() {
   const { toasts, removeToast } = useToast();
@@ -38,6 +39,7 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path='/products'element={<Catalog />}/>
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />

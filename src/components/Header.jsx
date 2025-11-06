@@ -61,25 +61,25 @@ const Header = () => {
       </div>
 
       <nav className="hidden md:flex gap-6 text-[1.15rem]">
-        <a href="#" className="hover:text-[#50D5C4] transition">
+        <a href="/products?filter=Sản-phẩm-mới" className="hover:text-[#50D5C4] transition">
           Sản phẩm mới
         </a>
-        <a href="#" className="hover:text-[#50D5C4] transition">
+        <a href="/products?filter=Nam" className="hover:text-[#50D5C4] transition">
           Nam
         </a>
-        <a href="#" className="hover:text-[#50D5C4] transition">
+        <a href="/products?filter=Nữ" className="hover:text-[#50D5C4] transition">
           Nữ
         </a>
-        <a href="#" className="hover:text-[#50D5C4] transition">
+        <a href="/products?filter=Unisex" className="hover:text-[#50D5C4] transition">
           Unisex
         </a>
-        <a href="#" className="hover:text-[#50D5C4] transition">
+        <a href="/products?filter=Trẻ-em" className="hover:text-[#50D5C4] transition">
           Trẻ em
         </a>
-        <a href="#" className="hover:text-[#50D5C4] transition">
+        <a href="/products?filter=Phụ-kiện" className="hover:text-[#50D5C4] transition">
           Phụ kiện thể thao
         </a>
-        <a href="#" className="text-[#50D5C4] font-semibold">
+        <a href="/products?filter=Giảm-giá" className="text-[#50D5C4] font-semibold">
           Giảm giá
         </a>
       </nav>
