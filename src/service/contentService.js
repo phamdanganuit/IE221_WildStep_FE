@@ -50,9 +50,20 @@ export const getPublicBrands = async () => {
   return makeRequest(`/brands`);
 };
 
+export const getPublicProducts = async ({ sort = "popular", page = 1, page_size = 12 } = {}) => {
+  // GET /api/products?sort=popular&page=&page_size=
+  const params = new URLSearchParams();
+  if (sort) params.set("sort", sort);
+  if (page) params.set("page", String(page));
+  if (page_size) params.set("page_size", String(page_size));
+  const qs = params.toString();
+  return makeRequest(`/products${qs ? `?${qs}` : ""}`);
+};
+
 export default {
   getPublicBanners,
   getPublicBrands,
+  getPublicProducts,
 };
 
 
