@@ -121,6 +121,14 @@ export const uploadProductImages = async (id, files) => {
   });
 };
 
+// Delete a single product image by URL
+export const removeProductImage = async (id, imageUrl) => {
+  return makeAuthRequest(`/admin/products/${id}/images`, {
+    method: "DELETE",
+    body: JSON.stringify({ image: imageUrl }),
+  });
+};
+
 // ==================== ORDERS ====================
 
 export const getOrders = async (params = {}) => {

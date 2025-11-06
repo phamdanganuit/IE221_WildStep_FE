@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getProduct } from "@/service/adminService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,8 @@ const ProductDetail = () => {
 
     if (result.success) {
       setProduct(result.data);
+      setMaxImageHeight(0);
+      imageRefs.current = [];
     } else {
       addToast({
         type: "error",
@@ -100,12 +102,25 @@ const ProductDetail = () => {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {product.images.map((img, index) => (
-                    <img
+                    <div
                       key={index}
-                      src={img}
-                      alt={`${product.name} ${index + 1}`}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
+                      className="w-full bg-white rounded-lg flex items-center justify-center overflow-hidden border border-gray-100"
+                      style={{ height: maxImageHeight ? `${maxImageHeight}px` : undefined }}
+                    >
+                      <img
+                        ref={(el) => (imageRefs.current[index] = el)}
+                        src={img}
+                        alt={`${product.name} ${index + 1}`}
+                        className="max-w-full max-h-full object-contain"
+                        onLoad={(e) => {
+                          // Measure rendered height after image loads
+                          const renderedHeight = e.currentTarget?.naturalHeight && e.currentTarget?.naturalWidth
+                            ? (e.currentTarget.naturalHeight / e.currentTarget.naturalWidth) * e.currentTarget.clientWidth
+                            : e.currentTarget.clientHeight;
+                          setMaxImageHeight((prev) => Math.max(prev, Math.ceil(renderedHeight)));
+                        }}
+                      />
+                    </div>
                   ))}
                 </div>
               </CardContent>

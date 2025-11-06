@@ -7,12 +7,14 @@ import {
   uploadProductImages,
   getCategories,
   getBrands,
+  removeProductImage,
 } from "@/service/adminService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const ProductForm = () => {
   const navigate = useNavigate();
@@ -24,7 +26,8 @@ const ProductForm = () => {
   const [categories, setCategories] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]); // new images (create mode)
+  const [existingImages, setExistingImages] = useState([]); // urls from server (edit mode)
   const [sizeInput, setSizeInput] = useState("");
   const [colorInput, setColorInput] = useState("");
   const [tagInput, setTagInput] = useState("");
@@ -47,6 +50,41 @@ const ProductForm = () => {
   });
 
   const initializedRef = useRef(false);
+  const [previewImage, setPreviewImage] = useState("");
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [dragIndex, setDragIndex] = useState(null);
+  const [imagesReordered, setImagesReordered] = useState(false);
+
+  const handleDragStart = (index) => {
+    setDragIndex(index);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (index) => {
+    if (dragIndex === null || dragIndex === index) return;
+    setExistingImages((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(dragIndex, 1);
+      next.splice(index, 0, moved);
+      return next;
+    });
+    setImagesReordered(true);
+    setDragIndex(null);
+  };
+
+  const handleSaveImagesOrder = async () => {
+    if (!isEdit) return;
+    const result = await updateProduct(id, { images: existingImages });
+    if (result.success) {
+      setImagesReordered(false);
+      addToast({ type: "success", message: "Đã lưu thứ tự ảnh" });
+    } else {
+      addToast({ type: "error", message: result.error || "Không thể lưu thứ tự ảnh" });
+    }
+  };
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -121,6 +159,7 @@ const ProductForm = () => {
         },
         tags: product.tags || [],
       });
+      setExistingImages(Array.isArray(product.images) ? product.images : []);
     } else {
       addToast({
         type: "error",
@@ -186,7 +225,43 @@ const ProductForm = () => {
       });
       return;
     }
-    setImages(files);
+    // If editing, upload immediately and merge; otherwise store for upload after create
+    if (isEdit) {
+      const doUpload = async () => {
+        const productId = id;
+        const result = await uploadProductImages(productId, files);
+        if (result.success) {
+          const newImages = Array.isArray(result.data?.images) ? result.data.images : [];
+          setExistingImages((prev) => {
+            // Merge and de-duplicate
+            const merged = [...prev];
+            newImages.forEach((url) => {
+              if (!merged.includes(url)) merged.push(url);
+            });
+            return merged;
+          });
+          addToast({ type: "success", message: "Tải lên hình ảnh thành công" });
+        } else {
+          addToast({ type: "error", message: result.error || "Không thể tải lên hình ảnh" });
+        }
+      };
+      doUpload();
+      // reset input
+      e.target.value = "";
+    } else {
+      setImages(files);
+    }
+  };
+
+  const handleDeleteExistingImage = async (imageUrl) => {
+    if (!isEdit) return;
+    const result = await removeProductImage(id, imageUrl);
+    if (result.success) {
+      setExistingImages((prev) => prev.filter((url) => url !== imageUrl));
+      addToast({ type: "success", message: "Đã xóa hình ảnh" });
+    } else {
+      addToast({ type: "error", message: result.error || "Không thể xóa hình ảnh" });
+    }
   };
 
   const handleAddSize = (e) => {
@@ -554,6 +629,43 @@ const ProductForm = () => {
           </CardHeader>
           <CardContent>
             <div>
+              {isEdit && existingImages.length > 0 && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh hiện có</label>
+                  {imagesReordered && (
+                    <div className="flex justify-end mb-3">
+                      <Button type="button" onClick={handleSaveImagesOrder}>Lưu thứ tự ảnh</Button>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {existingImages.map((url, idx) => (
+                      <div
+                        key={idx}
+                        className="relative group cursor-move"
+                        draggable
+                        onDragStart={() => handleDragStart(idx)}
+                        onDragOver={handleDragOver}
+                        onDrop={() => handleDrop(idx)}
+                        title="Kéo để sắp xếp"
+                      >
+                        <button type="button" onClick={() => { setPreviewImage(url); setIsPreviewOpen(true); }} className="block w-full">
+                          <div className="relative w-full aspect-square">
+                            <img src={url} alt={`image-${idx}`} className="absolute inset-0 w-full h-full object-cover rounded-md" />
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteExistingImage(url)}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-white rounded-full p-1"
+                          aria-label="Xóa ảnh"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Upload ảnh (tối đa 5 ảnh)
               </label>
@@ -569,7 +681,7 @@ const ProductForm = () => {
                     className="hidden"
                   />
                 </label>
-                {images.length > 0 && (
+                {!isEdit && images.length > 0 && (
                   <span className="text-sm text-gray-600">{images.length} ảnh đã chọn</span>
                 )}
               </div>
@@ -579,6 +691,17 @@ const ProductForm = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Image Preview Dialog */}
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <DialogContent className="sm:max-w-[90vw] max-w-[90vw] p-0 bg-transparent border-none shadow-none">
+            {previewImage && (
+              <div className="flex items-center justify-center">
+                <img src={previewImage} alt="Preview" className="max-w-[90vw] max-h-[90vh] object-contain rounded" />
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-4">
