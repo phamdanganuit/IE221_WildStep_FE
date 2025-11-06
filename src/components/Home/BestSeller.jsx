@@ -1,94 +1,71 @@
-import React, { useState } from "react";
-import { FaArrowRight } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import { FaArrowRight, FaFire } from "react-icons/fa";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 import newLabel from "@/assets/new_label.svg";
-import shoe_1 from "@/assets/shoes/shoe_1.png";
-import shoe_2 from "@/assets/shoes/shoe_2.png";
-import shoe_3 from "@/assets/shoes/shoe_3.png";
-import shoe_4 from "@/assets/shoes/shoe_4.png";
-import shoe_5 from "@/assets/shoes/shoe_5.png";
-import shoe_6 from "@/assets/shoes/shoe_6.png";
-
-const categories = ["Nam", "Nữ", "Unisex", "Trẻ Em", "Phụ Kiện Thể Thao"];
-
-const products = [
-  {
-    id: 1,
-    name: "WildStep formal sneaker shoe",
-    price: "₫ 3.999.000",
-    oldPrice: "₫ 4999.00",
-    image: shoe_1,
-    category: "Nam",
-  },
-  {
-    id: 2,
-    name: "WildStep formal sneaker shoe",
-    price: "₫ 3.999.000",
-    oldPrice: "₫ 4999.00",
-    image: shoe_2,
-    category: "Nam",
-  },
-  {
-    id: 3,
-    name: "WildStep sneaker",
-    price: "₫ 3.999.000",
-    oldPrice: "₫ 4999.00",
-    image: shoe_3,
-    category: "Nam",
-  },
-  {
-    id: 4,
-    name: "WildStep formal sneaker shoe",
-    price: "₫ 3.999.000",
-    oldPrice: "₫ 4999.00",
-    image: shoe_4,
-    category: "Nam",
-  },
-  {
-    id: 5,
-    name: "WildStep trendy sneaker shoe",
-    price: "₫ 3.999.000",
-    oldPrice: "₫ 4999.00",
-    image: shoe_5,
-    category: "Nam",
-  },
-  {
-    id: 6,
-    name: "Slick formal sneaker shoe",
-    price: "₫ 3.999.000",
-    oldPrice: "₫ 4999.00",
-    image: shoe_6,
-    category: "Nam",
-  },
-  {
-    id: 6,
-    name: "Slick formal sneaker shoe",
-    price: "₫ 3.999.000",
-    oldPrice: "₫ 4999.00",
-    image: shoe_6,
-    category: "Nữ",
-  },
-  {
-    id: 6,
-    name: "Slick formal sneaker shoe",
-    price: "₫ 3.999.000",
-    oldPrice: "₫ 4999.00",
-    image: shoe_5,
-    category: "Trẻ Em",
-  },
-  {
-    id: 6,
-    name: "Slick formal sneaker shoe",
-    price: "₫ 3.999.000",
-    oldPrice: "₫ 4999.00",
-    image: shoe_4,
-    category: "Phụ Kiện Thể Thao",
-  },
-];
+import { getPublicCategories, getPublicProducts } from "@/service/contentService";
 
 export default function BestSellers() {
-  const [activeCategory, setActiveCategory] = useState("Nam");
-  const [favorites, setFavorites] = useState([]); // lưu danh sách sản phẩm được yêu thích
+  const [categoryTabs, setCategoryTabs] = useState([{ name: "Tất cả", slug: "" }]);
+  const [activeCategorySlug, setActiveCategorySlug] = useState("");
+  const [favorites, setFavorites] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, page_size: 12, total: 0, total_pages: 0 });
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const catRes = await getPublicCategories();
+      if (!mounted) return;
+      if (catRes?.success) {
+        const payload = catRes.data;
+        const list = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : [];
+        const tabs = [{ name: "Tất cả", slug: "" }];
+        list.forEach((parent) => {
+          if (parent?.name && parent?.slug) tabs.push({ name: parent.name, slug: parent.slug });
+        });
+        setCategoryTabs(tabs);
+      } else {
+        setCategoryTabs([{ name: "Tất cả", slug: "" }]);
+      }
+    })();
+    return () => { mounted = false };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    (async () => {
+      const res = await getPublicProducts({ sort: "best_sellers", category_slug: activeCategorySlug, page: 1, page_size: 12 });
+      if (!mounted) return;
+      if (res?.success && Array.isArray(res.data?.data)) {
+        const currency = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" });
+        const apiProducts = res.data.data.map((p) => {
+          const priceNumber = p.discountPrice ?? p.price;
+          const oldPriceNumber = p.discountPrice ? p.price : null;
+          return {
+            id: p.id,
+            name: p.name,
+            image: (Array.isArray(p.images) && p.images[0]) || "",
+            price: typeof priceNumber === "number" ? currency.format(priceNumber) : String(priceNumber ?? ""),
+            oldPrice: typeof oldPriceNumber === "number" ? currency.format(oldPriceNumber) : null,
+            sold: typeof p.sold === "number" ? p.sold : 0,
+            createdAt: p.createdAt || p.created_at || null,
+          };
+        });
+        setProducts(apiProducts);
+        if (res.data.pagination) setPagination(res.data.pagination);
+      } else {
+        setProducts([]);
+      }
+      setLoading(false);
+    })();
+    return () => { mounted = false };
+  }, [activeCategorySlug]);
 
   const toggleFavorite = (id) => {
     setFavorites((prev) =>
@@ -107,17 +84,17 @@ export default function BestSellers() {
 
         {/* Bộ lọc danh mục */}
         <div className="flex flex-wrap justify-center gap-5 mt-6">
-          {categories.map((cat) => (
+          {categoryTabs.map((cat) => (
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
+              key={cat.slug || "all"}
+              onClick={() => setActiveCategorySlug(cat.slug)}
               className={`px-5 py-2 rounded border-[1.5px] border-color1 text-[1rem] md:text-[1.5rem] font-medium cursor-pointer transition-all duration-300 ${
-                activeCategory === cat
+                activeCategorySlug === cat.slug
                   ? "bg-color1 text-white"
                   : "bg-white text-[#0A1E33] hover:bg-gray-300"
               }`}
             >
-              {cat}
+              {cat.name}
             </button>
           ))}
         </div>
@@ -125,22 +102,35 @@ export default function BestSellers() {
 
       {/* Danh sách sản phẩm */}
       <div className="grid gap-6 grid-cols-2 md:grid-cols-3">
-        {products
-          .filter((item) => item.category === activeCategory)
-          .map((item) => (
+        {products.map((item) => (
             <div
               key={item.id}
-              className="relative group border-2 border-[#DEDEDE] rounded-2xl overflow-hidden hover:shadow-sm hover:-translate-y-1 transition-all duration-300"
+              className=" relative group border-2 border-[#DEDEDE] rounded-2xl overflow-hidden hover:shadow-sm hover:-translate-y-1 transition-all duration-300 group-hover:scale-105 "
             >
-              {/* Badge New */}
-              <img
-                src={newLabel}
-                alt="New Badge"
-                className="absolute top-5 left-0 w-[3.125rem]"
-                style={{
-                  filter: "drop-shadow(8px 7px 10px rgba(0,0,0,0.25))",
-                }}
-              />
+              {/* Badge New/Hot */}
+              {(() => {
+                const TEN_DAYS = 10 * 24 * 60 * 60 * 1000;
+                const createdTime = item.createdAt ? new Date(item.createdAt).getTime() : null;
+                const isOlderThan10Days = createdTime ? (Date.now() - createdTime) > TEN_DAYS : false;
+                const isHot = (item.sold || 0) > 10;
+                const showNew = !isHot && !isOlderThan10Days;
+                if (!isHot && !showNew) return null;
+                return (
+                  <div
+                    className={`absolute top-5 left-0 px-3 py-1 text-white text-sm font-semibold rounded-tr-xl rounded-br-xl shadow flex items-center gap-1`}
+                    style={{ backgroundColor: isHot ? "#E63946" : "#0A1E33" }}
+                  >
+                    {isHot ? (
+                      <>
+                        <FaFire className="w-4 h-4" />
+                        <span>Hot</span>
+                      </>
+                    ) : (
+                      <span>New</span>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Nút yêu thích */}
               <button
@@ -160,31 +150,13 @@ export default function BestSellers() {
                 )}
               </button>
 
-              {/* Ảnh sản phẩm */}
-              {/* <div className="w-full flex mt-10 justify-center items-center transition overflow-hidden bg-transparent">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="max-w-full h-[16rem] flip- object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div> */}
-
-              <div className="w-full flex mt-10 justify-center items-center overflow-hidden bg-transparent perspective">
-                <div className="relative w-full h-[16rem] preserve-3d transition-transform duration-700 ease-in-out group-hover:rotate-y-180">
-
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-2xl"
-                  />
-
-                  <img
-                    src={item.image}
-                    alt={`${item.name} back`}
-                    className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-2xl"
-                  />
-                </div>
-              </div>
+              {/* Ảnh nền sản phẩm */}
+              <div
+                className="w-full mt-0 rounded-t-2xl rounded-b-none aspect-square bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: `url(${item.image})`,
+                }}
+              />
 
               {/* Thông tin sản phẩm */}
               <div className="pl-6 pr-3 pt-3 pb-2 flex justify-between items-center">
@@ -209,7 +181,7 @@ export default function BestSellers() {
                 </button>
               </div>
             </div>
-          ))}
+        ))}
       </div>
     </section>
   );

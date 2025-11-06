@@ -50,20 +50,46 @@ export const getPublicBrands = async () => {
   return makeRequest(`/brands`);
 };
 
-export const getPublicProducts = async ({ sort = "popular", page = 1, page_size = 12 } = {}) => {
-  // GET /api/products?sort=popular&page=&page_size=
+export const getPublicProducts = async ({ sort = "popular", category_slug = "", page = 1, page_size = 12 } = {}) => {
+  // GET /api/products?sort=&category_slug=&page=&page_size=
   const params = new URLSearchParams();
   if (sort) params.set("sort", sort);
+  if (category_slug) params.set("category_slug", category_slug);
   if (page) params.set("page", String(page));
   if (page_size) params.set("page_size", String(page_size));
   const qs = params.toString();
   return makeRequest(`/products${qs ? `?${qs}` : ""}`);
 };
 
+export const getPublicCategories = async () => {
+  // GET /api/categories → { data: CategoryTree[] }
+  return makeRequest(`/categories`);
+};
+
+// HERO CONTENT
+export const getPublicHero = async () => {
+  // GET /api/content/hero → { data: {...} } or { data: null }
+  return makeRequest(`/content/hero`);
+};
+
+// PUBLIC REVIEWS
+export const getPublicReviews = async ({ placement = "home", page = 1, page_size = 10 } = {}) => {
+  // GET /api/reviews?placement=&page=&page_size=
+  const params = new URLSearchParams();
+  if (placement) params.set("placement", placement);
+  if (page) params.set("page", String(page));
+  if (page_size) params.set("page_size", String(page_size));
+  const qs = params.toString();
+  return makeRequest(`/reviews${qs ? `?${qs}` : ""}`);
+};
+
 export default {
   getPublicBanners,
   getPublicBrands,
   getPublicProducts,
+  getPublicCategories,
+  getPublicHero,
+  getPublicReviews,
 };
 
 
