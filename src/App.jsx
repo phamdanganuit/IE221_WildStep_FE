@@ -23,6 +23,7 @@ import CustomerDetail from "./pages/Admin/Customers/CustomerDetail";
 import Categories from "./pages/Admin/Categories";
 import Brands from "./pages/Admin/Brands";
 import Catalog from "./pages/Catalog";
+import Banners from "./pages/Admin/Banners";
 
 function AppContent() {
   const { toasts, removeToast } = useToast();
@@ -58,6 +59,7 @@ function AppContent() {
             <Route path="customers/:id" element={<CustomerDetail />} />
             <Route path="categories" element={<Categories />} />
             <Route path="brands" element={<Brands />} />
+            <Route path="banners" element={<Banners />} />
           </Route>
         </Route>
       </Routes>

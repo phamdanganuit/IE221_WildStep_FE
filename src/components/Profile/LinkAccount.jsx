@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
 import { getSocialLinks, linkGoogleAccount, unlinkGoogleAccount, linkFacebookAccount, unlinkFacebookAccount } from "@/service/accountService";
 import { useToast } from "@/contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 // Load Google OAuth script helper
 const loadGoogleScript = () => {
@@ -74,6 +75,7 @@ const loadFacebookScript = () => {
 };
 
 function LinkAccount() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [facebookLinked, setFacebookLinked] = useState(false);
   const [googleLinked, setGoogleLinked] = useState(false);
@@ -87,7 +89,7 @@ function LinkAccount() {
       setGoogleLinked(result.data.google);
       setFacebookLinked(result.data.facebook);
     } else {
-      error(result.error || "Không thể lấy thông tin liên kết");
+      error(result.error || t('profile.linkAccountPage.loadError'));
     }
     setIsLoading(false);
   };
@@ -111,7 +113,7 @@ function LinkAccount() {
         scope: 'email profile',
         callback: async (response) => {
           if (response.error) {
-            error("Liên kết Google thất bại: " + response.error);
+            error(t('profile.linkAccountPage.linkError') + ": " + response.error);
             setIsLinking(prev => ({ ...prev, google: false }));
             return;
           }
@@ -127,7 +129,7 @@ function LinkAccount() {
             }
           } catch (err) {
             console.error("Lỗi liên kết Google:", err);
-            error("Có lỗi xảy ra khi liên kết tài khoản Google");
+            error(t('common.error'));
           } finally {
             setIsLinking(prev => ({ ...prev, google: false }));
           }
@@ -137,13 +139,13 @@ function LinkAccount() {
       client.requestAccessToken();
     } catch (err) {
       console.error("Lỗi Google OAuth:", err);
-      error("Không thể khởi tạo Google OAuth");
+      error(t('profile.linkAccountPage.googleOAuthError'));
       setIsLinking(prev => ({ ...prev, google: false }));
     }
   };
 
   const handleGoogleUnlink = async () => {
-    if (!confirm("Bạn có chắc chắn muốn hủy liên kết tài khoản Google không?")) return;
+    if (!confirm(t('profile.linkAccountPage.confirmUnlinkGoogle'))) return;
     
     const result = await unlinkGoogleAccount();
     if (result.success) {
@@ -176,7 +178,7 @@ function LinkAccount() {
               }
             } catch (err) {
               console.error("Lỗi liên kết Facebook:", err);
-              error("Có lỗi xảy ra khi liên kết tài khoản Facebook");
+              error(t('common.error'));
             } finally {
               setIsLinking(prev => ({ ...prev, facebook: false }));
             }
@@ -184,19 +186,19 @@ function LinkAccount() {
           
           processLink();
         } else {
-          error("Liên kết Facebook bị hủy");
+          error(t('profile.linkAccountPage.linkCancelled'));
           setIsLinking(prev => ({ ...prev, facebook: false }));
         }
       }, { scope: 'email,public_profile' });
     } catch (err) {
       console.error("Lỗi Facebook OAuth:", err);
-      error("Không thể khởi tạo Facebook OAuth");
+      error(t('profile.linkAccountPage.facebookOAuthError'));
       setIsLinking(prev => ({ ...prev, facebook: false }));
     }
   };
 
   const handleFacebookUnlink = async () => {
-    if (!confirm("Bạn có chắc chắn muốn hủy liên kết tài khoản Facebook không?")) return;
+    if (!confirm(t('profile.linkAccountPage.confirmUnlinkFacebook'))) return;
     
     const result = await unlinkFacebookAccount();
     if (result.success) {
@@ -217,10 +219,10 @@ function LinkAccount() {
 
   return (
     <div className="flex-col space-y-[10px] w-full">
-      <p className="text-2xl font-semibold mb-4">Liên kết tài khoản</p>
+      <p className="text-2xl font-semibold mb-4">{t('profile.linkAccountPage.title')}</p>
       <div className="w-full space-y-8">
         <div className="flex flex-col items-center justify-center w-full space-y-4">
-          <p className="self-start font-semibold">Tài khoản Google</p>
+          <p className="self-start font-semibold">{t('profile.linkAccountPage.googleAccount')}</p>
           <div className="flex gap-2 w-full">
             <Button
               variant={"outline"}
@@ -230,10 +232,10 @@ function LinkAccount() {
             >
               <FaGoogle className="w-10 h-10" />
               {isLinking.google
-                ? "Đang liên kết..."
+                ? t('profile.linkAccountPage.linking')
                 : !googleLinked
-                ? "Liên kết với tài khoản Google"
-                : "Đã liên kết với tài khoản Google"}
+                ? t('profile.linkAccountPage.linkGoogle')
+                : t('profile.linkAccountPage.linkedGoogle')}
             </Button>
             {googleLinked && (
               <Button
@@ -241,13 +243,13 @@ function LinkAccount() {
                 className="h-12"
                 onClick={handleGoogleUnlink}
               >
-                Hủy liên kết
+                {t('profile.linkAccountPage.unlink')}
               </Button>
             )}
           </div>
         </div>
         <div className="flex flex-col items-center justify-center w-full space-y-4">
-          <p className="self-start font-semibold">Tài khoản Facebook</p>
+          <p className="self-start font-semibold">{t('profile.linkAccountPage.facebookAccount')}</p>
           <div className="flex gap-2 w-full">
             <Button
               variant={"outline"}
@@ -257,10 +259,10 @@ function LinkAccount() {
             >
               <FaFacebook className="w-10 h-10" />
               {isLinking.facebook
-                ? "Đang liên kết..."
+                ? t('profile.linkAccountPage.linking')
                 : !facebookLinked
-                ? "Liên kết với tài khoản Facebook"
-                : "Đã liên kết với tài khoản Facebook"}
+                ? t('profile.linkAccountPage.linkFacebook')
+                : t('profile.linkAccountPage.linkedFacebook')}
             </Button>
             {facebookLinked && (
               <Button
@@ -268,7 +270,7 @@ function LinkAccount() {
                 className="h-12"
                 onClick={handleFacebookUnlink}
               >
-                Hủy liên kết
+                {t('profile.linkAccountPage.unlink')}
               </Button>
             )}
           </div>

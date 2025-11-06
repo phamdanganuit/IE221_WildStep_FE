@@ -1,39 +1,23 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
-
-import shoe1 from "@/assets/shoes/shoe_1.png";
-import shoe2 from "@/assets/shoes/shoe_2.png";
-import shoe3 from "@/assets/shoes/shoe_3.png";
-import shoe4 from "@/assets/shoes/shoe_4.png";
-import shoe5 from "@/assets/shoes/shoe_5.png";
-import shoe6 from "@/assets/shoes/shoe_6.png";
-
-const products = [
-  { id: 1, image: shoe1, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 2, image: shoe2, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 3, image: shoe3, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 4, image: shoe4, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 5, image: shoe5, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 6, image: shoe6, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 7, image: shoe1, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 8, image: shoe2, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 9, image: shoe3, name: "Running sport shoe", price: "₹ 3999.00" },
-];
+import { getPublicProducts } from "@/service/contentService";
+import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
 
 const CARDS_PER_PAGE = 3;
 
-const ProductCard = ({ image, name, price, className = "" }) => {
+const ProductCard = ({ image, name, price, oldPrice, className = "" }) => {
   return (
     <div
       className={`group relative flex flex-col bg-[D9D9D9]/15 rounded-xl border-[1.5px] border-[#DEDEDE] overflow-hidden
         transition-all duration-300 hover:-translate-y-1
         md:min-w-0 ${className}`}
     >
-      <div className="h-[16rem] max-md:h-[12rem] pt-6 flex items-center justify-center overflow-hidden bg-transparent">
+      <div className="w-full aspect-square flex items-center justify-center overflow-hidden bg-transparent">
         <img
           src={image}
           alt={name}
-          className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </div>
 
@@ -42,7 +26,12 @@ const ProductCard = ({ image, name, price, className = "" }) => {
           <h3 className="font-medium text-sm md:text-base text-gray-900">
             {name}
           </h3>
-          <p className="font-semibold text-base md:text-lg text-color1">{price}</p>
+          <p className="font-semibold text-base md:text-lg text-color1">
+            {price}
+            {oldPrice ? (
+              <span className="text-gray-400 text-sm font-medium line-through ml-2">{oldPrice}</span>
+            ) : null}
+          </p>
         </div>
 
         {/* <button
@@ -64,8 +53,13 @@ const ProductCard = ({ image, name, price, className = "" }) => {
 };
 
 const PopularProducts = () => {
+  const { t, i18n } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const maxIndex = products.length - CARDS_PER_PAGE;
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, page_size: 12, total: 0, total_pages: 0 });
+
+  const maxIndex = Math.max(0, products.length - CARDS_PER_PAGE);
   const totalPages = Math.ceil(products.length / CARDS_PER_PAGE);
   const currentPage = Math.floor(currentIndex / CARDS_PER_PAGE);
 
@@ -75,6 +69,53 @@ const PopularProducts = () => {
   const handleDotClick = (pageIndex) => {
     setCurrentIndex(pageIndex * CARDS_PER_PAGE);
   };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const res = await getPublicProducts({ sort: "popular", page: 1, page_size: 12 });
+      if (!mounted) return;
+      if (res?.success && Array.isArray(res.data?.data)) {
+        const apiProducts = res.data.data.map(p => {
+          const currency = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+          const priceNumber = p.discountPrice ?? p.price;
+          const oldPriceNumber = p.discountPrice ? p.price : null;
+          return {
+            id: p.id,
+            name: safeText(p.name, i18n.language, 'N/A'),
+            image: (Array.isArray(p.images) && p.images[0]) || "",
+            price: typeof priceNumber === 'number' ? currency.format(priceNumber) : String(priceNumber ?? ""),
+            oldPrice: typeof oldPriceNumber === 'number' ? currency.format(oldPriceNumber) : null,
+          };
+        });
+        setProducts(apiProducts);
+        if (res.data.pagination) setPagination(res.data.pagination);
+      } else {
+        setProducts([]);
+      }
+      setLoading(false);
+    })();
+    return () => { mounted = false };
+  }, [i18n.language]);
+
+  if (loading) {
+    return (
+      <section className="w-full px-10 md:px-20 mt-12 md:mt-20">
+        <div className="flex flex-col md:flex-row justify-between md:gap-12 items-center">
+          <div className="flex flex-col gap-6 md:w-1/4">
+            <div className="h-8 w-40 bg-gray-200 rounded animate-pulse" />
+            <div className="h-24 w-64 bg-gray-200 rounded animate-pulse" />
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
+          </div>
+          <div className="flex-1 grid grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-64 bg-gray-200 rounded animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
   return (
     <section className="w-full px-10 md:px-20 mt-12 md:mt-20">
       <div className="flex flex-col md:flex-row justify-between md:gap-12 items-center">
@@ -83,20 +124,20 @@ const PopularProducts = () => {
           <div className="flex flex-col gap-2">
             <h3 className="text-color1 font-medium mb-2 text-[1.5rem] flex items-center gap-2">
               <span className="w-8 h-[2px] bg-color1"></span>
-              Giày Hot Trend
+              {t('home.popularProducts.subtitle')}
             </h3>
 
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-color1 leading-tight">
-              Most Popular Products
+              {t('home.popularProducts.heading')}
             </h2>
           </div>
 
           <p className="text-[1.125rem] text-[#000000]/75 leading-relaxed">
-            Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit
+            {t('home.popularProducts.description')}
           </p>
 
           <button className="px-8 py-3 bg-color4 text-white font-semibold rounded hover:bg-hover4 transition-colors shadow-md hover:shadow-lg self-center md:self-start cursor-pointer">
-            Khám Phá
+            {t('home.popularProducts.explore')}
           </button>
         </div>
 

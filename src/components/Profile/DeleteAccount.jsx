@@ -14,8 +14,10 @@ import { deleteAccount } from "@/service/profileService";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 function DeleteAccountDialog() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { clearAuth } = useAuthStore();
@@ -23,7 +25,7 @@ function DeleteAccountDialog() {
   const navigate = useNavigate();
 
   const handleDeteleAccount = async () => {
-    if (!confirm("Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác!")) {
+    if (!confirm(t('profile.deleteAccountPage.confirmPrompt'))) {
       return;
     }
 
@@ -44,24 +46,22 @@ function DeleteAccountDialog() {
   return (
     <Dialog open={open}  onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive">Xóa tài khoản</Button>
+        <Button variant="destructive">{t('profile.deleteAccountPage.deleteButton')}</Button>
       </DialogTrigger>
       <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="border-b px-4 py-2">
-            Xác nhận xóa tài khoản
+            {t('profile.deleteAccountPage.dialogTitle')}
           </DialogTitle>
             <p className="p-2">
-              Bạn có chắc chắn muốn xóa tài khoản của mình không? Hành động này
-              không thể hoàn tác và tất cả dữ liệu cá nhân của bạn sẽ bị xóa
-              vĩnh viễn.
+              {t('profile.deleteAccountPage.dialogDescription')}
             </p>
         </DialogHeader>
         <DialogFooter className="flex-row items-center justify-end border-t px-4 py-2">
           <DialogClose asChild>
             <Button variant="outline">
               <ChevronLeftIcon />
-              Quay lại
+              {t('profile.deleteAccountPage.cancel')}
             </Button>
           </DialogClose>
           <Button 
@@ -69,7 +69,7 @@ function DeleteAccountDialog() {
             onClick={handleDeteleAccount}
             disabled={isDeleting}
           >
-            {isDeleting ? "Đang xóa..." : "Xóa tài khoản"}
+            {isDeleting ? t('profile.deleteAccountPage.deleting') : t('profile.deleteAccountPage.confirmDelete')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -78,14 +78,14 @@ function DeleteAccountDialog() {
 }
 
 function DeleteAccount() {
+  const { t } = useTranslation();
+  
   return (
     <div className="flex-col space-y-[10px] w-full">
-      <p className="text-2xl font-semibold mb-4">Xóa tài khoản</p>
+      <p className="text-2xl font-semibold mb-4">{t('profile.deleteAccountPage.title')}</p>
       <div className="w-full space-y-4">
         <p className="text-lg">
-          Khi bạn xóa tài khoản, tất cả dữ liệu cá nhân của bạn sẽ bị xóa vĩnh
-          viễn và không thể khôi phục. Vui lòng chắc chắn rằng bạn đã sao lưu
-          mọi thông tin quan trọng trước khi tiếp tục.
+          {t('profile.deleteAccountPage.description')}
         </p>
         <DeleteAccountDialog />
       </div>

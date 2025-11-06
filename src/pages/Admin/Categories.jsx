@@ -13,16 +13,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
 
 const Categories = () => {
+  const { t, i18n } = useTranslation();
   const { addToast } = useToast();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formDialog, setFormDialog] = useState({ open: false, category: null, parentId: null });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, category: null });
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
+    name_vi: "",
+    name_en: "",
+    name_ja: "",
+    description_vi: "",
+    description_en: "",
+    description_ja: "",
     status: "active",
   });
 
@@ -47,7 +54,7 @@ const Categories = () => {
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể tải danh sách danh mục",
+        message: result.error || t('admin.categories.loadError'),
       });
     }
     setLoading(false);
@@ -55,15 +62,25 @@ const Categories = () => {
 
   const handleOpenForm = (category = null, parentId = null) => {
     if (category) {
+      const name = category.name || {};
+      const desc = category.description || {};
       setFormData({
-        name: category.name || "",
-        description: category.description || "",
+        name_vi: typeof name === 'object' ? (name.vi || '') : (name || ''),
+        name_en: typeof name === 'object' ? (name.en || '') : '',
+        name_ja: typeof name === 'object' ? (name.ja || '') : '',
+        description_vi: typeof desc === 'object' ? (desc.vi || '') : (desc || ''),
+        description_en: typeof desc === 'object' ? (desc.en || '') : '',
+        description_ja: typeof desc === 'object' ? (desc.ja || '') : '',
         status: category.status || "active",
       });
     } else {
       setFormData({
-        name: "",
-        description: "",
+        name_vi: "",
+        name_en: "",
+        name_ja: "",
+        description_vi: "",
+        description_en: "",
+        description_ja: "",
         status: "active",
       });
     }
@@ -73,16 +90,18 @@ const Categories = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name) {
+    if (!formData.name_vi && !formData.name_en && !formData.name_ja) {
       addToast({
         type: "error",
-        message: "Vui lòng nhập tên danh mục",
+        message: t('admin.categories.nameRequired'),
       });
       return;
     }
 
     const submitData = {
-      ...formData,
+      name: { vi: formData.name_vi || '', en: formData.name_en || '', ja: formData.name_ja || '' },
+      description: { vi: formData.description_vi || '', en: formData.description_en || '', ja: formData.description_ja || '' },
+      status: formData.status || 'active',
       type: formDialog.parentId ? "child" : "parent",
       ...(formDialog.parentId && { parentId: formDialog.parentId }),
     };
@@ -94,14 +113,14 @@ const Categories = () => {
     if (result.success) {
       addToast({
         type: "success",
-        message: formDialog.category ? "Cập nhật danh mục thành công" : "Tạo danh mục thành công",
+        message: formDialog.category ? t('admin.categories.updateSuccess') : t('admin.categories.createSuccess'),
       });
       fetchCategories();
       setFormDialog({ open: false, category: null, parentId: null });
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể lưu danh mục",
+        message: result.error || t('admin.categories.saveError'),
       });
     }
   };
@@ -114,13 +133,13 @@ const Categories = () => {
     if (result.success) {
       addToast({
         type: "success",
-        message: "Xóa danh mục thành công",
+        message: t('admin.categories.deleteSuccess'),
       });
       fetchCategories();
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể xóa danh mục",
+        message: result.error || t('admin.categories.deleteError'),
       });
     }
 
@@ -130,11 +149,11 @@ const Categories = () => {
   const getStatusBadge = (status) => {
     return status === "active" ? (
       <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-        Hoạt động
+        {t('admin.categories.active')}
       </span>
     ) : (
       <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-        Không hoạt động
+        {t('admin.categories.inactive')}
       </span>
     );
   };
@@ -144,19 +163,19 @@ const Categories = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý danh mục</h1>
-          <p className="text-gray-600 mt-1">Quản lý danh mục sản phẩm</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.categories.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('admin.categories.subtitle')}</p>
         </div>
         <Button onClick={() => handleOpenForm()}>
           <Plus className="w-4 h-4 mr-2" />
-          Thêm danh mục cha
+          {t('admin.categories.addParent')}
         </Button>
       </div>
 
       {/* Categories List */}
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách danh mục</CardTitle>
+          <CardTitle>{t('admin.categories.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -165,7 +184,7 @@ const Categories = () => {
             </div>
           ) : categories.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Chưa có danh mục nào</p>
+              <p className="text-gray-500">{t('admin.categories.noCategories')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -176,9 +195,9 @@ const Categories = () => {
                     <div className="flex items-center gap-3">
                       <FolderTree className="w-5 h-5 text-color4" />
                       <div>
-                        <p className="font-semibold text-gray-900">{parent.name}</p>
+                        <p className="font-semibold text-gray-900">{safeText(parent.name, i18n.language, "N/A")}</p>
                         {parent.description && (
-                          <p className="text-sm text-gray-500">{parent.description}</p>
+                          <p className="text-sm text-gray-500">{safeText(parent.description, i18n.language, "")}</p>
                         )}
                       </div>
                     </div>
@@ -217,9 +236,9 @@ const Categories = () => {
                           className="flex items-center justify-between p-3 bg-gray-50 rounded"
                         >
                           <div>
-                            <p className="font-medium text-gray-900">{child.name}</p>
+                            <p className="font-medium text-gray-900">{safeText(child.name, i18n.language, "N/A")}</p>
                             {child.description && (
-                              <p className="text-sm text-gray-500">{child.description}</p>
+                              <p className="text-sm text-gray-500">{safeText(child.description, i18n.language, "")}</p>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
@@ -260,43 +279,50 @@ const Categories = () => {
             <DialogHeader>
               <DialogTitle>
                 {formDialog.category
-                  ? "Chỉnh sửa danh mục"
+                  ? t('admin.categories.editCategory')
                   : formDialog.parentId
-                  ? "Thêm danh mục con"
-                  : "Thêm danh mục cha"}
+                  ? t('admin.categories.addChild')
+                  : t('admin.categories.addParent')}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tên danh mục <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Giày thể thao"
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameVI')}</label>
+                  <Input value={formData.name_vi} onChange={(e) => setFormData({ ...formData, name_vi: e.target.value })} placeholder={t('admin.categories.name')} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameEN')}</label>
+                  <Input value={formData.name_en} onChange={(e) => setFormData({ ...formData, name_en: e.target.value })} placeholder={t('admin.categories.name')} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.nameJA')}</label>
+                  <Input value={formData.name_ja} onChange={(e) => setFormData({ ...formData, name_ja: e.target.value })} placeholder={t('admin.categories.name')} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionVI')}</label>
+                  <textarea value={formData.description_vi} onChange={(e) => setFormData({ ...formData, description_vi: e.target.value })} placeholder={t('admin.categories.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionEN')}</label>
+                  <textarea value={formData.description_en} onChange={(e) => setFormData({ ...formData, description_en: e.target.value })} placeholder={t('admin.categories.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.common.descriptionJA')}</label>
+                  <textarea value={formData.description_ja} onChange={(e) => setFormData({ ...formData, description_ja: e.target.value })} placeholder={t('admin.categories.descriptionPlaceholder')} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4" rows={3} />
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Mô tả danh mục..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.categories.status')}</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
                 >
-                  <option value="active">Hoạt động</option>
-                  <option value="inactive">Không hoạt động</option>
+                  <option value="active">{t('admin.categories.active')}</option>
+                  <option value="inactive">{t('admin.categories.inactive')}</option>
                 </select>
               </div>
             </div>
@@ -306,10 +332,10 @@ const Categories = () => {
                 variant="outline"
                 onClick={() => setFormDialog({ open: false, category: null, parentId: null })}
               >
-                Hủy
+                {t('common.cancel')}
               </Button>
               <Button type="submit">
-                {formDialog.category ? "Cập nhật" : "Tạo mới"}
+                {t('common.save')}
               </Button>
             </DialogFooter>
           </form>
@@ -323,18 +349,17 @@ const Categories = () => {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Xác nhận xóa danh mục</DialogTitle>
+            <DialogTitle>{t('common.confirm')}</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn xóa danh mục <strong>{deleteDialog.category?.name}</strong>?
-              Hành động này không thể hoàn tác.
+              {t('admin.categories.deleteConfirm', { name: deleteDialog.category?.name || '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialog({ open: false, category: null })}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Xóa
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

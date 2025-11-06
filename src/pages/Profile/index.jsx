@@ -7,9 +7,12 @@ import LinkAccount from "../../components/Profile/LinkAccount";
 import NotifSetting from "../../components/Profile/NotifSetting";
 import DeleteAccount from "../../components/Profile/DeleteAccount";
 import Header from "@/components/Header";
+import { useTranslation } from "react-i18next";
 
 function Profile() {
-  const [isActive, setActive] = useState("Hồ sơ");
+  const { t } = useTranslation();
+  const [isActive, setActive] = useState(t('profile.title'));
+  
   return (
     <div className="flex flex-col min-h-screen" style={{
       objectFit: "contain",
@@ -21,15 +24,15 @@ function Profile() {
       <div className="flex-1 jusifty-center w-[1100px] px-6 h-full flex pt-10 mx-auto space-x-2 bg-white">
         <Sidebar isActive={isActive} setActive={setActive} />
         <div className="w-full pl-2 max-h-screen">
-          {isActive === "Hồ sơ" ? (
+          {isActive === t('profile.title') ? (
             <EditProfile />
-          ) : isActive === "Địa chỉ" ? (
+          ) : isActive === t('profile.address') ? (
             <Address />
-          ) : isActive === "Đổi mật khẩu" ? (
+          ) : isActive === t('profile.changePassword') ? (
             <ChangePassword />
-          ) : isActive === "Liên kết tài khoản" ? (
+          ) : isActive === t('profile.linkAccount') ? (
             <LinkAccount />
-          ) : isActive === "Cài đặt thông báo" ? (
+          ) : isActive === t('profile.notificationSettings') ? (
             <NotifSetting />
           ) : (
             <DeleteAccount />

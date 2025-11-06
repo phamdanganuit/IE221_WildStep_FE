@@ -9,6 +9,7 @@ import {
 import { Switch } from "../ui/switch";
 import { getNotificationSettings, updateNotificationSettings } from "@/service/accountService";
 import { useToast } from "@/contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 const NotifItem = ({ title, description, value, setValue, disabled }) => {
   return (
@@ -43,6 +44,7 @@ const NotifItem = ({ title, description, value, setValue, disabled }) => {
 };
 
 function NotifSetting() {
+  const { t } = useTranslation();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [emailNotif, setEmailNotif] = useState(true);
@@ -65,7 +67,7 @@ function NotifSetting() {
         setSmsNotif(data.smsNotif ?? false);
         setSmsSale(data.smsSale ?? false);
       } else {
-        error(result.error || "Không thể lấy cài đặt thông báo");
+        error(result.error || t('profile.notificationPage.loadError'));
       }
       setIsLoaded(true);
       setIsLoading(false);
@@ -88,7 +90,7 @@ function NotifSetting() {
       
       const result = await updateNotificationSettings(settings);
       if (!result.success) {
-        error(result.error || "Không thể cập nhật cài đặt thông báo");
+        error(result.error || t('profile.notificationPage.saveError'));
       }
     };
     
@@ -119,56 +121,48 @@ function NotifSetting() {
 
   return (
     <div className="flex-col space-y-[10px] w-full">
-      <p className="text-2xl font-semibold mb-4">Cài đặt thông báo</p>
+      <p className="text-2xl font-semibold mb-4">{t('profile.notificationPage.title')}</p>
       <div className="w-full space-y-2">
         <NotifItem
-          title={"Email thông báo"}
-          description={
-            "Thông báo và nhắc nhở quan trọng về tài khoản sẽ không thể bị tắt"
-          }
+          title={t('profile.notificationPage.emailNotifications')}
+          description={t('profile.notificationPage.emailDesc')}
           value={emailNotif}
           setValue={setEmailNotif}
         />
         <div className={`pl-6 ${emailNotif ? "" : "bg-opacity/70"}`}>
           <NotifItem
             disabled={!emailNotif}
-            title={"Cập nhật đơn hàng"}
-            description={
-              "Cập nhật về tình trạng vận chuyển của tất cả các đơn hàng"
-            }
+            title={t('profile.notificationPage.orderUpdates')}
+            description={t('profile.notificationPage.orderDesc')}
             value={emailUpdate}
             setValue={setEmailUpdate}
           />
           <NotifItem
             disabled={!emailNotif}
-            title={"Khuyến mãi"}
-            description={"Cập nhật về các ưu đãi và khuyến mãi sắp tới"}
+            title={t('profile.notificationPage.promotions')}
+            description={t('profile.notificationPage.promotionsDesc')}
             value={emailSale}
             setValue={setEmailSale}
           />
           <NotifItem
             disabled={!emailNotif}
-            title={"Khảo sát"}
-            description={
-              "Đồng ý nhận khảo sát để cho chúng tôi được lắng nghe bạn"
-            }
+            title={t('profile.notificationPage.survey')}
+            description={t('profile.notificationPage.surveyDesc')}
             value={emailSurvey}
             setValue={setEmailSurvey}
           />
         </div>
         <NotifItem
-          title={"Thông báo SMS"}
-          description={
-            "Thông báo và nhắc nhở quan trọng về tài khoản sẽ không thể bị tắt"
-          }
+          title={t('profile.notificationPage.smsNotifications')}
+          description={t('profile.notificationPage.smsDesc')}
           value={smsNotif}
           setValue={setSmsNotif}
         />
         <div className="pl-6">
           <NotifItem
             disabled={!smsNotif}
-            title={"Khuyến mãi"}
-            description={"Cập nhật về các ưu đãi và khuyến mãi sắp tới"}
+            title={t('profile.notificationPage.smsPromotions')}
+            description={t('profile.notificationPage.smsPromotionsDesc')}
             value={smsSale}
             setValue={setSmsSale}
           />

@@ -4,8 +4,10 @@ import { Button } from "../ui/button";
 import { Save } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import { changePassword } from "@/service/accountService";
+import { useTranslation } from "react-i18next";
 
 function ChangePassword() {
+  const { t } = useTranslation();
   const [oldPass, setOldPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
@@ -16,7 +18,7 @@ function ChangePassword() {
     e.preventDefault();
     
     if (newPass !== confirmPass) {
-      error("Mật khẩu mới và nhập lại mật khẩu không khớp!");
+      error(t('profile.changePasswordPage.passwordMismatch'));
       return;
     }
 
@@ -45,10 +47,10 @@ function ChangePassword() {
 
   return (
     <div className="flex-col space-y-[10px] w-full">
-      <p className="text-2xl font-semibold mb-4">Đổi mật khẩu</p>
+      <p className="text-2xl font-semibold mb-4">{t('profile.changePasswordPage.title')}</p>
       <div className="flex justify-between items-center">
         <form className="w-150 space-y-[10px]" onSubmit={handleSubmit}>
-          <p className="font-semibold">Mật khẩu hiện tại <span className="text-red-500">*</span></p>
+          <p className="font-semibold">{t('profile.changePasswordPage.currentPassword')} <span className="text-red-500">*</span></p>
           <Input
             value={oldPass}
             onChange={(e) => setOldPass(e.target.value)}
@@ -56,7 +58,7 @@ function ChangePassword() {
             type = "password"
             className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
           />
-          <p className="font-semibold">Mật khẩu mới <span className="text-red-500">*</span></p>
+          <p className="font-semibold">{t('profile.changePasswordPage.newPassword')} <span className="text-red-500">*</span></p>
           <Input
             value={newPass}
             onChange={(e) => setNewPass(e.target.value)}
@@ -64,7 +66,7 @@ function ChangePassword() {
             type = "password"
             className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
           />
-          <p className="font-semibold">Nhập lại mật khẩu</p>
+          <p className="font-semibold">{t('profile.changePasswordPage.confirmPassword')}</p>
           <Input
             value={confirmPass}
             onChange={(e) => setConfirmPass(e.target.value)}
@@ -78,7 +80,7 @@ function ChangePassword() {
             className={"font-semibold flex items-center gap-2 mt-5"}
           >
             <Save />
-            {isLoading ? "Đang xử lý..." : "Lưu thay đổi"}
+            {isLoading ? t('profile.changePasswordPage.processing') : t('profile.changePasswordPage.saveChanges')}
           </Button>
         </form>
       </div>

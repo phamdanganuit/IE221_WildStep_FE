@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
+import { getPublicReviews } from "@/service/contentService";
+import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
 const allReviews = [
   // --- Trang 1 ---
   [
@@ -140,14 +143,70 @@ const StarRating = ({ rating }) => {
 };
 
 const CustomerReviews = () => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const reviews = allReviews[currentPage];
+  const { t, i18n } = useTranslation();
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1); // 1-based UI pagination
+  const PAGE_SIZE_UI = 2; // số review hiển thị mỗi trang trên UI
+  const [allFetchedReviews, setAllFetchedReviews] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      // Bước 1: lấy trang đầu để biết tổng số trang
+      const firstRes = await getPublicReviews({ placement: "home", page: 1, page_size: 20 });
+      if (!mounted) return;
+      if (!firstRes?.success) {
+        setAllFetchedReviews([]);
+        setLoading(false);
+        return;
+      }
+
+      const firstPayload = firstRes.data;
+      const totalPages = firstPayload?.pagination?.total_pages || 1;
+
+      const mapReviews = (list) => (Array.isArray(list) ? list : []).map((r) => ({
+        id: r.id,
+        name: safeText(r.author_name, i18n.language, 'N/A'),
+        avatar: r.author_avatar,
+        review: safeText(r.content, i18n.language, ''),
+        rating: r.rating,
+        createdAt: r.createdAt || r.created_at || null,
+      }));
+
+      const firstPageReviews = mapReviews(firstPayload?.data);
+
+      // Bước 2: nếu còn trang, fetch song song các trang còn lại
+      let restReviews = [];
+      if (totalPages > 1) {
+        const promises = [];
+        for (let p = 2; p <= totalPages; p++) {
+          promises.push(getPublicReviews({ placement: "home", page: p, page_size: 20 }));
+        }
+        const results = await Promise.all(promises);
+        restReviews = results.flatMap((res) => mapReviews(res?.data?.data));
+      }
+
+      setAllFetchedReviews([...firstPageReviews, ...restReviews]);
+      setLoading(false);
+    })();
+    return () => { mounted = false };
+  }, [i18n.language]);
+
+  if (loading) return null;
+  if (!allFetchedReviews.length) return null;
+
+  const totalPagesUI = Math.max(1, Math.ceil(allFetchedReviews.length / PAGE_SIZE_UI));
+  const start = (currentPage - 1) * PAGE_SIZE_UI;
+  const end = start + PAGE_SIZE_UI;
+  const reviews = allFetchedReviews.slice(start, end);
+
   return (
     <section className="flex flex-col items-center self-center w-full px-10 md:px-20 mt-12 md:mt-20 bg-transparent max-md:max-w-full">
       <h2 className="text-[#0A1E33] flex items-center justify-center gap-5">
         <span className="font-semibold text-[2rem]">—</span>
         <span className="text-[2.5rem] font-semibold">
-          ĐÁNH GIÁ TỪ KHÁCH HÀNG
+          {t('home.customerReviews.title')}
         </span>
         <span className="font-semibold text-[2rem]">—</span>
       </h2>
@@ -178,18 +237,22 @@ const CustomerReviews = () => {
 
       {/* Dấu tròn điều hướng */}
       <div className="flex justify-center mt-10 space-x-3">
-        {allReviews.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentPage(i)}
-            className={`rounded-full cursor-pointer ${
-              i === currentPage
-                ? "bg-[#000000]/75 w-4 h-4 scale-115"
-                : "bg-[#000000]/30 w-4 h-4 hover:bg-[#000000]/60"
-            }`}
-            aria-label={`Trang ${i + 1}`}
-          ></button>
-        ))}
+        {Array.from({ length: totalPagesUI }).map((_, index) => {
+          const pageIdx = index + 1;
+          const isActive = pageIdx === currentPage;
+          return (
+            <button
+              key={pageIdx}
+              onClick={() => setCurrentPage(pageIdx)}
+              className={`rounded-full cursor-pointer ${
+                isActive
+                  ? "bg-[#000000]/75 w-4 h-4 scale-115"
+                  : "bg-[#000000]/30 w-4 h-4 hover:bg-[#000000]/60"
+              }`}
+              aria-label={`${t('home.customerReviews.pageLabel')} ${pageIdx}`}
+            ></button>
+          );
+        })}
       </div>
     </section>
   );
