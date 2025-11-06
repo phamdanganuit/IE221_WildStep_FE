@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { getBrands, createBrand, updateBrand, deleteBrand } from "@/service/adminService";
+import { useEffect, useRef, useState } from "react";
+import { getBrands, createBrand, updateBrand, deleteBrand, uploadBrandLogo } from "@/service/adminService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Edit, Trash2, Award } from "lucide-react";
+import { Plus, Edit, Trash2, Award, Upload } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import {
   Dialog,
@@ -20,6 +20,8 @@ const Brands = () => {
   const [loading, setLoading] = useState(true);
   const [formDialog, setFormDialog] = useState({ open: false, brand: null });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, brand: null });
+  const [uploading, setUploading] = useState({});
+  const fileInputsRef = useRef({});
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -139,6 +141,31 @@ const Brands = () => {
     );
   };
 
+  const getBrandLogoUrl = (brand) => {
+    return brand.logo || brand.logoUrl || brand.image || brand.icon || "";
+  };
+
+  const handleTriggerUpload = (brand) => {
+    const id = brand._id || brand.id;
+    if (fileInputsRef.current[id]) fileInputsRef.current[id].click();
+  };
+
+  const handleUploadLogo = async (brand, e) => {
+    const id = brand._id || brand.id;
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading((prev) => ({ ...prev, [id]: true }));
+    const res = await uploadBrandLogo(id, file);
+    if (res.success) {
+      addToast({ type: "success", message: "Tải logo thành công" });
+      fetchBrands();
+    } else {
+      addToast({ type: "error", message: res.error || "Tải logo thất bại" });
+    }
+    setUploading((prev) => ({ ...prev, [id]: false }));
+    e.target.value = "";
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -173,9 +200,17 @@ const Brands = () => {
                 <div key={brand._id || brand.id} className="border rounded-lg p-4 hover:shadow-md transition">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-color4/10 rounded-lg">
-                        <Award className="w-6 h-6 text-color4" />
-                      </div>
+                      {getBrandLogoUrl(brand) ? (
+                        <img
+                          src={getBrandLogoUrl(brand)}
+                          alt={brand.name}
+                          className="w-12 h-12 rounded-full object-cover border"
+                        />
+                      ) : (
+                        <div className="p-2 bg-color4/10 rounded-lg">
+                          <Award className="w-6 h-6 text-color4" />
+                        </div>
+                      )}
                       <div>
                         <p className="font-semibold text-gray-900">{brand.name}</p>
                         {brand.country && (
@@ -217,6 +252,23 @@ const Brands = () => {
                       onClick={() => setDeleteDialog({ open: true, brand })}
                     >
                       <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={(el) => (fileInputsRef.current[brand._id || brand.id] = el)}
+                      onChange={(e) => handleUploadLogo(brand, e)}
+                      className="hidden"
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleTriggerUpload(brand)}
+                      disabled={!!uploading[brand._id || brand.id]}
+                      className="cursor-pointer"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {uploading[brand._id || brand.id] ? "Đang tải..." : "Tải logo"}
                     </Button>
                   </div>
                 </div>

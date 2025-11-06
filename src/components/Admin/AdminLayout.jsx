@@ -6,6 +6,7 @@ import {
   Users, 
   FolderTree, 
   Award,
+  Image as ImageIcon,
   LogOut,
   Menu,
   X
@@ -26,6 +27,7 @@ const AdminLayout = () => {
     { icon: Users, label: "Khách hàng", path: "/admin/customers" },
     { icon: FolderTree, label: "Danh mục", path: "/admin/categories" },
     { icon: Award, label: "Thương hiệu", path: "/admin/brands" },
+    { icon: ImageIcon, label: "Banner", path: "/admin/banners" },
   ];
 
   const handleLogout = () => {

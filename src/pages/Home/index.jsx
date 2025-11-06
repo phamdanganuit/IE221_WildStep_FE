@@ -21,7 +21,9 @@ export default function Home() {
       <main className="flex flex-col items-center justify-start">
         {/* LEFT TEXT CONTENT */}
         <div
-          className="flex md:flex-row items-center justify-start flex-1 gap-10 w-full bg-no-repeat bg-right bg-contain min-h-[calc(100vh-3.5rem)]"
+          className="flex md:flex-row flex-col items-center justify-start w-full gap-10
+         bg-no-repeat bg-right bg-contain
+         min-h-[56.25vw] md:min-h-[calc(100vh-3.5rem)]"
           style={{
             backgroundImage: `url(${bgShoe})`,
             backgroundPosition: "right center", // neo phần phải
@@ -63,7 +65,7 @@ export default function Home() {
                 Trendy WildStep Pro
               </h2>
               <p className="text-[#000000]/50 text-[1.5rem] font-semibold">
-                ₹ 3999.00
+                 3.999.000₫
               </p>
             </div>
             {/* <span className="absolute text-[8rem] md:text-[10rem] font-extrabold text-[#E8E8E8] -rotate-90 opacity-30 right-0">

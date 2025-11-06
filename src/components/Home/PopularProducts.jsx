@@ -9,15 +9,15 @@ import shoe5 from "@/assets/shoes/shoe_5.png";
 import shoe6 from "@/assets/shoes/shoe_6.png";
 
 const products = [
-  { id: 1, image: shoe1, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 2, image: shoe2, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 3, image: shoe3, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 4, image: shoe4, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 5, image: shoe5, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 6, image: shoe6, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 7, image: shoe1, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 8, image: shoe2, name: "Running sport shoe", price: "₹ 3999.00" },
-  { id: 9, image: shoe3, name: "Running sport shoe", price: "₹ 3999.00" },
+  { id: 1, image: shoe1, name: "Running sport shoe", price: "₫ 3.999.000" },
+  { id: 2, image: shoe2, name: "Running sport shoe", price: "₫ 3.999.000" },
+  { id: 3, image: shoe3, name: "Running sport shoe", price: "₫ 3.999.000" },
+  { id: 4, image: shoe4, name: "Running sport shoe", price: "₫ 3.999.000" },
+  { id: 5, image: shoe5, name: "Running sport shoe", price: "₫ 3.999.000" },
+  { id: 6, image: shoe6, name: "Running sport shoe", price: "₫ 3.999.000" },
+  { id: 7, image: shoe1, name: "Running sport shoe", price: "₫ 3.999.000" },
+  { id: 8, image: shoe2, name: "Running sport shoe", price: "₫ 3.999.000" },
+  { id: 9, image: shoe3, name: "Running sport shoe", price: "₫ 3.999.000" },
 ];
 
 const CARDS_PER_PAGE = 3;

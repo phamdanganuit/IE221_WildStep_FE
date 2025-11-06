@@ -1,36 +1,58 @@
 import React, { useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-
-import banner1 from "@/assets/banner/banner1.jpg";
-import banner2 from "@/assets/banner/banner2.jpg";
-import banner3 from "@/assets/banner/banner3.jpg";
-
-const banners = [
-  { id: 1, img: banner1},
-  { id: 2, img: banner2},
-  { id: 3, img: banner3},
-];
+import { getPublicBanners } from "@/service/contentService";
 
 const Banner = () => {
   const [current, setCurrent] = useState(0);
+  const [banners, setBanners] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const nextSlide = () => {
+    if (!banners.length) return;
     setCurrent((prev) => (prev + 1) % banners.length);
   };
 
   const prevSlide = () => {
+    if (!banners.length) return;
     setCurrent((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
-   useEffect(() => {
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      const res = await getPublicBanners();
+      if (!isMounted) return;
+      if (res?.success && Array.isArray(res.data?.data)) {
+        setBanners(res.data.data);
+      } else {
+        setBanners([]);
+      }
+      setLoading(false);
+    })();
+    return () => { isMounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!banners.length) return;
     const interval = setInterval(() => {
       nextSlide();
     }, 5000);
+    return () => clearInterval(interval);
+  }, [banners.length, current]);
 
-    return () => clearInterval(interval); 
-  }, [current]);
+  if (loading) {
+    return (
+      <section className="px-10 md:px-20 mt-12 md:mt-20">
+        <div className="relative w-full h-[400px] overflow-hidden rounded-2xl shadow-lg bg-gray-200 animate-pulse" />
+      </section>
+    );
+  }
 
- return (
+  if (!banners.length) {
+    return null;
+  }
+
+  return (
     <section className="px-10 md:px-20 mt-12 md:mt-20">
       <div className="relative w-full h-[400px] overflow-hidden rounded-2xl shadow-lg">
         {/* Slides */}
@@ -38,20 +60,28 @@ const Banner = () => {
           className="flex transition-transform duration-700 ease-in-out"
           style={{ transform: `translateX(-${current * 100}%)` }}
         >
-          {banners.map((banner) => (
-            <div key={banner.id} className="w-full flex-shrink-0 relative">
+          {banners.map((banner) => {
+            const imageUrl = banner.image || banner.img || banner.url;
+            const title = banner.title || `Banner ${banner.id}`;
+            const content = (
               <img
-                src={banner.img}
-                alt={`Banner ${banner.id}`}
+                src={imageUrl}
+                alt={title}
                 className="w-full h-[400px] object-cover"
               />
-              {/* <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <h2 className="text-white text-3xl font-semibold drop-shadow-lg">
-                  {banner.title}
-                </h2>
-              </div> */}
-            </div>
-          ))}
+            );
+            return (
+              <div key={banner.id} className="w-full flex-shrink-0 relative">
+                {banner.link ? (
+                  <a href={banner.link} aria-label={title}>
+                    {content}
+                  </a>
+                ) : (
+                  content
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Nút điều hướng */}
@@ -71,7 +101,8 @@ const Banner = () => {
           <FaChevronRight />
         </button>
 
-        {/* Dấu chấm chỉ số */}
+        {/* Dấu chấm chỉ số */
+        }
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
           {banners.map((_, index) => (
             <button
