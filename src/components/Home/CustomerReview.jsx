@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
 import { getPublicReviews } from "@/service/contentService";
+import { useTranslation } from "react-i18next";
 const allReviews = [
   // --- Trang 1 ---
   [
@@ -141,6 +142,7 @@ const StarRating = ({ rating }) => {
 };
 
 const CustomerReviews = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1); // 1-based UI pagination
   const PAGE_SIZE_UI = 2; // số review hiển thị mỗi trang trên UI
@@ -203,7 +205,7 @@ const CustomerReviews = () => {
       <h2 className="text-[#0A1E33] flex items-center justify-center gap-5">
         <span className="font-semibold text-[2rem]">—</span>
         <span className="text-[2.5rem] font-semibold">
-          ĐÁNH GIÁ TỪ KHÁCH HÀNG
+          {t('home.customerReviews.title')}
         </span>
         <span className="font-semibold text-[2rem]">—</span>
       </h2>
@@ -246,7 +248,7 @@ const CustomerReviews = () => {
                   ? "bg-[#000000]/75 w-4 h-4 scale-115"
                   : "bg-[#000000]/30 w-4 h-4 hover:bg-[#000000]/60"
               }`}
-              aria-label={`Trang ${pageIdx}`}
+              aria-label={`${t('home.customerReviews.pageLabel')} ${pageIdx}`}
             ></button>
           );
         })}

@@ -13,8 +13,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 
 const Categories = () => {
+  const { t } = useTranslation();
   const { addToast } = useToast();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ const Categories = () => {
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể tải danh sách danh mục",
+        message: result.error || t('admin.categories.loadError'),
       });
     }
     setLoading(false);
@@ -76,7 +78,7 @@ const Categories = () => {
     if (!formData.name) {
       addToast({
         type: "error",
-        message: "Vui lòng nhập tên danh mục",
+        message: t('admin.categories.nameRequired'),
       });
       return;
     }
@@ -94,14 +96,14 @@ const Categories = () => {
     if (result.success) {
       addToast({
         type: "success",
-        message: formDialog.category ? "Cập nhật danh mục thành công" : "Tạo danh mục thành công",
+        message: formDialog.category ? t('admin.categories.updateSuccess') : t('admin.categories.createSuccess'),
       });
       fetchCategories();
       setFormDialog({ open: false, category: null, parentId: null });
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể lưu danh mục",
+        message: result.error || t('admin.categories.saveError'),
       });
     }
   };
@@ -114,13 +116,13 @@ const Categories = () => {
     if (result.success) {
       addToast({
         type: "success",
-        message: "Xóa danh mục thành công",
+        message: t('admin.categories.deleteSuccess'),
       });
       fetchCategories();
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể xóa danh mục",
+        message: result.error || t('admin.categories.deleteError'),
       });
     }
 
@@ -130,11 +132,11 @@ const Categories = () => {
   const getStatusBadge = (status) => {
     return status === "active" ? (
       <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-        Hoạt động
+        {t('admin.categories.active')}
       </span>
     ) : (
       <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-        Không hoạt động
+        {t('admin.categories.inactive')}
       </span>
     );
   };
@@ -144,19 +146,19 @@ const Categories = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý danh mục</h1>
-          <p className="text-gray-600 mt-1">Quản lý danh mục sản phẩm</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.categories.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('admin.categories.subtitle')}</p>
         </div>
         <Button onClick={() => handleOpenForm()}>
           <Plus className="w-4 h-4 mr-2" />
-          Thêm danh mục cha
+          {t('admin.categories.addParent')}
         </Button>
       </div>
 
       {/* Categories List */}
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách danh mục</CardTitle>
+          <CardTitle>{t('admin.categories.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -165,7 +167,7 @@ const Categories = () => {
             </div>
           ) : categories.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Chưa có danh mục nào</p>
+              <p className="text-gray-500">{t('admin.categories.noCategories')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -260,43 +262,43 @@ const Categories = () => {
             <DialogHeader>
               <DialogTitle>
                 {formDialog.category
-                  ? "Chỉnh sửa danh mục"
+                  ? t('admin.categories.editCategory')
                   : formDialog.parentId
-                  ? "Thêm danh mục con"
-                  : "Thêm danh mục cha"}
+                  ? t('admin.categories.addChild')
+                  : t('admin.categories.addParent')}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tên danh mục <span className="text-red-500">*</span>
+                  {t('admin.categories.name')} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Giày thể thao"
+                  placeholder={t('admin.categories.name')}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.categories.description')}</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Mô tả danh mục..."
+                  placeholder={t('admin.categories.descriptionPlaceholder')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
                   rows={3}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.categories.status')}</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
                 >
-                  <option value="active">Hoạt động</option>
-                  <option value="inactive">Không hoạt động</option>
+                  <option value="active">{t('admin.categories.active')}</option>
+                  <option value="inactive">{t('admin.categories.inactive')}</option>
                 </select>
               </div>
             </div>
@@ -306,10 +308,10 @@ const Categories = () => {
                 variant="outline"
                 onClick={() => setFormDialog({ open: false, category: null, parentId: null })}
               >
-                Hủy
+                {t('common.cancel')}
               </Button>
               <Button type="submit">
-                {formDialog.category ? "Cập nhật" : "Tạo mới"}
+                {t('common.save')}
               </Button>
             </DialogFooter>
           </form>
@@ -323,18 +325,17 @@ const Categories = () => {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Xác nhận xóa danh mục</DialogTitle>
+            <DialogTitle>{t('common.confirm')}</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn xóa danh mục <strong>{deleteDialog.category?.name}</strong>?
-              Hành động này không thể hoàn tác.
+              {t('admin.categories.deleteConfirm', { name: deleteDialog.category?.name || '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialog({ open: false, category: null })}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Xóa
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

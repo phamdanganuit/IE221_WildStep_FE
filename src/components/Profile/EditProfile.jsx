@@ -9,8 +9,10 @@ import { getProfile, updateProfile, uploadAvatar } from "@/service/profileServic
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 import { getFullAvatarUrl } from "@/lib/avatarUtils";
+import { useTranslation } from "react-i18next";
 
 function EditProfile() {
+  const { t } = useTranslation();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -33,16 +35,16 @@ function EditProfile() {
         setPhone(profile.phone || "");
         
         // Map giá trị từ API sang giá trị UI
-        if (profile.sex === "male") setSex("Nam");
-        else if (profile.sex === "female") setSex("Nữ");
-        else setSex("Không muốn đề cập");
+        if (profile.sex === "male") setSex(t('profile.edit.male'));
+        else if (profile.sex === "female") setSex(t('profile.edit.female'));
+        else setSex(t('profile.edit.other'));
         
         setBirth(profile.birth ? new Date(profile.birth) : null);
         // Convert avatar URL to full URL if it's relative
         const fullAvatarUrl = profile.avatar ? getFullAvatarUrl(profile.avatar) : "";
         setAvatar(fullAvatarUrl);
       } else {
-        error(result.error || "Không thể lấy thông tin người dùng");
+        error(result.error || t('profile.edit.loadError'));
       }
       setIsLoading(false);
     };
@@ -81,8 +83,8 @@ function EditProfile() {
 
     // Map giá trị từ UI sang giá trị API
     let sexValue;
-    if (sex === "Nam") sexValue = "male";
-    else if (sex === "Nữ") sexValue = "female";
+    if (sex === t('profile.edit.male')) sexValue = "male";
+    else if (sex === t('profile.edit.female')) sexValue = "female";
     else sexValue = "other";
 
     const data = {
@@ -114,63 +116,63 @@ function EditProfile() {
 
   return (
     <div className="flex-col space-y-[10px] w-full">
-      <p className="text-2xl font-semibold mb-4">Hồ sơ</p>
+      <p className="text-2xl font-semibold mb-4">{t('profile.edit.title')}</p>
       <div className="flex justify-between items-center">
         <form className="w-150 space-y-[10px]" onSubmit={handleSubmit}>
-          <p className="font-semibold">Tên hiển thị <span className="text-red-500">*</span></p>
+          <p className="font-semibold">{t('profile.edit.displayName')} <span className="text-red-500">{t('profile.edit.required')}</span></p>
           <Input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             required
             className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
           />
-          <p className="font-semibold">Email <span className="text-red-500">*</span></p>
+          <p className="font-semibold">{t('profile.edit.email')} <span className="text-red-500">{t('profile.edit.required')}</span></p>
           <Input
             value={email}
             required
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
           />
-          <p className="font-semibold">Số điện thoại</p>
+          <p className="font-semibold">{t('profile.edit.phone')}</p>
           <Input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
           />
-          <p className="font-semibold">Giới tính</p>
+          <p className="font-semibold">{t('profile.edit.gender')}</p>
           <div className="flex gap-5 items-center">
             <Label className="flex items-center gap-2">
               <Input
                 type="radio"
-                checked={sex === "Nam"}
-                value="Nam"
+                checked={sex === t('profile.edit.male')}
+                value={t('profile.edit.male')}
                 onChange={(e) => setSex(e.target.value)}
                 className="w-6 h-6 accent-teal-600"
               />
-              Nam
+              {t('profile.edit.male')}
             </Label>
             <Label className="flex items-center gap-2">
               <Input
                 type="radio"
-                checked={sex === "Nữ"}
-                value="Nữ"
+                checked={sex === t('profile.edit.female')}
+                value={t('profile.edit.female')}
                 onChange={(e) => setSex(e.target.value)}
                 className="w-6 h-6 accent-teal-600"
               />
-              Nữ
+              {t('profile.edit.female')}
             </Label>
             <Label className="flex items-center gap-2">
               <Input
                 type="radio"
-                checked={sex === "Không muốn đề cập"}
-                value="Không muốn đề cập"
+                checked={sex === t('profile.edit.other')}
+                value={t('profile.edit.other')}
                 onChange={(e) => setSex(e.target.value)}
                 className="w-6 h-6 accent-teal-600"
               />
-              Không muốn đề cập
+              {t('profile.edit.other')}
             </Label>
           </div>
-          <p className="font-semibold">Ngày sinh</p>
+          <p className="font-semibold">{t('profile.edit.birthDate')}</p>
           {!isLoading && (
             <DatePicker
               defaultValue={birth}
@@ -183,7 +185,7 @@ function EditProfile() {
             className={"font-semibold flex items-center gap-2 mt-5"}
           >
             <Save />
-            {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+            {isSubmitting ? t('profile.edit.saving') : t('profile.edit.saveChanges')}
           </Button>
         </form>
         <ChangeAvatar avatar={avatar} setAvatar={handleAvatarChange} />

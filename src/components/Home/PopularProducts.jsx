@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { getPublicProducts } from "@/service/contentService";
+import { useTranslation } from "react-i18next";
 
 const CARDS_PER_PAGE = 3;
 
@@ -51,6 +52,7 @@ const ProductCard = ({ image, name, price, oldPrice, className = "" }) => {
 };
 
 const PopularProducts = () => {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
@@ -121,20 +123,20 @@ const PopularProducts = () => {
           <div className="flex flex-col gap-2">
             <h3 className="text-color1 font-medium mb-2 text-[1.5rem] flex items-center gap-2">
               <span className="w-8 h-[2px] bg-color1"></span>
-              Giày Hot Trend
+              {t('home.popularProducts.subtitle')}
             </h3>
 
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-color1 leading-tight">
-              Most Popular Products
+              {t('home.popularProducts.heading')}
             </h2>
           </div>
 
           <p className="text-[1.125rem] text-[#000000]/75 leading-relaxed">
-          Khám phá những đôi giày WildStep được yêu thích nhất mùa này.
+            {t('home.popularProducts.description')}
           </p>
 
           <button className="px-8 py-3 bg-color4 text-white font-semibold rounded hover:bg-hover4 transition-colors shadow-md hover:shadow-lg self-center md:self-start cursor-pointer">
-            Khám Phá
+            {t('home.popularProducts.explore')}
           </button>
         </div>
 

@@ -5,8 +5,10 @@ import AddressDialog from "./AddressDialog";
 import { Pencil, Trash2 } from "lucide-react";
 import { setDefaultAddress, updateAddress, deleteAddress } from "@/service/addressService";
 import { useToast } from "@/contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 function AddressCard({ address, onUpdate }) {
+  const { t } = useTranslation();
   const { success, error } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -44,7 +46,7 @@ function AddressCard({ address, onUpdate }) {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Bạn có chắc chắn muốn xóa địa chỉ này không?")) return;
+    if (!confirm(t('profile.addressPage.deleteConfirm'))) return;
     
     const result = await deleteAddress(address.id || address._id);
     if (result.success) {
@@ -69,17 +71,17 @@ function AddressCard({ address, onUpdate }) {
         <div className="w-full flex justify-between">
           <div className="h-full flex-col space-y-4">
             <p>{address?.detail}, {address?.ward}, {address?.district}, {address?.province}</p>
-            {(address?.default || address?.is_default) && <div className="px-2 py-1 rounded-xl text-center text-slate-800 border border-slate-800 w-[100px]">Mặc định</div>}
+            {(address?.default || address?.is_default) && <div className="px-2 py-1 rounded-xl text-center text-slate-800 border border-slate-800 w-[100px]">{t('profile.addressPage.default')}</div>}
           </div>
           <div className="flex-col space-y-2">
-            <AddressDialog address={address} title={"Cập nhật địa chỉ"} submitIcon={<Pencil/>} submitText={"Hoàn tất chỉnh sửa"} onSubmit={handleEdit}/>
+            <AddressDialog address={address} title={t('profile.addressPage.edit')} submitIcon={<Pencil/>} submitText={t('common.save')} onSubmit={handleEdit}/>
             <Button
               variant="outline"
               disabled={address?.default || address?.is_default || isProcessing}
               className="w-[200px]"
               onClick={handleDefault}
             >
-              {isProcessing ? "Đang xử lý..." : "Thiết lập mặc định"}
+              {isProcessing ? t('profile.changePasswordPage.processing') : t('profile.addressPage.setDefault')}
             </Button>
             <Button
               variant="destructive"
@@ -87,7 +89,7 @@ function AddressCard({ address, onUpdate }) {
               onClick={handleDelete}
             >
               <Trash2 className="w-4 h-4" />
-              Xóa địa chỉ
+              {t('profile.addressPage.delete')}
             </Button>
           </div>
         </div>

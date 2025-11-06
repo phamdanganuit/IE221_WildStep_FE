@@ -29,7 +29,10 @@ const emptyForm = {
   status: "active",
 };
 
+import { useTranslation } from "react-i18next";
+
 export default function Banners() {
+  const { t } = useTranslation();
   const { addToast } = useToast();
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +57,7 @@ export default function Banners() {
           : [];
       setBanners(list);
     } else {
-      addToast({ type: "error", message: res.error || "Không thể tải banner" });
+      addToast({ type: "error", message: res.error || t('admin.banners.loadError') });
     }
     setLoading(false);
   };
@@ -99,7 +102,7 @@ export default function Banners() {
     } else {
       // Create with image URL
       if (!formData.image) {
-        addToast({ type: "error", message: "Vui lòng chọn ảnh hoặc nhập URL ảnh" });
+        addToast({ type: "error", message: t('admin.banners.imageRequired') });
         return;
       }
       result = await createAdminBanner({
@@ -112,12 +115,12 @@ export default function Banners() {
     }
 
     if (result.success) {
-      addToast({ type: "success", message: isEdit ? "Cập nhật banner thành công" : "Tạo banner thành công" });
+      addToast({ type: "success", message: isEdit ? t('admin.banners.updateSuccess') : t('admin.banners.createSuccess') });
       setFormDialog({ open: false, banner: null });
       if (fileInputRef.current) fileInputRef.current.value = "";
       await fetchBanners();
     } else {
-      addToast({ type: "error", message: result.error || "Không thể lưu banner" });
+      addToast({ type: "error", message: result.error || t('admin.banners.saveError') });
     }
   };
 
@@ -126,11 +129,11 @@ export default function Banners() {
     const id = deleteDialog.banner.id || deleteDialog.banner._id;
     const res = await deleteAdminBanner(id);
     if (res.success) {
-      addToast({ type: "success", message: "Xóa banner thành công" });
+      addToast({ type: "success", message: t('admin.banners.deleteSuccess') });
       setDeleteDialog({ open: false, banner: null });
       fetchBanners();
     } else {
-      addToast({ type: "error", message: res.error || "Không thể xóa banner" });
+      addToast({ type: "error", message: res.error || t('admin.banners.deleteError') });
     }
   };
 
@@ -144,10 +147,10 @@ export default function Banners() {
     if (!file) return;
     const res = await uploadAdminBannerImage(id, file);
     if (res.success) {
-      addToast({ type: "success", message: "Cập nhật ảnh banner thành công" });
+      addToast({ type: "success", message: t('admin.banners.uploadImageSuccess') });
       fetchBanners();
     } else {
-      addToast({ type: "error", message: res.error || "Tải ảnh thất bại" });
+      addToast({ type: "error", message: res.error || t('admin.banners.uploadImageError') });
     }
     e.target.value = "";
   };
@@ -156,18 +159,18 @@ export default function Banners() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý Banner</h1>
-          <p className="text-gray-600 mt-1">Tạo, sửa, sắp xếp và tải ảnh banner</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.banners.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('admin.banners.subtitle')}</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="w-4 h-4 mr-2" />
-          Thêm banner
+          {t('admin.banners.addNew')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách banner ({banners.length})</CardTitle>
+          <CardTitle>{t('admin.banners.title')} ({banners.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -175,7 +178,7 @@ export default function Banners() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-color4"></div>
             </div>
           ) : banners.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">Chưa có banner</div>
+            <div className="text-center py-12 text-gray-500">{t('admin.banners.noBanners')}</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {banners.map((b) => {
@@ -188,8 +191,8 @@ export default function Banners() {
                           <ImageIcon className="w-6 h-6 text-color4" />
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900 line-clamp-1">{b.title || "(Không tiêu đề)"}</p>
-                          <p className="text-sm text-gray-500">Thứ tự: {b.order ?? 0} · Trạng thái: {b.status}</p>
+                          <p className="font-semibold text-gray-900 line-clamp-1">{b.title || t('admin.banners.noTitle')}</p>
+                          <p className="text-sm text-gray-500">{t('admin.banners.order')}: {b.order ?? 0} · {t('admin.banners.status')}: {b.status}</p>
                         </div>
                       </div>
                     </div>
@@ -199,7 +202,7 @@ export default function Banners() {
 
                     <div className="flex items-center gap-2">
                       <Button size="sm" variant="outline" onClick={() => openEdit(b)} className="flex-1">
-                        <Edit className="w-4 h-4 mr-2" />Sửa
+                        <Edit className="w-4 h-4 mr-2" />{t('admin.banners.edit')}
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => setDeleteDialog({ open: true, banner: b })}>
                         <Trash2 className="w-4 h-4" />
@@ -215,7 +218,7 @@ export default function Banners() {
                         className="hidden"
                       />
                       <Button size="sm" variant="secondary" onClick={() => triggerUpload(id)} className="cursor-pointer">
-                        <Upload className="w-4 h-4 mr-2" />Tải ảnh
+                        <Upload className="w-4 h-4 mr-2" />{t('admin.banners.uploadImage')}
                       </Button>
                     </div>
                   </div>
@@ -230,70 +233,70 @@ export default function Banners() {
         <DialogContent>
           <form onSubmit={handleSubmit}>
             <DialogHeader>
-              <DialogTitle>{formDialog.banner ? "Chỉnh sửa banner" : "Thêm banner mới"}</DialogTitle>
+              <DialogTitle>{formDialog.banner ? t('admin.banners.editBanner') : t('admin.banners.addNew')}</DialogTitle>
               <DialogDescription>
-                Có thể tạo bằng URL ảnh hoặc chọn file khi tạo mới.
+                {t('admin.banners.createHint')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               {!formDialog.banner && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Chọn ảnh (tạo mới)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.banners.selectImage')}</label>
                   <input ref={fileInputRef} type="file" accept="image/*" className="block w-full" />
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">URL ảnh</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.banners.imageUrl')}</label>
                 <Input
                   value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://cdn.example.com/banner.jpg"
+                  placeholder={t('admin.banners.imageUrlPlaceholder')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tiêu đề</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.banners.title_field')}</label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Summer Sale"
+                  placeholder={t('admin.banners.titlePlaceholder')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Liên kết</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.banners.link')}</label>
                 <Input
                   value={formData.link}
                   onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  placeholder="/sale"
+                  placeholder={t('admin.banners.linkPlaceholder')}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Thứ tự</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.banners.order')}</label>
                   <Input
                     type="number"
                     value={formData.order}
                     onChange={(e) => setFormData({ ...formData, order: Number(e.target.value) })}
-                    placeholder="0"
+                    placeholder={t('admin.banners.orderPlaceholder')}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.banners.status')}</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
                   >
-                    <option value="active">active</option>
-                    <option value="inactive">inactive</option>
+                    <option value="active">{t('admin.banners.active')}</option>
+                    <option value="inactive">{t('admin.banners.inactive')}</option>
                   </select>
                 </div>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormDialog({ open: false, banner: null })}>
-                Hủy
+                {t('common.cancel')}
               </Button>
-              <Button type="submit">{formDialog.banner ? "Cập nhật" : "Tạo mới"}</Button>
+              <Button type="submit">{t('common.save')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -302,14 +305,14 @@ export default function Banners() {
       <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, banner: null })}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Xác nhận xóa banner</DialogTitle>
+            <DialogTitle>{t('common.confirm')}</DialogTitle>
             <DialogDescription>
-              Hành động này không thể hoàn tác.
+              {t('admin.banners.deleteConfirm')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, banner: null })}>Hủy</Button>
-            <Button variant="destructive" onClick={handleDelete}>Xóa</Button>
+            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, banner: null })}>{t('common.cancel')}</Button>
+            <Button variant="destructive" onClick={handleDelete}>{t('common.delete')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

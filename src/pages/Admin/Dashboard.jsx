@@ -3,8 +3,10 @@ import { getDashboardStats } from "@/service/adminService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Package, ShoppingCart, Users, DollarSign } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("month");
@@ -23,7 +25,7 @@ const Dashboard = () => {
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể tải dữ liệu dashboard",
+        message: result.error || t('dashboard.loadError'),
       });
     }
     setLoading(false);
@@ -66,7 +68,7 @@ const Dashboard = () => {
               <span className={`text-sm font-medium ${isPositive ? "text-green-600" : "text-red-600"}`}>
                 {isPositive ? "+" : ""}{change.toFixed(1)}%
               </span>
-              <span className="text-sm text-gray-500">so với kỳ trước</span>
+              <span className="text-sm text-gray-500">{t('dashboard.comparedToPrevious')}</span>
             </div>
           </div>
         </CardContent>
@@ -87,8 +89,8 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Tổng quan về hoạt động kinh doanh</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('dashboard.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -99,7 +101,7 @@ const Dashboard = () => {
                 : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-300"
             }`}
           >
-            Tuần
+            {t('dashboard.week')}
           </button>
           <button
             onClick={() => setPeriod("month")}
@@ -109,7 +111,7 @@ const Dashboard = () => {
                 : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-300"
             }`}
           >
-            Tháng
+            {t('dashboard.month')}
           </button>
           <button
             onClick={() => setPeriod("year")}
@@ -119,7 +121,7 @@ const Dashboard = () => {
                 : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-300"
             }`}
           >
-            Năm
+            {t('dashboard.year')}
           </button>
         </div>
       </div>
@@ -128,26 +130,26 @@ const Dashboard = () => {
       {stats?.summary && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Doanh thu"
+            title={t('dashboard.revenue')}
             value={stats.summary.totalRevenue}
             change={stats.summary.revenueChange}
             icon={DollarSign}
             format="currency"
           />
           <StatCard
-            title="Đơn hàng"
+            title={t('dashboard.orders')}
             value={stats.summary.totalOrders}
             change={stats.summary.ordersChange}
             icon={ShoppingCart}
           />
           <StatCard
-            title="Khách hàng"
+            title={t('dashboard.customers')}
             value={stats.summary.totalCustomers}
             change={stats.summary.customersChange}
             icon={Users}
           />
           <StatCard
-            title="Sản phẩm"
+            title={t('dashboard.products')}
             value={stats.summary.totalProducts}
             change={stats.summary.productsChange}
             icon={Package}
@@ -159,7 +161,7 @@ const Dashboard = () => {
       {Array.isArray(stats?.revenueChart) && stats.revenueChart.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Doanh thu theo thời gian</CardTitle>
+            <CardTitle>{t('dashboard.revenueOverTime')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ChartLine data={stats.revenueChart} height={220} />
@@ -171,7 +173,7 @@ const Dashboard = () => {
       {Array.isArray(stats?.categoryDistribution) && stats.categoryDistribution.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Tỷ trọng danh mục</CardTitle>
+            <CardTitle>{t('dashboard.categoryDistribution')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ChartBar data={stats.categoryDistribution} height={240} />
@@ -183,18 +185,18 @@ const Dashboard = () => {
       {stats?.recentOrders && stats.recentOrders.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Đơn hàng gần đây</CardTitle>
+            <CardTitle>{t('dashboard.recentOrders')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Mã đơn</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Khách hàng</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Tổng tiền</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Trạng thái</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Ngày đặt</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('dashboard.orderCode')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('dashboard.customer')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('dashboard.total')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('dashboard.status')}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('dashboard.orderDate')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -211,11 +213,7 @@ const Dashboard = () => {
                           order.status === "cancelled" ? "bg-red-100 text-red-800" :
                           "bg-yellow-100 text-yellow-800"
                         }`}>
-                          {order.status === "pending" ? "Chờ xử lý" :
-                           order.status === "processing" ? "Đang xử lý" :
-                           order.status === "shipping" ? "Đang giao" :
-                           order.status === "completed" ? "Hoàn thành" :
-                           "Đã hủy"}
+                          {t(`dashboard.orderStatus.${order.status}`)}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-500">

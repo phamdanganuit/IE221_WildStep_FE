@@ -4,8 +4,10 @@ import AddressDialog from "./AddressDialog";
 import { Plus } from "lucide-react";
 import { getAddresses, createAddress } from "@/service/addressService";
 import { useToast } from "@/contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 function Address() {
+  const { t } = useTranslation();
   const [addressList, setAddressList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { success, error } = useToast();
@@ -16,7 +18,7 @@ function Address() {
     if (result.success) {
       setAddressList(result.data);
     } else {
-      error(result.error || "Không thể lấy danh sách địa chỉ");
+      error(result.error || t('profile.addressPage.loadError'));
     }
     setIsLoading(false);
   };
@@ -54,13 +56,13 @@ function Address() {
   return (
     <div className="flex-col space-y-[10px] w-full">
       <div className="w-full flex justify-between items-center">
-        <p className="text-2xl font-semibold mb-4">Địa chỉ</p>
-        <AddressDialog title={"Thêm địa chỉ mới"} submitIcon={<Plus/>} submitText={"Thêm"} onSubmit={handleAdd}/>
+        <p className="text-2xl font-semibold mb-4">{t('profile.addressPage.title')}</p>
+        <AddressDialog title={t('profile.addressPage.addNew')} submitIcon={<Plus/>} submitText={t('profile.addressPage.add')} onSubmit={handleAdd}/>
       </div>
       <div className="w-full flex-col space-y-2 overflow-y-auto max-h-[34.5rem] scrollbar-hide">
         {addressList.length === 0 ? (
           <div>
-            <p>Bạn chưa thiết lập địa chỉ nào</p>
+            <p>{t('profile.addressPage.noAddress')}</p>
           </div>
         ) : (
           <>

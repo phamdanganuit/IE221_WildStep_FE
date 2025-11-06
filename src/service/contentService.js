@@ -45,9 +45,10 @@ export const getPublicBanners = async () => {
   return makeRequest(`/content/banners`);
 };
 
-export const getPublicBrands = async () => {
-  // GET /api/brands → { data: Brand[] }
-  return makeRequest(`/brands`);
+export const getPublicBrands = async (lang) => {
+  // GET /api/brands?lang=vi|en|ja → { data: Brand[] }
+  const qs = lang ? `?lang=${encodeURIComponent(lang)}` : "";
+  return makeRequest(`/brands${qs}`);
 };
 
 export const getPublicProducts = async ({ sort = "popular", category_slug = "", page = 1, page_size = 12 } = {}) => {

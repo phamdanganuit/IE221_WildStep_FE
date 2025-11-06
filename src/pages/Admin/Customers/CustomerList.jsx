@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Eye } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 const CustomerList = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [customers, setCustomers] = useState([]);
@@ -48,7 +50,7 @@ const CustomerList = () => {
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể tải danh sách khách hàng",
+        message: result.error || t('admin.customers.loadError'),
       });
     }
     setLoading(false);
@@ -69,10 +71,10 @@ const CustomerList = () => {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      active: { label: "Hoạt động", class: "bg-green-100 text-green-800" },
-      inactive: { label: "Không hoạt động", class: "bg-gray-100 text-gray-800" },
-      vip: { label: "VIP", class: "bg-purple-100 text-purple-800" },
-      blocked: { label: "Đã chặn", class: "bg-red-100 text-red-800" },
+      active: { label: t('admin.customers.active'), class: "bg-green-100 text-green-800" },
+      inactive: { label: t('admin.customers.inactive'), class: "bg-gray-100 text-gray-800" },
+      vip: { label: t('admin.customers.vip'), class: "bg-purple-100 text-purple-800" },
+      blocked: { label: t('admin.customers.blocked'), class: "bg-red-100 text-red-800" },
     };
 
     const statusInfo = statusMap[status] || { label: status, class: "bg-gray-100 text-gray-800" };
@@ -88,8 +90,8 @@ const CustomerList = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Quản lý khách hàng</h1>
-        <p className="text-gray-600 mt-1">Xem và quản lý thông tin khách hàng</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('admin.customers.title')}</h1>
+        <p className="text-gray-600 mt-1">{t('admin.customers.subtitle')}</p>
       </div>
 
       {/* Filters */}
@@ -100,7 +102,7 @@ const CustomerList = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="Tìm kiếm theo tên, email, số điện thoại..."
+                  placeholder={t('admin.customers.search')}
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                   className="pl-10"
@@ -112,31 +114,31 @@ const CustomerList = () => {
               onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
             >
-              <option value="">Tất cả trạng thái</option>
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Không hoạt động</option>
-              <option value="vip">VIP</option>
-              <option value="blocked">Đã chặn</option>
+              <option value="">{t('admin.customers.allStatus')}</option>
+              <option value="active">{t('admin.customers.active')}</option>
+              <option value="inactive">{t('admin.customers.inactive')}</option>
+              <option value="vip">{t('admin.customers.vip')}</option>
+              <option value="blocked">{t('admin.customers.blocked')}</option>
             </select>
             <select
               value={filters.sort}
               onChange={(e) => setFilters({ ...filters, sort: e.target.value, page: 1 })}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
             >
-              <option value="joinDate">Ngày tham gia</option>
-              <option value="name">Tên</option>
-              <option value="totalOrders">Số đơn</option>
-              <option value="totalSpent">Tổng chi</option>
+              <option value="joinDate">{t('admin.customers.sort.joinDate')}</option>
+              <option value="name">{t('admin.customers.sort.name')}</option>
+              <option value="totalOrders">{t('admin.customers.sort.totalOrders')}</option>
+              <option value="totalSpent">{t('admin.customers.sort.totalSpent')}</option>
             </select>
             <select
               value={filters.order}
               onChange={(e) => setFilters({ ...filters, order: e.target.value, page: 1 })}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
             >
-              <option value="desc">Giảm dần</option>
-              <option value="asc">Tăng dần</option>
+              <option value="desc">{t('common.desc')}</option>
+              <option value="asc">{t('common.asc')}</option>
             </select>
-            <Button type="submit">Tìm kiếm</Button>
+            <Button type="submit">{t('header.search')}</Button>
           </form>
         </CardContent>
       </Card>
@@ -144,7 +146,7 @@ const CustomerList = () => {
       {/* Customers Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách khách hàng ({customers.length})</CardTitle>
+          <CardTitle>{t('admin.customers.title')} ({customers.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -153,7 +155,7 @@ const CustomerList = () => {
             </div>
           ) : customers.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Không có khách hàng nào</p>
+              <p className="text-gray-500">{t('admin.customers.noCustomers')}</p>
             </div>
           ) : (
             <>
@@ -161,13 +163,13 @@ const CustomerList = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Khách hàng</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Email</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Số đơn</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Tổng chi</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Trạng thái</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Ngày tham gia</th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Thao tác</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.customers.name')}</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.customers.email')}</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.customers.orders')}</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.customers.spent')}</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.customers.status')}</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.customers.joined')}</th>
+                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">{t('admin.customers.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -191,7 +193,7 @@ const CustomerList = () => {
                             <div>
                               <p className="font-medium text-gray-900">{customer.displayName || customer.name}</p>
                               {customer.isVip && (
-                                <span className="text-xs text-purple-600 font-medium">⭐ VIP</span>
+                                <span className="text-xs text-purple-600 font-medium">⭐ {t('admin.customers.vip')}</span>
                               )}
                             </div>
                           </div>
@@ -226,7 +228,7 @@ const CustomerList = () => {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-6 border-t">
                   <p className="text-sm text-gray-600">
-                    Trang {filters.page} / {totalPages}
+                    {t('common.page')} {filters.page} / {totalPages}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -234,14 +236,14 @@ const CustomerList = () => {
                       disabled={filters.page === 1}
                       onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
                     >
-                      Trước
+                      {t('common.prev')}
                     </Button>
                     <Button
                       variant="outline"
                       disabled={filters.page === totalPages}
                       onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
                     >
-                      Sau
+                      {t('common.next')}
                     </Button>
                   </div>
                 </div>

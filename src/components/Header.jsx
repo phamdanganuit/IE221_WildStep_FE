@@ -1,17 +1,27 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleUser } from "@fortawesome/free-regular-svg-icons";
-import { faRightFromBracket, faGauge } from "@fortawesome/free-solid-svg-icons";
+import { faRightFromBracket, faGauge, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 const Header = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user, clearAuth } = useAuthStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const userMenuRef = useRef(null);
+  const languageMenuRef = useRef(null);
+  const { t, i18n } = useTranslation();
+
+  const languages = [
+    { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵' }
+  ];
 
   const handleLogout = () => {
     clearAuth();
@@ -23,11 +33,19 @@ const Header = () => {
     setShowUserMenu(false);
   };
 
+  const handleLanguageChange = (languageCode) => {
+    i18n.changeLanguage(languageCode);
+    setShowLanguageMenu(false);
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
+      }
+      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
+        setShowLanguageMenu(false);
       }
     };
 
@@ -62,25 +80,25 @@ const Header = () => {
 
       <nav className="hidden md:flex gap-6 text-[1.15rem]">
         <a href="#" className="hover:text-[#50D5C4] transition">
-          Sản phẩm mới
+          {t('header.nav.newProducts')}
         </a>
         <a href="#" className="hover:text-[#50D5C4] transition">
-          Nam
+          {t('header.nav.men')}
         </a>
         <a href="#" className="hover:text-[#50D5C4] transition">
-          Nữ
+          {t('header.nav.women')}
         </a>
         <a href="#" className="hover:text-[#50D5C4] transition">
-          Unisex
+          {t('header.nav.unisex')}
         </a>
         <a href="#" className="hover:text-[#50D5C4] transition">
-          Trẻ em
+          {t('header.nav.kids')}
         </a>
         <a href="#" className="hover:text-[#50D5C4] transition">
-          Phụ kiện thể thao
+          {t('header.nav.accessories')}
         </a>
         <a href="#" className="text-[#50D5C4] font-semibold">
-          Giảm giá
+          {t('header.nav.sale')}
         </a>
       </nav>
 
@@ -97,7 +115,7 @@ const Header = () => {
               />
               <input
                 type="text"
-                placeholder="Search"
+                placeholder={t('header.search')}
                 className="flex justify-center items-center bg-transparent outline-none text-[1.25rem] px-2"
               />
             </div>
@@ -118,6 +136,36 @@ const Header = () => {
                 alt="Wishlist"
                 className="w-6 h-6"
               />
+            </div>
+
+            {/* Language Switcher */}
+            <div className="relative" ref={languageMenuRef}>
+              <div
+                className="w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer"
+                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+              >
+                <FontAwesomeIcon icon={faGlobe} className="w-5 h-5" />
+              </div>
+
+              {/* Language Dropdown */}
+              {showLanguageMenu && (
+                <div className="absolute right-0 top-full mt-2 min-w-[180px] bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      className={`w-full px-4 py-3 text-left text-[1rem] flex items-center gap-3 transition ${
+                        i18n.language === lang.code
+                          ? 'bg-color1 text-white'
+                          : 'text-gray-900 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className="text-xl">{lang.flag}</span>
+                      <span>{lang.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* User Profile */}
@@ -183,7 +231,7 @@ const Header = () => {
                     >
                       <span className="inline-flex items-center gap-2">
                         <FontAwesomeIcon icon={faGauge} className="w-4 h-4" />
-                        Quản lý
+                        {t('header.admin')}
                       </span>
                     </button>
                   )}
@@ -193,7 +241,7 @@ const Header = () => {
                   >
                     <span className="inline-flex items-center gap-2">
                       <FontAwesomeIcon icon={faCircleUser} className="w-4 h-4" />
-                      Hồ sơ
+                      {t('header.profile')}
                     </span>
                   </button>
                   <button
@@ -202,7 +250,7 @@ const Header = () => {
                   >
                     <span className="inline-flex items-center gap-2">
                       <FontAwesomeIcon icon={faRightFromBracket} className="w-4 h-4" />
-                      Đăng xuất
+                      {t('header.logout')}
                     </span>
                   </button>
                 </div>
@@ -220,16 +268,46 @@ const Header = () => {
               />
               <input
                 type="text"
-                placeholder="Search"
+                placeholder={t('header.search')}
                 className="bg-transparent outline-none text-[1rem] px-2"
               />
+            </div>
+
+            {/* Language Switcher for non-authenticated users */}
+            <div className="relative" ref={languageMenuRef}>
+              <div
+                className="w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer"
+                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+              >
+                <FontAwesomeIcon icon={faGlobe} className="w-5 h-5" />
+              </div>
+
+              {/* Language Dropdown */}
+              {showLanguageMenu && (
+                <div className="absolute right-0 top-full mt-2 min-w-[180px] bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      className={`w-full px-4 py-3 text-left text-[1rem] flex items-center gap-3 transition ${
+                        i18n.language === lang.code
+                          ? 'bg-color1 text-white'
+                          : 'text-gray-900 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className="text-xl">{lang.flag}</span>
+                      <span>{lang.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <button
               onClick={() => navigate("/login")}
               className="bg-color4 text-[#0A1E33] font-semibold px-4 py-2 rounded-[0.5rem] hover:bg-hover4 transition cursor-pointer"
             >
-              Đăng nhập
+              {t('header.login')}
             </button>
           </div>
         )}

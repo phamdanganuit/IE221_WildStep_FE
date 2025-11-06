@@ -10,8 +10,11 @@ import Banner from "../../components/Home/Banner";
 import BestSellers from "../../components/Home/BestSeller";
 import CustomerReviews from "../../components/Home/CustomerReview";
 import Footer from "@/components/Footer";
+import { useTranslation } from "react-i18next";
 
 export default function Home() {
+  const { t } = useTranslation();
+  
   return (
     <div className="w-full min-h-screen bg-white flex flex-col">
       {/* NAVBAR */}
@@ -44,11 +47,11 @@ export default function Home() {
             </div>
 
             <p className="text-[#000000]/75 mb-8 w-full font-normal text-[1.5rem] tracking-wide">
-            Khám phá những đôi giày được thiết kế để nâng tầm phong cách và mang lại sự thoải mái tối đa mỗi bước chân.
+              {t('home.hero.description')}
             </p>
 
             <button className="px-8 py-3 bg-color4 text-white font-semibold rounded hover:bg-hover4 transition-colors shadow-xl hover:shadow-lg self-center md:self-start cursor-pointer">
-              Mua Ngay
+              {t('home.hero.buyNow')}
             </button>
           </div>
 
@@ -61,7 +64,7 @@ export default function Home() {
             />
             <div className="absolute bottom-0 right-3/10 text-center">
               <h2 className="text-[#0A1E33] text-[1.75rem] font-semibold">
-                Trendy WildStep Pro
+                {t('home.hero.productName')}
               </h2>
               <p className="text-[#000000]/50 text-[1.5rem] font-semibold">
                  3.999.000₫

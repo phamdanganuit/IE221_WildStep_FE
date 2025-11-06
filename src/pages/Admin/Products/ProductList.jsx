@@ -15,8 +15,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 
 const ProductList = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [products, setProducts] = useState([]);
@@ -100,7 +102,7 @@ const ProductList = () => {
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể tải danh sách sản phẩm",
+        message: result.error || t('admin.products.loadError'),
       });
     }
     setLoading(false);
@@ -119,13 +121,13 @@ const ProductList = () => {
     if (result.success) {
       addToast({
         type: "success",
-        message: "Xóa sản phẩm thành công",
+        message: t('admin.products.deleteSuccess'),
       });
       fetchProducts();
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể xóa sản phẩm",
+        message: result.error || t('admin.products.deleteError'),
       });
     }
 
@@ -141,10 +143,10 @@ const ProductList = () => {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      active: { label: "Đang bán", class: "bg-green-100 text-green-800" },
-      inactive: { label: "Ngừng bán", class: "bg-gray-100 text-gray-800" },
-      out_of_stock: { label: "Hết hàng", class: "bg-red-100 text-red-800" },
-      low_stock: { label: "Sắp hết", class: "bg-yellow-100 text-yellow-800" },
+      active: { label: t('admin.products.active'), class: "bg-green-100 text-green-800" },
+      inactive: { label: t('admin.products.inactive'), class: "bg-gray-100 text-gray-800" },
+      out_of_stock: { label: t('admin.products.outOfStock'), class: "bg-red-100 text-red-800" },
+      low_stock: { label: t('admin.products.lowStock'), class: "bg-yellow-100 text-yellow-800" },
     };
 
     const statusInfo = statusMap[status] || { label: status, class: "bg-gray-100 text-gray-800" };
@@ -161,12 +163,12 @@ const ProductList = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý sản phẩm</h1>
-          <p className="text-gray-600 mt-1">Quản lý sản phẩm trong cửa hàng</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.products.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('admin.products.subtitle')}</p>
         </div>
         <Button onClick={() => navigate("/admin/products/create")}>
           <Plus className="w-4 h-4 mr-2" />
-          Thêm sản phẩm
+          {t('admin.products.addNew')}
         </Button>
       </div>
 
@@ -178,7 +180,7 @@ const ProductList = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="Tìm kiếm theo tên sản phẩm..."
+                  placeholder={t('admin.products.search')}
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                   className="pl-10"
@@ -190,7 +192,7 @@ const ProductList = () => {
               onChange={(e) => setFilters({ ...filters, category: e.target.value, page: 1 })}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
             >
-              <option value="">Tất cả danh mục</option>
+              <option value="">{t('admin.products.allCategories')}</option>
               {categoryOptions.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -200,7 +202,7 @@ const ProductList = () => {
               onChange={(e) => setFilters({ ...filters, brand: e.target.value, page: 1 })}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
             >
-              <option value="">Tất cả thương hiệu</option>
+              <option value="">{t('admin.products.allBrands')}</option>
               {brandOptions.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
@@ -210,32 +212,32 @@ const ProductList = () => {
               onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
             >
-              <option value="">Tất cả trạng thái</option>
-              <option value="active">Đang bán</option>
-              <option value="inactive">Ngừng bán</option>
-              <option value="out_of_stock">Hết hàng</option>
-              <option value="low_stock">Sắp hết</option>
+              <option value="">{t('admin.products.allStatus')}</option>
+              <option value="active">{t('admin.products.active')}</option>
+              <option value="inactive">{t('admin.products.inactive')}</option>
+              <option value="out_of_stock">{t('admin.products.outOfStock')}</option>
+              <option value="low_stock">{t('admin.products.lowStock')}</option>
             </select>
             <select
               value={filters.sort}
               onChange={(e) => setFilters({ ...filters, sort: e.target.value, page: 1 })}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
             >
-              <option value="createdAt">Mới nhất</option>
-              <option value="name">Tên</option>
-              <option value="price">Giá</option>
-              <option value="stock">Tồn kho</option>
-              <option value="sold">Đã bán</option>
+              <option value="createdAt">{t('admin.products.newest')}</option>
+              <option value="name">{t('admin.products.name')}</option>
+              <option value="price">{t('admin.products.price')}</option>
+              <option value="stock">{t('admin.products.stock')}</option>
+              <option value="sold">{t('dashboard.orders')}</option>
             </select>
             <select
               value={filters.order}
               onChange={(e) => setFilters({ ...filters, order: e.target.value, page: 1 })}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
             >
-              <option value="desc">Giảm dần</option>
-              <option value="asc">Tăng dần</option>
+              <option value="desc">{t('admin.products.priceHighLow')}</option>
+              <option value="asc">{t('admin.products.priceLowHigh')}</option>
             </select>
-            <Button type="submit">Tìm kiếm</Button>
+            <Button type="submit">{t('header.search')}</Button>
           </form>
         </CardContent>
       </Card>
@@ -243,7 +245,7 @@ const ProductList = () => {
       {/* Products Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách sản phẩm ({products.length})</CardTitle>
+          <CardTitle>{t('admin.products.title')} ({products.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -252,7 +254,7 @@ const ProductList = () => {
             </div>
           ) : products.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Không có sản phẩm nào</p>
+              <p className="text-gray-500">{t('admin.products.noProducts')}</p>
             </div>
           ) : (
             <>
@@ -260,12 +262,12 @@ const ProductList = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Sản phẩm</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Giá</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Tồn kho</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Đã bán</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Trạng thái</th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Thao tác</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.products.name')}</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.products.price')}</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.products.stock')}</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('dashboard.orders')}</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.products.status')}</th>
+                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">{t('admin.products.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -281,7 +283,7 @@ const ProductList = () => {
                               />
                             ) : (
                               <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                                <span className="text-gray-400 text-xs">No img</span>
+                                <span className="text-gray-400 text-xs">{t('common.noImage')}</span>
                               </div>
                             )}
                             <div>
@@ -338,7 +340,7 @@ const ProductList = () => {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-6 border-t">
                   <p className="text-sm text-gray-600">
-                    Trang {filters.page} / {totalPages}
+                    {t('admin.products.list.pagination.page', { current: filters.page, total: totalPages })}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -346,14 +348,14 @@ const ProductList = () => {
                       disabled={filters.page === 1}
                       onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
                     >
-                      Trước
+                      {t('admin.products.list.pagination.prev')}
                     </Button>
                     <Button
                       variant="outline"
                       disabled={filters.page === totalPages}
                       onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
                     >
-                      Sau
+                      {t('admin.products.list.pagination.next')}
                     </Button>
                   </div>
                 </div>
@@ -367,17 +369,15 @@ const ProductList = () => {
       <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, product: null })}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Xác nhận xóa sản phẩm</DialogTitle>
+            <DialogTitle>{t('admin.products.list.deleteConfirm.title')}</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn xóa sản phẩm <strong>{deleteDialog.product?.name}</strong>? Hành động này không thể hoàn tác.
+              {t('admin.products.list.deleteConfirm.description', { name: deleteDialog.product?.name })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, product: null })}>
-              Hủy
-            </Button>
+            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, product: null })}>{t('common.cancel')}</Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Xóa
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

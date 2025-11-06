@@ -13,8 +13,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 
 const CustomerDetail = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const { addToast } = useToast();
@@ -36,7 +38,7 @@ const CustomerDetail = () => {
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể tải thông tin khách hàng",
+        message: result.error || t('admin.customers.detail.loadError'),
       });
       navigate("/admin/customers");
     }
@@ -50,13 +52,13 @@ const CustomerDetail = () => {
     if (result.success) {
       addToast({
         type: "success",
-        message: status === "blocked" ? "Đã chặn khách hàng" : "Đã bỏ chặn khách hàng",
+        message: status === "blocked" ? t('admin.customers.detail.blocked') : t('admin.customers.detail.unblocked'),
       });
       fetchCustomer();
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể cập nhật trạng thái",
+        message: result.error || t('admin.customers.detail.updateError'),
       });
     }
     setUpdating(false);
@@ -72,10 +74,10 @@ const CustomerDetail = () => {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      active: { label: "Hoạt động", class: "bg-green-100 text-green-800" },
-      inactive: { label: "Không hoạt động", class: "bg-gray-100 text-gray-800" },
-      vip: { label: "VIP", class: "bg-purple-100 text-purple-800" },
-      blocked: { label: "Đã chặn", class: "bg-red-100 text-red-800" },
+      active: { label: t('admin.customers.active'), class: "bg-green-100 text-green-800" },
+      inactive: { label: t('admin.customers.inactive'), class: "bg-gray-100 text-gray-800" },
+      vip: { label: t('admin.customers.vip'), class: "bg-purple-100 text-purple-800" },
+      blocked: { label: t('admin.customers.blocked'), class: "bg-red-100 text-red-800" },
     };
 
     const statusInfo = statusMap[status] || { label: status, class: "bg-gray-100 text-gray-800" };

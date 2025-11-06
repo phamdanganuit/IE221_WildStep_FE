@@ -3,9 +3,12 @@ import { FaArrowRight, FaFire } from "react-icons/fa";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 import newLabel from "@/assets/new_label.svg";
 import { getPublicCategories, getPublicProducts } from "@/service/contentService";
+import { useTranslation } from "react-i18next";
+import { translateCategoryName } from "@/lib/i18nUtils";
 
 export default function BestSellers() {
-  const [categoryTabs, setCategoryTabs] = useState([{ name: "Tất cả", slug: "" }]);
+  const { t } = useTranslation();
+  const [categoryTabs, setCategoryTabs] = useState([{ name: t('home.bestSellers.all'), slug: "" }]);
   const [activeCategorySlug, setActiveCategorySlug] = useState("");
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,17 +27,23 @@ export default function BestSellers() {
           : Array.isArray(payload?.data)
             ? payload.data
             : [];
-        const tabs = [{ name: "Tất cả", slug: "" }];
+        const tabs = [{ name: t('home.bestSellers.all'), slug: "" }];
         list.forEach((parent) => {
-          if (parent?.name && parent?.slug) tabs.push({ name: parent.name, slug: parent.slug });
+          if (parent?.name && parent?.slug) {
+            tabs.push({ 
+              name: translateCategoryName(parent.name, t), 
+              originalName: parent.name,
+              slug: parent.slug 
+            });
+          }
         });
         setCategoryTabs(tabs);
       } else {
-        setCategoryTabs([{ name: "Tất cả", slug: "" }]);
+        setCategoryTabs([{ name: t('home.bestSellers.all'), slug: "" }]);
       }
     })();
     return () => { mounted = false };
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let mounted = true;
@@ -78,7 +87,7 @@ export default function BestSellers() {
       <div className="text-center mb-10">
         <h2 className="text-[#0A1E33] flex items-center justify-center gap-5">
           <span className="font-semibold text-[2rem]">—</span>
-          <span className="text-[2.5rem] font-semibold">BÁN CHẠY NHẤT</span>
+          <span className="text-[2.5rem] font-semibold">{t('home.bestSellers.title')}</span>
           <span className="font-semibold text-[2rem]">—</span>
         </h2>
 
@@ -123,10 +132,10 @@ export default function BestSellers() {
                     {isHot ? (
                       <>
                         <FaFire className="w-4 h-4" />
-                        <span>Hot</span>
+                        <span>{t('home.bestSellers.hot')}</span>
                       </>
                     ) : (
-                      <span>New</span>
+                      <span>{t('home.bestSellers.new')}</span>
                     )}
                   </div>
                 );
