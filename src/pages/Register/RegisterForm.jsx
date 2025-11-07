@@ -4,8 +4,10 @@ import SocialLoginButtons from "@/components/SocialLoginButton";
 import { register, getStoredToken } from "../../service/authService";
 import { useAuthStore } from "../../store/authStore";
 import { useToast } from "../../contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 function RegisterForm() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
@@ -50,21 +52,21 @@ function RegisterForm() {
 
     // Validation cho fullName
     if (!fullName || fullName.trim() === "") {
-      nextErrors.fullName = "Họ và tên là bắt buộc";
+      nextErrors.fullName = t('register.errors.fullNameRequired');
     }
 
     if (!email || email.trim() === "") {
-      nextErrors.email = "Email là bắt buộc";
+      nextErrors.email = t('register.errors.emailRequired');
     } else if (!isValidEmail(email.trim())) {
-      nextErrors.email = "Email không hợp lệ";
+      nextErrors.email = t('register.errors.emailInvalid');
     }
 
     if (!password || password === "") {
-      nextErrors.password = "Mật khẩu là bắt buộc";
+      nextErrors.password = t('register.errors.passwordRequired');
     } else if (password.length < MIN_PASSWORD_LENGTH) {
-      nextErrors.password = `Mật khẩu phải có ít nhất ${MIN_PASSWORD_LENGTH} ký tự`;
+      nextErrors.password = t('register.errors.passwordMinLength', { length: MIN_PASSWORD_LENGTH });
     } else if (!isStrongPassword(password)) {
-      nextErrors.password = `Mật khẩu phải chứa ít nhất 1 chữ in hoa, 1 chữ số và 1 ký tự đặc biệt`;
+      nextErrors.password = t('register.errors.passwordWeak');
     }
 
     if (!check) {
@@ -122,10 +124,10 @@ function RegisterForm() {
         <main className="flex flex-col gap-3 mt-3 w-full max-md:mt-10 max-md:max-w-full">
           <header className="flex flex-col justify-start items-start gap-1">
             <h1 className="text-[3rem] font-semibold text-color2 max-md:text-[2.25rem]">
-              Đăng ký
+              {t('register.title')}
             </h1>
             <div className="text-[1.25rem] tracking-tight text-black text-normal">
-              Bắt đầu hành trình khám phá cùng Wild Step
+              {t('register.subtitle')}
             </div>
           </header>
 
@@ -138,7 +140,7 @@ function RegisterForm() {
                 htmlFor="fullName"
                 className="text-[1rem] text-[#000000]/50"
               >
-                Họ và Tên
+                {t('register.fullName')}
               </label>
               <input
                 id="fullName"
@@ -146,7 +148,7 @@ function RegisterForm() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="flex flex-col justify-center px-5 py-4 mt-1.5 w-full text-[1.25rem] text-[#000000]/50 tracking-tight whitespace-nowrap rounded-2xl border-2 border-solid bg-opacity-0 border-[#333678]/50 border-opacity-50 min-h-16 max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color2 focus:border-color2"
-                placeholder="Nguyễn Văn A"
+                placeholder={t('register.fullNamePlaceholder')}
                 aria-describedby="fullname-help"
               />
               {errors.fullName && (
@@ -158,7 +160,7 @@ function RegisterForm() {
 
             <div className="mt-4 w-full font-medium max-md:max-w-full">
               <label htmlFor="email" className="text-[1rem] text-[#000000]/50">
-                Email hoặc username
+                {t('register.email')}
               </label>
               <input
                 id="email"
@@ -166,7 +168,7 @@ function RegisterForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="flex flex-col justify-center px-5 py-4 mt-1.5 w-full text-[1.25rem] text-[#000000]/50 tracking-tight whitespace-nowrap rounded-2xl border-2 border-solid bg-opacity-0 border-[#333678]/50 border-opacity-50 min-h-16 max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color2 focus:border-color2"
-                placeholder="info@gmail.com"
+                placeholder={t('register.emailPlaceholder')}
                 aria-describedby="email-help"
               />
               {errors.email && (
@@ -178,7 +180,7 @@ function RegisterForm() {
 
             <div className="mt-4 w-full font-medium text-[#000000]/50 max-md:max-w-full">
               <label htmlFor="password" className="text-[1rem] tracking-tight">
-                Mật khẩu
+                {t('register.password')}
               </label>
               <div className="relative">
                 <input
@@ -186,7 +188,7 @@ function RegisterForm() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mật khẩu"
+                  placeholder={t('register.passwordPlaceholder')}
                   className="flex flex-col justify-center px-5 py-4 mt-1.5 w-full text-[1.25rem] tracking-tight rounded-2xl border-2 border-solid border-[#333678]/50 min-h-16 max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color2 focus:border-color2"
                   aria-describedby="password-help"
                 />
@@ -256,19 +258,19 @@ function RegisterForm() {
                 </div>
 
                 <span className="self-stretch my-auto text-[1.125rem]">
-                  Tôi đồng ý với{" "}
+                  {t('register.agreeWith')}{" "}
                   <Link
                     to="/terms"
                     className="font-semibold text-color2 hover:underline hover:scale-50"
                   >
-                    Điều khoản sử dụng
+                    {t('register.termsOfService')}
                   </Link>{" "}
-                  và{" "}
+                  {t('register.and')}{" "}
                   <Link
                     to="/privacy"
                     className="font-semibold text-color2 hover:underline"
                   >
-                    Chính sách bảo mật
+                    {t('register.privacyPolicy')}
                   </Link>
                 </span>
               </div>
@@ -291,21 +293,21 @@ function RegisterForm() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span className="self-stretch my-auto">Đang đăng ký...</span>
+                  <span className="self-stretch my-auto">{t('register.registering')}</span>
                 </>
               ) : (
-                <span className="self-stretch my-auto">Đăng ký</span>
+                <span className="self-stretch my-auto">{t('register.registerButton')}</span>
               )}
             </button>
           </form>
 
           <div className="flex gap-1.5 items-center self-start text-[1.25rem] tracking-tight">
-            <p className="self-stretch my-auto text-black">Đã có tài khoản ?</p>
+            <p className="self-stretch my-auto text-black">{t('register.haveAccount')}</p>
             <button
               onClick={() => navigate("/login")}
               className="self-stretch my-auto font-semibold text-color2 hover:underline cursor-pointer"
             >
-              Đăng nhập
+              {t('register.login')}
             </button>
           </div>
 
@@ -316,7 +318,7 @@ function RegisterForm() {
               className="object-contain shrink-0 self-stretch my-auto aspect-[76.92] w-[9.6875rem]"
             />
             <span className="self-stretch my-auto text-center">
-              Hoặc tiếp tục với
+              {t('register.orContinueWith')}
             </span>
             <img
               src="https://api.builder.io/api/v1/image/assets/7e6ace8706ad423985a91f95c2918220/88e5e0c07683d0c404879328cec4e8151ffff570?placeholderIfAbsent=true"

@@ -4,8 +4,10 @@ import { FaFacebook, FaGoogle } from "react-icons/fa";
 import { loginWithGoogle, loginWithFacebook } from "../service/authService";
 import { useAuthStore } from "../store/authStore";
 import { useToast } from "../contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState({ google: false, facebook: false });
   const setAuth = useAuthStore((state) => state.setAuth);
   const { error } = useToast();
@@ -28,7 +30,7 @@ function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
         scope: 'email profile',
         callback: async (response) => {
           if (response.error) {
-            error("Đăng nhập Google thất bại: " + response.error);
+            error(t('socialLogin.googleLoginFailed') + ": " + response.error);
             setIsLoading(prev => ({ ...prev, google: false }));
             return;
           }
@@ -55,7 +57,7 @@ function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
             }
           } catch (err) {
             console.error("Lỗi xử lý Google login:", err);
-            error("Có lỗi xảy ra khi đăng nhập Google");
+            error(t('socialLogin.googleLoginError'));
           } finally {
             setIsLoading(prev => ({ ...prev, google: false }));
           }
@@ -65,7 +67,7 @@ function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
       client.requestAccessToken();
     } catch (err) {
       console.error("Lỗi Google OAuth:", err);
-      error("Không thể khởi tạo Google OAuth");
+      error(t('socialLogin.googleOAuthError'));
       setIsLoading(prev => ({ ...prev, google: false }));
     }
   };
@@ -140,7 +142,7 @@ function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
               }
             } catch (err) {
               console.error("Lỗi xử lý Facebook login:", err);
-              error("Có lỗi xảy ra khi đăng nhập Facebook");
+              error(t('socialLogin.facebookLoginError'));
             } finally {
               setIsLoading(prev => ({ ...prev, facebook: false }));
             }
@@ -148,13 +150,13 @@ function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
           
           processLogin();
         } else {
-          error("Đăng nhập Facebook bị hủy");
+          error(t('socialLogin.facebookCancelled'));
           setIsLoading(prev => ({ ...prev, facebook: false }));
         }
       }, { scope: 'email,public_profile' });
     } catch (err) {
       console.error("Lỗi Facebook OAuth:", err);
-      error("Không thể khởi tạo Facebook OAuth");
+      error(t('socialLogin.facebookOAuthError'));
       setIsLoading(prev => ({ ...prev, facebook: false }));
     }
   };

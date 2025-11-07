@@ -1,56 +1,38 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 function Sidebar({ isActive, setActive }) {
+  const { t } = useTranslation();
+  
+  const menuItems = [
+    { key: 'profile', label: t('profile.title') },
+    { key: 'address', label: t('profile.address') },
+    { key: 'changePassword', label: t('profile.changePassword') },
+    { key: 'linkAccount', label: t('profile.linkAccount') },
+    { key: 'notificationSettings', label: t('profile.notificationSettings') },
+  ];
+
   return (
     <div className="mt-10 flex flex-col space-y-4 w-[250px] h-[400px] justify-start pr-6 border-r border-[#3A506B] ">
-      <button
-        className={`${
-          isActive === "Hồ sơ" ? "font-bold text-[#0B132B]" : "font-semibold text-zinc-500"
-        } px-4 py-2 text-left hover:bg-gray-200 rounded-lg cursor-pointer`}
-        onClick={() => setActive("Hồ sơ")}
-      >
-        Hồ sơ
-      </button>
-      <button
-        className={`${
-          isActive === "Địa chỉ" ? "font-bold text-[#0B132B]" : "font-semibold text-zinc-500"
-        } px-4 py-2 text-left hover:bg-gray-200 rounded-lg cursor-pointer`}
-        onClick={() => setActive("Địa chỉ")}
-      >
-        Địa chỉ
-      </button>
-      <button
-        className={`${
-          isActive === "Đổi mật khẩu" ? "font-bold text-[#0B132B]" : "font-semibold text-zinc-500"
-        } px-4 py-2 text-left hover:bg-gray-200 rounded-lg cursor-pointer`}
-        onClick={() => setActive("Đổi mật khẩu")}
-      >
-        Đổi mật khẩu
-      </button>
-      <button
-        className={`${
-          isActive === "Liên kết tài khoản" ? "font-bold text-[#0B132B]" : "font-semibold text-zinc-500"
-        } px-4 py-2 text-left hover:bg-gray-200 rounded-lg cursor-pointer`}
-        onClick={() => setActive("Liên kết tài khoản")}
-      >
-        Liên kết tài khoản
-      </button>
-      <button
-        className={`${
-          isActive === "Cài đặt thông báo" ? "font-bold text-[#0B132B]" : "font-semibold text-zinc-500"
-        } px-4 py-2 text-left hover:bg-gray-200 rounded-lg cursor-pointer`}
-        onClick={() => setActive("Cài đặt thông báo")}
-      >
-        Cài đặt thông báo
-      </button>
+      {menuItems.map((item) => (
+        <button
+          key={item.key}
+          className={`${
+            isActive === item.label ? "font-bold text-[#0B132B]" : "font-semibold text-zinc-500"
+          } px-4 py-2 text-left hover:bg-gray-200 rounded-lg cursor-pointer`}
+          onClick={() => setActive(item.label)}
+        >
+          {item.label}
+        </button>
+      ))}
       <div className="border-t border-[#3A506B]" />
       <button
         className={`${
-          isActive === "Xóa tài khoản" ? "font-bold text-rose-600" : "font-semibold text-rose-500"
+          isActive === t('profile.deleteAccount') ? "font-bold text-rose-600" : "font-semibold text-rose-500"
         } px-4 py-2 text-left hover:bg-gray-200 rounded-lg cursor-pointer`}
-        onClick={() => setActive("Xóa tài khoản")}
+        onClick={() => setActive(t('profile.deleteAccount'))}
       >
-        Xóa tài khoản
+        {t('profile.deleteAccount')}
       </button>
     </div>
   );

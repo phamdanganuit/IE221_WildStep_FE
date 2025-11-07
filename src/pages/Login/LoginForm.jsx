@@ -4,8 +4,10 @@ import SocialLoginButtons from "@/components/SocialLoginButton";
 import { login, getStoredToken } from "../../service/authService";
 import { useAuthStore } from "../../store/authStore";
 import { useToast } from "../../contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 function LoginForm() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -63,10 +65,10 @@ function LoginForm() {
         <main className="flex flex-col gap-3 mt-10 w-full max-md:mt-10 max-md:max-w-full">
           <header className="flex flex-col justify-start items-start gap-1">
             <h1 className="text-[3rem] font-semibold text-color4 max-md:text-[2.25rem]">
-              Đăng nhập
+              {t('login.title')}
             </h1>
             <div className="text-[1.25rem] tracking-tight text-black text-normal">
-              Trải nghiệm mua sắm tối ưu cùng Wild Step
+              {t('login.subtitle')}
             </div>
           </header>
 
@@ -76,7 +78,7 @@ function LoginForm() {
           >
             <div className="w-full font-medium max-md:max-w-full">
               <label htmlFor="email" className="text-[1rem] text-[#000000]/50">
-                Email hoặc username
+                {t('login.email')}
               </label>
               <input
                 id="email"
@@ -84,7 +86,7 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="flex flex-col justify-center px-5 py-4 mt-1.5 w-full text-[1.25rem] text-[#000000]/50 tracking-tight whitespace-nowrap rounded-2xl border-2 border-solid bg-opacity-0 border-[#333678]/50 border-opacity-50 min-h-16 max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color4 focus:border-color4"
-                placeholder="info@gmail.com"
+                placeholder={t('login.emailPlaceholder')}
                 required
                 aria-describedby="email-help"
               />
@@ -92,7 +94,7 @@ function LoginForm() {
 
             <div className="mt-4 w-full font-medium text-[#000000]/50 max-md:max-w-full">
               <label htmlFor="password" className="text-[1rem] tracking-tight">
-                Mật khẩu
+                {t('login.password')}
               </label>
               <div className="relative">
                 <input
@@ -100,7 +102,7 @@ function LoginForm() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mật khẩu"
+                  placeholder={t('login.passwordPlaceholder')}
                   className="flex flex-col justify-center px-5 py-4 mt-1.5 w-full text-[1.25rem] tracking-tight rounded-2xl border-2 border-solid border-[#333678]/50 min-h-16 max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color4 focus:border-color4"
                   required
                   aria-describedby="password-help"
@@ -150,14 +152,14 @@ function LoginForm() {
                   </div>
                 </label>
                 <span className="self-stretch my-auto text-[1.125rem]">
-                  Ghi nhớ
+                  {t('login.rememberMe')}
                 </span>
               </div>
               <button
                 type="button"
                 className="self-stretch my-auto text-[1.125rem] font-medium text-color4 hover:text-hover4 hover:underline cursor-pointer focus:outline-none focus:ring-2 focus:ring-color4 rounded"
               >
-                Quên mật khẩu
+                {t('login.forgotPassword')}
               </button>
             </div>
 
@@ -178,23 +180,23 @@ function LoginForm() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span className="self-stretch my-auto">Đang đăng nhập...</span>
+                  <span className="self-stretch my-auto">{t('login.loggingIn')}</span>
                 </>
               ) : (
-                <span className="self-stretch my-auto">Đăng nhập</span>
+                <span className="self-stretch my-auto">{t('login.loginButton')}</span>
               )}
             </button>
           </form>
 
           <div className="flex gap-1.5 items-center self-start text-[1.25rem] tracking-tight">
             <p className="self-stretch my-auto text-black">
-              Chưa có tài khoản ?
+              {t('login.noAccount')}
             </p>
             <button
               onClick={() => navigate("/register")}
               className="self-stretch my-auto font-semibold text-color4 hover:underline cursor-pointer"
             >
-              Đăng ký
+              {t('login.register')}
             </button>
           </div>
 
@@ -205,7 +207,7 @@ function LoginForm() {
               className="object-contain shrink-0 self-stretch my-auto aspect-[76.92] w-[9.6875rem]"
             />
             <span className="self-stretch my-auto text-center">
-              Hoặc tiếp tục với
+              {t('login.orContinueWith')}
             </span>
             <img
               src="https://api.builder.io/api/v1/image/assets/7e6ace8706ad423985a91f95c2918220/88e5e0c07683d0c404879328cec4e8151ffff570?placeholderIfAbsent=true"

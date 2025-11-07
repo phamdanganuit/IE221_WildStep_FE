@@ -233,4 +233,16 @@ button:focus-visible {
   body {
     @apply bg-background text-foreground;
   }
+  /* Unified pointer + hover for buttons and links */
+  button,
+  [type="button"],
+  [type="submit"],
+  [role="button"],
+  a {
+    cursor: pointer;
+    transition: color 150ms ease, background-color 150ms ease, opacity 150ms ease, filter 150ms ease;
+  }
+  a:hover {
+    color: var(--color4);
+  }
 }

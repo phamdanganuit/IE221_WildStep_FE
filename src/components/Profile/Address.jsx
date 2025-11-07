@@ -2,45 +2,50 @@ import React, { useEffect, useState } from "react";
 import AddressCard from "./AddressCard";
 import AddressDialog from "./AddressDialog";
 import { Plus } from "lucide-react";
-
+import { getAddresses, createAddress } from "@/service/addressService";
+import { useToast } from "@/contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 function Address() {
+  const { t } = useTranslation();
   const [addressList, setAddressList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { success, error } = useToast();
+
+  const fetchAddresses = async () => {
+    setIsLoading(true);
+    const result = await getAddresses();
+    if (result.success) {
+      setAddressList(result.data);
+    } else {
+      error(result.error || t('profile.addressPage.loadError'));
+    }
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = () => {
-      setAddressList([
-        {
-          _id: "63b413a8c913d1321a98",
-          receiver: "Hac Thien Cau",
-          detail: "11A đường 4",
-          ward: "Phường Bình Chiểu",
-          district: "Quận Thủ Đức",
-          province: "Thành phồ Hồ Chí Minh",
-          phone: "0779765688",
-          default: true,
-          createdAt: "2023-01-03T10:20:40.123Z",
-        },
-        {
-          _id: "1234534edsafdfas32318",
-          receiver: "Uyen Nè",
-          detail: "Khu phố 6",
-          ward: "Phường Linh Trung",
-          district: "Quận Thủ Đức",
-          province: "Thành phồ Hồ Chí Minh",
-          phone: "0123456789",
-          default: false,
-          createdAt: "2025-01-03T10:20:40.123Z",
-        },
-      ]);
-      setIsLoading(false);
-    };
-    fetchData();
+    fetchAddresses();
   }, []);
 
-  const handleAdd = (newAddress) => {
-    console.log(newAddress);
-  }
+  const handleAdd = async (newAddress) => {
+    const result = await createAddress({
+      receiver: newAddress.receiver,
+      detail: newAddress.detail,
+      ward: newAddress.ward,
+      district: newAddress.district,
+      province: newAddress.province,
+      phone: newAddress.phone,
+      is_default: newAddress.default,
+    });
+
+    if (result.success) {
+      success(result.message);
+      // Refresh danh sách địa chỉ
+      await fetchAddresses();
+    } else {
+      error(result.error);
+    }
+  };
   if (isLoading) {
     return (
       <div className="w-full flex items-center justify-center font-semibold text-2xl gap-2">
@@ -51,18 +56,18 @@ function Address() {
   return (
     <div className="flex-col space-y-[10px] w-full">
       <div className="w-full flex justify-between items-center">
-        <p className="text-2xl font-semibold mb-4">Địa chỉ</p>
-        <AddressDialog title={"Thêm địa chỉ mới"} submitIcon={<Plus/>} submitText={"Thêm"} onSubmit={handleAdd}/>
+        <p className="text-2xl font-semibold mb-4">{t('profile.addressPage.title')}</p>
+        <AddressDialog title={t('profile.addressPage.addNew')} submitIcon={<Plus/>} submitText={t('profile.addressPage.add')} onSubmit={handleAdd}/>
       </div>
       <div className="w-full flex-col space-y-2 overflow-y-auto max-h-[34.5rem] scrollbar-hide">
         {addressList.length === 0 ? (
           <div>
-            <p>Bạn chưa thiết lập địa chỉ nào</p>
+            <p>{t('profile.addressPage.noAddress')}</p>
           </div>
         ) : (
           <>
             {addressList?.map((a) => {
-              return <AddressCard key={a._id} address={a} />;
+              return <AddressCard key={a.id || a._id} address={a} onUpdate={fetchAddresses} />;
             })}
           </>
         )}
