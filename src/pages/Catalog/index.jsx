@@ -1,6 +1,7 @@
+import CatalogList from "@/components/Catalog/CatalogList";
 import { CatalogSidebar } from "@/components/Catalog/CatalogSideBar";
 import Header from "@/components/Header";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -64,7 +65,10 @@ function Catalog() {
   });
   useEffect(() => {
     if (!filterParam) return;
-
+    if (!/^(Sản-phẩm-mới|Giảm-giá|Phụ-kiện|Nam|Nữ|Trẻ-em|Unisex)$/.test(filterParam)) {
+      searchParams.delete("filter");
+      window.location.href = "/products"
+    }
     setFilters((prev) => {
       const updated = { ...prev };
 
@@ -106,9 +110,7 @@ function Catalog() {
     <div className="w-full min-h-screen">
       <Header/>
       <CatalogLayout filters={filters} setFilters={setFilters}>
-        <div className="flex flex-col w-full">
-          Filter hiện tại:{" "}
-        </div>
+      <CatalogList filters={filters} />
       </CatalogLayout>
     </div>
   );

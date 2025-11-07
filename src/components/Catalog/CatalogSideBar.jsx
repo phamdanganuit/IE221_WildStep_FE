@@ -4,9 +4,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
-  SidebarHeader,
 } from "@/components/ui/sidebar";
-import CatalogBreadCrumb from "./CatalogBreadCrumb";
 import { Input } from "../ui/input";
 import {
   Collapsible,
@@ -16,8 +14,13 @@ import {
 import { ChevronDown } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
+import { useState } from "react";
+import { useToast } from "../../contexts/ToastContext";
 
 export function CatalogSidebar({ filters, setFilters }) {
+  const [from, setFrom] = useState(filters?.price?.from || "");
+  const [to, setTo] = useState(filters?.price?.to || "");
+  const { error } = useToast();
   const handleGenderChange = (index) => {
     setFilters((prev) => {
       const newGender = prev.gender.map((g, i) =>
@@ -50,25 +53,21 @@ export function CatalogSidebar({ filters, setFilters }) {
       return { ...prev, color: newColor };
     });
   };
-  const handleFromPriceChange = (e) => {
-    const newFromPrice = e.target.value;
+  const handleApplyPrice = () => {
+    if (from > to) {
+      error("Giá từ không được lớn hơn giá đến");
+      return;
+    }
     setFilters((prev) => ({
       ...prev,
-      from: newFromPrice,
+      price: {
+        from: from,
+        to: to,
+      },
     }));
-  }
-  const handleToPriceChange = (e) => {
-    const newToPrice = e.target.value;
-    setFilters((prev) => ({
-      ...prev,
-      to: newToPrice,
-    }));
-  }
+  };
   return (
     <Sidebar className={"sticky"}>
-      <SidebarHeader>
-        <CatalogBreadCrumb category={filters?.category} />
-      </SidebarHeader>
       <SidebarContent>
         <Separator />
         <Collapsible defaultOpen className="group/collapsible mb-2">
@@ -104,9 +103,14 @@ export function CatalogSidebar({ filters, setFilters }) {
             <p className="text-lg font-semibold">Khoảng giá</p>
           </SidebarGroupLabel>
           <p className="text-sm px-2">Từ</p>
-          <label className="text-sm flex items-center px-2"><Input value={filters.from} onChange={handleFromPriceChange}/>.000₫</label>
+          <label className="text-sm flex items-center px-2">
+            <Input value={from} onChange={(e) => setFrom(e.target.value)} />₫
+          </label>
           <p className="text-sm px-2">Đến</p>
-          <label className="text-sm flex items-center px-2"><Input value={filters.to} onChange={handleToPriceChange}/>.000₫</label>
+          <label className="text-sm flex items-center px-2">
+            <Input value={to} onChange={(e) => setTo(e.target.value)} />₫
+          </label>
+          <Button className={"mt-4"} onClick={handleApplyPrice}>Áp dụng</Button>
         </SidebarGroup>
         <Separator />
         <Collapsible defaultOpen className="group/collapsible mb-2">
