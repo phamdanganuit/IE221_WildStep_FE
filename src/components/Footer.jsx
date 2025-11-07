@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -30,8 +32,8 @@ const Footer = () => {
                     />
                     <div className="flex gap-2 items-center self-stretch my-auto text-[1.125rem] text-black whitespace-nowrap w-[50px]">
                       <div className="shrink-0 self-stretch my-auto w-0 border border-black border-solid h-[18px]" />
-                      <button className="self-stretch my-auto w-[41px]">
-                        {t('footer.send')}
+                      <button className="self-stretch my-auto w-[41px] flex items-center justify-center cursor-pointer hover:scale-110 transition-transform duration-200" aria-label={t('footer.send')}>
+                        <FontAwesomeIcon icon={faPaperPlane} className="w-5 h-5 hover:text-color4 transition-colors duration-200" />
                       </button>
                     </div>
                   </div>
