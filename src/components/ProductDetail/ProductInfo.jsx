@@ -1,0 +1,89 @@
+import React from "react";
+import ColorSelector from "./ColorSelector";
+import SizeSelector from "./SizeSelector";
+import { Button } from "../ui/button";
+
+const ProductInfo = ({
+  title,
+  originalPrice,
+  salePrice,
+  soldCount,
+  rating,
+  onAddToCart,
+  onBuyNow,
+  selectedSize,
+  handleSizeChange,
+  selectedColor,
+  handleColorChange,
+}) => {
+  return (
+    <div className="flex flex-col w-full max-md:max-w-full">
+      <h1 className="self-start text-4xl font-bold tracking-normal leading-tight text-slate-900">
+        {title}
+      </h1>
+
+      <div className="flex flex-wrap gap-5 justify-between mt-4 w-full max-md:max-w-full">
+        <div className="flex gap-4 justify-center items-center leading-tight whitespace-nowrap">
+          <span className="self-stretch my-auto text-lg font-medium line-through text-stone-500">
+            {originalPrice}
+          </span>
+          <span className="self-stretch my-auto text-3xl font-semibold text-slate-900">
+            {salePrice}
+          </span>
+        </div>
+
+        <div className="flex gap-3 justify-center items-center my-auto leading-none">
+          <span className="items-center flex justify-center text-xl text-stone-500">
+            Đã bán: {soldCount}
+          </span>
+          <div className="flex gap-1 justify-center items-center my-auto text-2xl font-semibold whitespace-nowrap text-neutral-900">
+            <img
+              src="https://api.builder.io/api/v1/image/assets/7e6ace8706ad423985a91f95c2918220/39c40ce39c244e8d7b00b6d26740705242085a80?placeholderIfAbsent=true"
+              alt="Rating star"
+              className="object-contain shrink-0 my-auto w-6 rounded-sm aspect-square"
+            />
+            <span className="flex self-stretch items-center my-auto">
+              {rating}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <img
+        src="https://api.builder.io/api/v1/image/assets/7e6ace8706ad423985a91f95c2918220/93d2205f05d05075b32b3ea720a46f24122ebd45?placeholderIfAbsent=true"
+        alt="Product features"
+        className="object-contain mt-5 w-full max-md:max-w-full"
+      />
+
+        <ColorSelector
+          selectedColor={selectedColor}
+          onColorChange={handleColorChange}
+        />
+
+        <SizeSelector
+          selectedSize={selectedSize}
+          onSizeChange={handleSizeChange}
+        />
+
+        <section className="grid grid-cols-2 justify-center items-center mt-6 w-full gap-10 text-xl leading-tight max-md:max-w-full">
+          <button
+            onClick={onAddToCart}
+            className="flex w-full overflow-hidden justify-between items-center self-stretch px-12 py-4 my-auto font-semibold text-white bg-color4 rounded-lg max-md:px-5 hover:bg-hover4 focus:outline-none focus:ring-2 transition-colors"
+            aria-label="Add product to shopping cart"
+          >
+            <span className="self-stretch my-auto">Thêm vào giỏ hàng</span>
+          </button>
+
+          <Button
+            variant="outline"
+            onClick={onBuyNow}
+            className="flex w-full h-full text-xl font-semibold self-stretch my-auto max-md:px-5"
+          >
+            Mua ngay
+            </Button>
+        </section>
+    </div>
+  );
+};
+
+export default ProductInfo;

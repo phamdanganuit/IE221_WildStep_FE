@@ -144,7 +144,7 @@ const Header = () => {
                 className="w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer"
                 onClick={() => setShowLanguageMenu(!showLanguageMenu)}
               >
-                <FontAwesomeIcon icon={faGlobe} className="w-5 h-5" />
+                <FontAwesomeIcon icon={faGlobe} size="lg"/>
               </div>
 
               {/* Language Dropdown */}
@@ -279,7 +279,7 @@ const Header = () => {
                 className="w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer"
                 onClick={() => setShowLanguageMenu(!showLanguageMenu)}
               >
-                <FontAwesomeIcon icon={faGlobe} className="w-5 h-5" />
+                <FontAwesomeIcon icon={faGlobe} size="lg"/>
               </div>
 
               {/* Language Dropdown */}

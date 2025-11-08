@@ -9,13 +9,14 @@ import { useAuthStore } from "./store/authStore";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
 import Profile from "./pages/Profile";
+import ProductDetail from "./pages/ProductDetail";
 
 // Admin imports
 import AdminLayout from "./components/Admin/AdminLayout";
 import Dashboard from "./pages/Admin/Dashboard";
 import ProductList from "./pages/Admin/Products/ProductList";
 import ProductForm from "./pages/Admin/Products/ProductForm";
-import ProductDetail from "./pages/Admin/Products/ProductDetail";
+import AdminProductDetail from "./pages/Admin/Products/ProductDetail";
 import OrderList from "./pages/Admin/Orders/OrderList";
 import OrderDetail from "./pages/Admin/Orders/OrderDetail";
 import CustomerList from "./pages/Admin/Customers/CustomerList";
@@ -38,6 +39,7 @@ function AppContent() {
     <>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/detail" element={<ProductDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path='/products'element={<Catalog />}/>
@@ -51,7 +53,7 @@ function AppContent() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="products" element={<ProductList />} />
             <Route path="products/create" element={<ProductForm />} />
-            <Route path="products/:id" element={<ProductDetail />} />
+            <Route path="products/:id" element={<AdminProductDetail />} />
             <Route path="products/:id/edit" element={<ProductForm />} />
             <Route path="orders" element={<OrderList />} />
             <Route path="orders/:id" element={<OrderDetail />} />

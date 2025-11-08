@@ -42,8 +42,9 @@ export default function BrandLogos() {
   return (
     <section className="relative w-screen overflow-hidden py-8 px-0 md:px-0 bg-slate-900">
       <div className="relative">
-        <InfiniteSlider className="w-screen overflow-hidden" duration={40} durationOnHover={Infinity} gap={80}>
-          {[...logos, ...logos, ...logos].map((logo, index) => (
+        <InfiniteSlider duration={40} durationOnHover={Infinity} gap={112}>
+          {/* Nhân đôi mảng để chạy seamless */}
+          {[...logos, ...logos].map((logo, index) => (
             <div key={index} className="flex">
               {logo.href ? (
                 <a href={logo.href} target="_blank" rel="noreferrer" aria-label={logo.alt}>
