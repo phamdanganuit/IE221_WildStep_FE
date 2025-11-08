@@ -78,28 +78,21 @@ const Header = () => {
         />
       </div>
 
-      <nav className="hidden md:flex gap-6 text-[1.15rem]">
-        <a href="/products?filter=Sản-phẩm-mới" className="hover:text-[#50D5C4] transition">
-          {t('header.nav.newProducts')}
-        </a>
-        <a href="/products?filter=Nam" className="hover:text-[#50D5C4] transition">
-          {t('header.nav.men')}
-        </a>
-        <a href="/products?filter=Nữ" className="hover:text-[#50D5C4] transition">
-          {t('header.nav.women')}
-        </a>
-        <a href="/products?filter=Unisex" className="hover:text-[#50D5C4] transition">
-          {t('header.nav.unisex')}
-        </a>
-        <a href="/products?filter=Trẻ-em" className="hover:text-[#50D5C4] transition">
-          {t('header.nav.kids')}
-        </a>
-        <a href="/products?filter=Phụ-kiện" className="hover:text-[#50D5C4] transition">
-          {t('header.nav.accessories')}
-        </a>
-        <a href="/products?filter=Giảm-giá" className="text-[#50D5C4] font-semibold">
-          {t('header.nav.sale')}
-        </a>
+      <nav className="hidden md:flex flex-1 justify-center">
+        <div className="flex items-center gap-10 text-[1.25rem]">
+          <a href="/products?filter=Sản-phẩm-mới" className="hover:text-[#50D5C4] transition whitespace-nowrap">
+            {t('header.nav.newProducts')}
+          </a>
+          <a href="/products?filter=Giảm-giá" className="text-[#50D5C4] font-semibold whitespace-nowrap">
+            {t('header.nav.sale')}
+          </a>
+          <a href="/contact" className="hover:text-[#50D5C4] transition whitespace-nowrap">
+            {t('header.nav.contact')}
+          </a>
+          <a href="/support" className="hover:text-[#50D5C4] transition whitespace-nowrap">
+            {t('header.nav.support')}
+          </a>
+        </div>
       </nav>
 
       <div className="flex items-center gap-4">
