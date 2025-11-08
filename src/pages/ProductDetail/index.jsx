@@ -71,15 +71,15 @@ const ChiTietSanPham = () => {
               Trang chủ
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
+        <BreadcrumbSeparator> | </BreadcrumbSeparator>
           <BreadcrumbItem>
             <BreadcrumbLink href="/shoes">Giày</BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
+        <BreadcrumbSeparator> | </BreadcrumbSeparator>
           <BreadcrumbItem>
             <BreadcrumbLink href="/shoes/women">Giày nữ</BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
+        <BreadcrumbSeparator> | </BreadcrumbSeparator>
           <BreadcrumbItem>
             <BreadcrumbPage>Air Jordan 1 Low</BreadcrumbPage>
           </BreadcrumbItem>
