@@ -82,6 +82,13 @@ const Header = () => {
   return (
     <>
       <header className="w-full flex items-center justify-between px-4 sm:px-6 md:px-8 lg:px-10 py-3 md:py-4 bg-color1 text-white sticky top-0 z-50">
+      <button
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+          className="lg:hidden w-10 h-10 flex items-center justify-center text-white z-50"
+          aria-label="Toggle menu"
+        >
+          <FontAwesomeIcon icon={showMobileMenu ? faTimes : faBars} size="lg" />
+        </button>
         {/* Logo */}
         <div className="flex items-center gap-2 z-50">
           <img
@@ -114,13 +121,7 @@ const Header = () => {
         </nav>
 
         {/* Mobile/Tablet Hamburger Menu Button */}
-        <button
-          onClick={() => setShowMobileMenu(!showMobileMenu)}
-          className="lg:hidden w-10 h-10 flex items-center justify-center text-white z-50"
-          aria-label="Toggle menu"
-        >
-          <FontAwesomeIcon icon={showMobileMenu ? faTimes : faBars} size="lg" />
-        </button>
+       
 
       <div className="flex items-center gap-4">
         {isAuthenticated ? (
