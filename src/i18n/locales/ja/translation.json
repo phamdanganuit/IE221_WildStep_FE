@@ -569,6 +569,30 @@
       "deleteConfirm": "このバナーを削除してもよろしいですか？この操作は取り消せません。"
     }
   },
+  "search": {
+    "brand": "ブランド",
+    "seeAll": "すべての結果を見る",
+    "noResults": "結果が見つかりません",
+    "resultsFor": "検索結果",
+    "found": "見つかりました",
+    "products": "商品",
+    "filters": "フィルター",
+    "clearAll": "すべてクリア",
+    "priceRange": "価格帯",
+    "showing": "表示中",
+    "of": "の",
+    "sortBy": "並び替え",
+    "relevance": "関連性",
+    "popular": "人気順",
+    "newest": "新着順",
+    "priceLowToHigh": "価格: 安い順",
+    "priceHighToLow": "価格: 高い順",
+    "rating": "評価の高い順",
+    "tryDifferent": "別のキーワードで検索してみてください",
+    "trySearching": "検索してみる",
+    "previous": "前へ",
+    "next": "次へ"
+  },
   "common": {
     "loading": "読み込み中...",
     "error": "エラーが発生しました",

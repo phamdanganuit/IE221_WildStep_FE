@@ -631,6 +631,30 @@
       "deleteConfirm": "Bạn có chắc chắn muốn xóa banner này? Hành động này không thể hoàn tác."
     }
   },
+  "search": {
+    "brand": "Thương hiệu",
+    "seeAll": "Xem tất cả kết quả",
+    "noResults": "Không tìm thấy kết quả",
+    "resultsFor": "Kết quả tìm kiếm cho",
+    "found": "Đã tìm thấy",
+    "products": "sản phẩm",
+    "filters": "Bộ lọc",
+    "clearAll": "Xóa tất cả",
+    "priceRange": "Khoảng giá",
+    "showing": "Hiển thị",
+    "of": "của",
+    "sortBy": "Sắp xếp theo",
+    "relevance": "Liên quan nhất",
+    "popular": "Phổ biến nhất",
+    "newest": "Mới nhất",
+    "priceLowToHigh": "Giá: Thấp đến cao",
+    "priceHighToLow": "Giá: Cao đến thấp",
+    "rating": "Đánh giá cao nhất",
+    "tryDifferent": "Thử tìm kiếm với từ khóa khác",
+    "trySearching": "Thử tìm kiếm",
+    "previous": "Trước",
+    "next": "Sau"
+  },
   "common": {
     "loading": "Đang tải...",
     "error": "Có lỗi xảy ra",

@@ -569,6 +569,30 @@
       "deleteConfirm": "Are you sure you want to delete this banner? This action cannot be undone."
     }
   },
+  "search": {
+    "brand": "Brand",
+    "seeAll": "See all results",
+    "noResults": "No results found",
+    "resultsFor": "Search results for",
+    "found": "Found",
+    "products": "products",
+    "filters": "Filters",
+    "clearAll": "Clear all",
+    "priceRange": "Price Range",
+    "showing": "Showing",
+    "of": "of",
+    "sortBy": "Sort by",
+    "relevance": "Relevance",
+    "popular": "Most Popular",
+    "newest": "Newest",
+    "priceLowToHigh": "Price: Low to High",
+    "priceHighToLow": "Price: High to Low",
+    "rating": "Highest Rating",
+    "tryDifferent": "Try searching with different keywords",
+    "trySearching": "Try searching for",
+    "previous": "Previous",
+    "next": "Next"
+  },
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",

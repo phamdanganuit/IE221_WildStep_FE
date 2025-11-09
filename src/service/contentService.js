@@ -61,13 +61,23 @@ export const getPublicBrands = async (lang) => {
   return makeRequest(`/brands${qs}`);
 };
 
-export const getPublicProducts = async ({ sort = "popular", category_slug = "", page = 1, page_size = 12 } = {}) => {
-  // GET /api/products?sort=&category_slug=&page=&page_size=
+export const getPublicProducts = async ({ sort = "popular", category_slug = "", page = 1, page_size = 12, search = "", brand = "", gender = "", color = "", size = "", priceFrom = "", priceTo = "", category = "", min_rating = "", in_stock = "" } = {}) => {
+  // GET /api/products?sort=&category_slug=&page=&page_size=&search=&brand=&gender=...
   const params = new URLSearchParams();
   if (sort) params.set("sort", sort);
   if (category_slug) params.set("category_slug", category_slug);
   if (page) params.set("page", String(page));
   if (page_size) params.set("page_size", String(page_size));
+  if (search) params.set("search", search);
+  if (brand) params.set("brand", brand);
+  if (gender) params.set("gender", gender);
+  if (color) params.set("color", color);
+  if (size) params.set("size", size);
+  if (priceFrom) params.set("priceFrom", String(priceFrom));
+  if (priceTo) params.set("priceTo", String(priceTo));
+  if (category) params.set("category", category);
+  if (min_rating) params.set("min_rating", String(min_rating));
+  if (in_stock) params.set("in_stock", String(in_stock));
   const qs = params.toString();
   return makeRequest(`/products${qs ? `?${qs}` : ""}`);
 };
@@ -94,6 +104,36 @@ export const getPublicReviews = async ({ placement = "home", page = 1, page_size
   return makeRequest(`/reviews${qs ? `?${qs}` : ""}`);
 };
 
+// AUTOCOMPLETE
+export const getProductAutocomplete = async (query, limit = 5) => {
+  if (!query || query.length < 2) {
+    return { success: false, error: "Query must be at least 2 characters" };
+  }
+  const params = new URLSearchParams();
+  params.set("q", query);
+  params.set("limit", String(limit));
+  return makeRequest(`/products/autocomplete?${params.toString()}`);
+};
+
+// SEARCH PRODUCTS
+export const searchProducts = async ({ query, page = 1, page_size = 12, sort = "relevance", brand = "", category_slug = "", priceFrom = "", priceTo = "", min_rating = "", in_stock = "" } = {}) => {
+  if (!query) {
+    return { success: false, error: "Query is required" };
+  }
+  const params = new URLSearchParams();
+  params.set("q", query);
+  params.set("page", String(page));
+  params.set("page_size", String(page_size));
+  if (sort) params.set("sort", sort);
+  if (brand) params.set("brand", brand);
+  if (category_slug) params.set("category_slug", category_slug);
+  if (priceFrom) params.set("priceFrom", String(priceFrom));
+  if (priceTo) params.set("priceTo", String(priceTo));
+  if (min_rating) params.set("min_rating", String(min_rating));
+  if (in_stock) params.set("in_stock", String(in_stock));
+  return makeRequest(`/products/search?${params.toString()}`);
+};
+
 export default {
   getPublicBanners,
   getPublicBrands,
@@ -101,6 +141,8 @@ export default {
   getPublicCategories,
   getPublicHero,
   getPublicReviews,
+  getProductAutocomplete,
+  searchProducts,
 };
 
 

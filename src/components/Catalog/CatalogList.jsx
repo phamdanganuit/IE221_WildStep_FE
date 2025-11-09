@@ -359,6 +359,8 @@ function CatalogList({ filters }) {
         .filter((s) => s.value)
         .map((s) => s.label);
 
+      // Add search query if exists
+      if (filters.search) params.append("search", filters.search);
       if (selectedBrands.length)
         params.append("brand", selectedBrands.join(","));
       if (selectedGenders.length)
@@ -383,7 +385,9 @@ function CatalogList({ filters }) {
     <div className="flex flex-col w-full p-4 sm:p-6 md:p-8">
       <div className="flex-col space-y-4 mb-6">
         <CatalogBreadCrumb category={filters?.category} />
-        <h2 className="font-semibold text-xl md:text-2xl lg:text-3xl">Tất cả sản phẩm</h2>
+        <h2 className="font-semibold text-xl md:text-2xl lg:text-3xl">
+          {filters?.search ? `Kết quả tìm kiếm: "${filters.search}"` : 'Tất cả sản phẩm'}
+        </h2>
         
         {/* Filter and Sort Button + Layout Switcher */}
         <div className=" lg:hidden flex items-center justify-between gap-3">

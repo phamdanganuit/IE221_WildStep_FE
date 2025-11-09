@@ -13,6 +13,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useMobileMenu } from "@/contexts/MobileMenuContext";
+import SearchBox from "@/components/SearchBox";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -148,18 +149,7 @@ const Header = () => {
             // Giao diện khi đã đăng nhập
             <div className="flex items-center gap-2">
               {/* Search Bar */}
-              <div className="hidden xl:flex justify-center items-center bg-white rounded-[1.5rem] px-3 py-2 text-[#0A1E33]">
-                <img
-                  src="/icon/material-symbols_search-rounded.svg"
-                  alt="Search"
-                  className="w-5 h-5 mr-1"
-                />
-                <input
-                  type="text"
-                  placeholder={t("header.search")}
-                  className="flex justify-center items-center bg-transparent outline-none text-base px-2 w-32"
-                />
-              </div>
+              <SearchBox className="hidden xl:flex" />
               {/* Cart Icon */}
               <div className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer">
                 <img
@@ -308,18 +298,7 @@ const Header = () => {
           ) : (
             // Giao diện khi chưa đăng nhập
             <div className="flex items-center gap-2 xl:gap-4">
-              <div className="hidden xl:flex items-center bg-white rounded-[1.5rem] px-3 py-2 text-[#0A1E33]">
-                <img
-                  src="/icon/material-symbols_search-rounded.svg"
-                  alt="Search"
-                  className="w-5 h-5 mr-1"
-                />
-                <input
-                  type="text"
-                  placeholder={t("header.search")}
-                  className="bg-transparent outline-none text-base px-2 w-32"
-                />
-              </div>
+              <SearchBox className="hidden xl:flex" />
 
               {/* Language Switcher for non-authenticated users - Hidden on mobile */}
               <div className="hidden lg:block relative" ref={languageMenuRef}>
@@ -375,18 +354,10 @@ const Header = () => {
             {/* Mobile Menu Content */}
             <div className="flex flex-col p-6 gap-6 mt-16">
               {/* Search Bar Mobile */}
-              <div className="flex items-center bg-white rounded-[1.5rem] px-3 py-2 text-[#0A1E33]">
-                <img
-                  src="/icon/material-symbols_search-rounded.svg"
-                  alt="Search"
-                  className="w-5 h-5 mr-2"
-                />
-                <input
-                  type="text"
-                  placeholder={t("header.search")}
-                  className="bg-transparent outline-none text-base px-2 w-full"
-                />
-              </div>
+              <SearchBox 
+                isMobile={true} 
+                onClose={() => setShowMobileMenu(false)} 
+              />
 
               {/* Navigation Links */}
               <nav className="flex flex-col gap-4 border-t border-white/20 pt-6">

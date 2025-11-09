@@ -21,8 +21,10 @@ function CatalogLayout({ filters, setFilters, children }) {
 function Catalog() {
   const [searchParams] = useSearchParams();
   const filterParam = searchParams.get("filter");
+  const searchQuery = searchParams.get("search");
   const [filters, setFilters] = useState({
     category: "", // Sản-phẩm-mới, Giảm-giá, Phụ-kiện
+    search: "", // Từ khóa tìm kiếm
     gender: [
       { label: "Nam", value: false },
       { label: "Nữ", value: false },
@@ -66,48 +68,57 @@ function Catalog() {
     ],
   });
   useEffect(() => {
-    if (!filterParam) return;
-    if (!/^(Sản-phẩm-mới|Giảm-giá|Phụ-kiện|Nam|Nữ|Trẻ-em|Unisex)$/.test(filterParam)) {
-      searchParams.delete("filter");
-      window.location.href = "/products"
-    }
+    if (!filterParam && !searchQuery) return;
+    
     setFilters((prev) => {
       const updated = { ...prev };
 
-      // Reset gender
-      updated.gender = prev.gender.map((g) => ({ ...g, value: false }));
+      // Set search query
+      updated.search = searchQuery || "";
 
-      switch (filterParam) {
-        case "Nam":
-          updated.gender = prev.gender.map((g) => ({
-            ...g,
-            value: g.label === "Nam",
-          }));
-          break;
-        case "Nữ":
-          updated.gender = prev.gender.map((g) => ({
-            ...g,
-            value: g.label === "Nữ",
-          }));
-          break;
-        case "Unisex":
-          updated.gender = prev.gender.map((g) => ({
-            ...g,
-            value: g.label === "Unisex",
-          }));
-          break;
-        case "Trẻ-em":
-          updated.gender = prev.gender.map((g) => ({
-            ...g,
-            value: g.label === "Trẻ em",
-          }));
-          break;
-        default:
-          updated.category = filterParam;
+      // Only process filter if exists
+      if (filterParam) {
+        if (!/^(Sản-phẩm-mới|Giảm-giá|Phụ-kiện|Nam|Nữ|Trẻ-em|Unisex)$/.test(filterParam)) {
+          searchParams.delete("filter");
+          window.location.href = "/products"
+          return prev;
+        }
+
+        // Reset gender
+        updated.gender = prev.gender.map((g) => ({ ...g, value: false }));
+
+        switch (filterParam) {
+          case "Nam":
+            updated.gender = prev.gender.map((g) => ({
+              ...g,
+              value: g.label === "Nam",
+            }));
+            break;
+          case "Nữ":
+            updated.gender = prev.gender.map((g) => ({
+              ...g,
+              value: g.label === "Nữ",
+            }));
+            break;
+          case "Unisex":
+            updated.gender = prev.gender.map((g) => ({
+              ...g,
+              value: g.label === "Unisex",
+            }));
+            break;
+          case "Trẻ-em":
+            updated.gender = prev.gender.map((g) => ({
+              ...g,
+              value: g.label === "Trẻ em",
+            }));
+            break;
+          default:
+            updated.category = filterParam;
+        }
       }
       return updated;
     });
-  }, [filterParam]);
+  }, [filterParam, searchQuery]);
   return (
     <div className="w-full min-h-screen overflow-x-hidden">
       <div className="relative z-50">
