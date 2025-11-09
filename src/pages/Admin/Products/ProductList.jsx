@@ -163,38 +163,41 @@ const ProductList = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('admin.products.title')}</h1>
-          <p className="text-gray-600 mt-1">{t('admin.products.subtitle')}</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{t('admin.products.title')}</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">{t('admin.products.subtitle')}</p>
         </div>
-        <Button onClick={() => navigate("/admin/products/create")}>
+        <Button 
+          onClick={() => navigate("/admin/products/create")}
+          className="w-full sm:w-auto min-h-[44px]"
+        >
           <Plus className="w-4 h-4 mr-2" />
           {t('admin.products.addNew')}
         </Button>
       </div>
 
-      {/* Filters */}
+      {/* Filters - Responsive */}
       <Card>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSearch} className="flex gap-4 flex-wrap items-center">
-            <div className="flex-1">
+        <CardContent className="pt-4 sm:pt-6">
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+            <div className="flex-1 w-full sm:w-auto">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder={t('admin.products.search')}
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  className="pl-10"
+                  className="pl-10 min-h-[44px] text-sm sm:text-base"
                 />
               </div>
             </div>
             <select
               value={filters.category}
               onChange={(e) => setFilters({ ...filters, category: e.target.value, page: 1 })}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
+              className="px-3 sm:px-4 py-2.5 sm:py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4 min-h-[44px] w-full sm:w-auto"
             >
               <option value="">{t('admin.products.allCategories')}</option>
               {categoryOptions.map((c) => (
@@ -204,7 +207,7 @@ const ProductList = () => {
             <select
               value={filters.brand}
               onChange={(e) => setFilters({ ...filters, brand: e.target.value, page: 1 })}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
+              className="px-3 sm:px-4 py-2.5 sm:py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4 min-h-[44px] w-full sm:w-auto"
             >
               <option value="">{t('admin.products.allBrands')}</option>
               {brandOptions.map((b) => (
@@ -214,7 +217,7 @@ const ProductList = () => {
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
+              className="px-3 sm:px-4 py-2.5 sm:py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4 min-h-[44px] w-full sm:w-auto"
             >
               <option value="">{t('admin.products.allStatus')}</option>
               <option value="active">{t('admin.products.active')}</option>
@@ -225,7 +228,7 @@ const ProductList = () => {
             <select
               value={filters.sort}
               onChange={(e) => setFilters({ ...filters, sort: e.target.value, page: 1 })}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
+              className="px-3 sm:px-4 py-2.5 sm:py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4 min-h-[44px] w-full sm:w-auto"
             >
               <option value="createdAt">{t('admin.products.newest')}</option>
               <option value="name">{t('admin.products.name')}</option>
@@ -236,12 +239,12 @@ const ProductList = () => {
             <select
               value={filters.order}
               onChange={(e) => setFilters({ ...filters, order: e.target.value, page: 1 })}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4"
+              className="px-3 sm:px-4 py-2.5 sm:py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-color4 focus:border-color4 min-h-[44px] w-full sm:w-auto"
             >
               <option value="desc">{t('admin.products.priceHighLow')}</option>
               <option value="asc">{t('admin.products.priceLowHigh')}</option>
             </select>
-            <Button type="submit">{t('header.search')}</Button>
+            <Button type="submit" className="min-h-[44px] w-full sm:w-auto">{t('header.search')}</Button>
           </form>
         </CardContent>
       </Card>
@@ -262,82 +265,118 @@ const ProductList = () => {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.products.name')}</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.products.price')}</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.products.stock')}</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('dashboard.orders')}</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">{t('admin.products.status')}</th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">{t('admin.products.actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products.map((product) => (
-                      <tr key={product._id || product.id} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            {product.images && product.images[0] ? (
-                              <img
-                                src={product.images[0]}
-                                alt={safeText(product.name, i18n.language, '')}
-                                className="w-12 h-12 object-cover rounded"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                                <span className="text-gray-400 text-xs">{t('common.noImage')}</span>
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-medium text-gray-900">{safeText(product.name, i18n.language, 'N/A')}</p>
-                              <p className="text-sm text-gray-500">{safeText(product.brand?.name, i18n.language, '')}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div>
-                            <p className="font-medium text-gray-900">{formatCurrency(product.price || 0)}</p>
-                            {product.discountPrice != null && (
-                              <p className="text-sm text-color4">
-                                {formatCurrency(product.discountPrice)}
-                              </p>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-900">{product.stock}</td>
-                        <td className="py-3 px-4 text-sm text-gray-900">{product.sold || 0}</td>
-                        <td className="py-3 px-4">{getStatusBadge(product.status)}</td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              onClick={() => navigate(`/admin/products/${product._id || product.id}`)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              onClick={() => navigate(`/admin/products/${product._id || product.id}/edit`)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              onClick={() => setDeleteDialog({ open: true, product })}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                            </Button>
-                          </div>
-                        </td>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-3 sm:px-4 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider">
+                          {t('admin.products.name')}
+                        </th>
+                        <th className="px-3 py-3 sm:px-4 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider hidden md:table-cell">
+                          {t('admin.products.price')}
+                        </th>
+                        <th className="px-3 py-3 sm:px-4 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider hidden lg:table-cell">
+                          {t('admin.products.stock')}
+                        </th>
+                        <th className="px-3 py-3 sm:px-4 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider hidden lg:table-cell">
+                          {t('dashboard.orders')}
+                        </th>
+                        <th className="px-3 py-3 sm:px-4 text-left text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider">
+                          {t('admin.products.status')}
+                        </th>
+                        <th className="px-3 py-3 sm:px-4 text-right text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wider">
+                          {t('admin.products.actions')}
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {products.map((product) => (
+                        <tr key={product._id || product.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              {product.images && product.images[0] ? (
+                                <img
+                                  src={product.images[0]}
+                                  alt={safeText(product.name, i18n.language, '')}
+                                  className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
+                                  <span className="text-gray-400 text-xs">{t('common.noImage')}</span>
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">
+                                  {safeText(product.name, i18n.language, 'N/A')}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate hidden sm:block">
+                                  {safeText(product.brand?.name, i18n.language, '')}
+                                </p>
+                                {/* Mobile: Show price and stock */}
+                                <div className="sm:hidden mt-1 space-y-1">
+                                  <p className="text-xs font-medium text-gray-900">
+                                    {formatCurrency(product.price || 0)}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {t('admin.products.stock')}: {product.stock}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 sm:px-4 whitespace-nowrap hidden md:table-cell">
+                            <div>
+                              <p className="text-xs sm:text-sm font-medium text-gray-900">{formatCurrency(product.price || 0)}</p>
+                              {product.discountPrice != null && (
+                                <p className="text-xs text-color4">
+                                  {formatCurrency(product.discountPrice)}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 hidden lg:table-cell">
+                            {product.stock}
+                          </td>
+                          <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 hidden lg:table-cell">
+                            {product.sold || 0}
+                          </td>
+                          <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
+                            {getStatusBadge(product.status)}
+                          </td>
+                          <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-1 sm:gap-2">
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                onClick={() => navigate(`/admin/products/${product._id || product.id}`)}
+                                className="min-h-[44px] min-w-[44px] sm:min-h-auto sm:min-w-auto"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                onClick={() => navigate(`/admin/products/${product._id || product.id}/edit`)}
+                                className="min-h-[44px] min-w-[44px] sm:min-h-auto sm:min-w-auto"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                onClick={() => setDeleteDialog({ open: true, product })}
+                                className="min-h-[44px] min-w-[44px] sm:min-h-auto sm:min-w-auto"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* Pagination */}

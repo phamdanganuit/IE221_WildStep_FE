@@ -7,27 +7,37 @@ function RegisterPage() {
   const navigate = useNavigate();
   return (
     <div
-      className="flex w-full h-full bg-white max-md:flex-col"
+      className="flex flex-col md:flex-row w-full min-h-screen bg-white overflow-x-hidden"
       aria-label="Trang đăng ký Wild Step"
     >
+      {/* Logo - Responsive positioning */}
       <button
         onClick={() => navigate("/")}
-        className="absolute left-[45%] top-8 py-5 max-w-full cursor-pointer"
+        className="absolute top-4 sm:top-6 md:top-8 
+          left-1/2 transform -translate-x-1/2 md:left-[45%] md:transform-none
+          z-50 cursor-pointer"
       >
         <img
           src="/Logo.svg"
           alt="Wild Step Logo"
-          className="object-contain w-full aspect-[9.52] max-md:w-[15rem]"
+          className="object-contain 
+            w-32 sm:w-40 md:w-48 lg:w-56
+            h-auto"
         />
       </button>
-      <div className="flex w-full h-screen justify-center items-center">
+
+      {/* Register Form Container - Responsive */}
+      <div className="flex w-full lg:w-3/5 xl:w-1/2 min-h-screen justify-center items-center 
+        p-4 sm:p-6 md:p-8">
         <RegisterForm />
       </div>
-      <div className="hidden md:flex h-screen w-11/20 justify-center items-center">
+
+      {/* Background Image - Hidden on mobile, shown on tablet+ */}
+      <div className="hidden lg:flex lg:w-2/5 xl:w-1/2 h-screen justify-center items-center bg-gray-50">
         <img
           src={bg}
           alt="Register background"
-          className="h-full object-cover "
+          className="h-full w-full object-cover"
         />
       </div>
     </div>

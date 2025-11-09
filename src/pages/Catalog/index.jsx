@@ -8,10 +8,12 @@ import { useSearchParams } from "react-router-dom";
 function CatalogLayout({ filters, setFilters, children }) {
   return (
     <SidebarProvider>
-      <CatalogSidebar filters={filters} setFilters={setFilters} />
-      <main>
-        {children}
-      </main>
+      <div className="flex w-full min-h-screen">
+        <CatalogSidebar filters={filters} setFilters={setFilters} />
+        <main className="flex-1 w-full overflow-x-hidden">
+          {children}
+        </main>
+      </div>
     </SidebarProvider>
   );
 }
@@ -107,10 +109,12 @@ function Catalog() {
     });
   }, [filterParam]);
   return (
-    <div className="w-full min-h-screen">
-      <Header/>
+    <div className="w-full min-h-screen overflow-x-hidden">
+      <div className="relative z-50">
+        <Header/>
+      </div>
       <CatalogLayout filters={filters} setFilters={setFilters}>
-      <CatalogList filters={filters} />
+        <CatalogList filters={filters} />
       </CatalogLayout>
     </div>
   );

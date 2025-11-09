@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { ToastProvider, useToast } from "./contexts/ToastContext";
+import { MobileMenuProvider } from "./contexts/MobileMenuContext";
 import ToastContainer from "./components/Toast";
 import { useAuthStore } from "./store/authStore";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -73,7 +74,9 @@ function AppContent() {
 export default function App() {
   return (
     <ToastProvider>
-      <AppContent />
+      <MobileMenuProvider>
+        <AppContent />
+      </MobileMenuProvider>
     </ToastProvider>
   );
 }

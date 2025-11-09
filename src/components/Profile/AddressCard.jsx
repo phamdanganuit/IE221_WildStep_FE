@@ -58,34 +58,46 @@ function AddressCard({ address, onUpdate }) {
   };
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>
-          <p>
+        <CardTitle className="text-base sm:text-lg">
+          <p className="break-words">
             {address?.receiver} |{" "}
             <span className="font-normal">({address?.phone})</span>
           </p>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="w-full flex justify-between">
-          <div className="h-full flex-col space-y-4">
-            <p>{address?.detail}, {address?.ward}, {address?.district}, {address?.province}</p>
-            {(address?.default || address?.is_default) && <div className="px-2 py-1 rounded-xl text-center text-slate-800 border border-slate-800 w-[100px]">{t('profile.addressPage.default')}</div>}
+        <div className="w-full flex flex-col sm:flex-row sm:justify-between gap-4 sm:gap-6">
+          <div className="flex-1 flex-col space-y-3 sm:space-y-4">
+            <p className="text-sm sm:text-base break-words">
+              {address?.detail}, {address?.ward}, {address?.district}, {address?.province}
+            </p>
+            {(address?.default || address?.is_default) && (
+              <div className="px-3 py-1.5 rounded-xl text-center text-slate-800 border border-slate-800 w-fit text-xs sm:text-sm">
+                {t('profile.addressPage.default')}
+              </div>
+            )}
           </div>
-          <div className="flex-col space-y-2">
-            <AddressDialog address={address} title={t('profile.addressPage.edit')} submitIcon={<Pencil/>} submitText={t('common.save')} onSubmit={handleEdit}/>
+          <div className="flex flex-col sm:flex-col gap-2 sm:gap-2 w-full sm:w-auto">
+            <AddressDialog 
+              address={address} 
+              title={t('profile.addressPage.edit')} 
+              submitIcon={<Pencil className="w-4 h-4"/>} 
+              submitText={t('common.save')} 
+              onSubmit={handleEdit}
+            />
             <Button
               variant="outline"
               disabled={address?.default || address?.is_default || isProcessing}
-              className="w-[200px]"
+              className="w-full sm:w-[180px] min-h-[44px] text-sm sm:text-base"
               onClick={handleDefault}
             >
               {isProcessing ? t('profile.changePasswordPage.processing') : t('profile.addressPage.setDefault')}
             </Button>
             <Button
               variant="destructive"
-              className="w-[200px] flex items-center gap-2"
+              className="w-full sm:w-[180px] flex items-center justify-center gap-2 min-h-[44px] text-sm sm:text-base"
               onClick={handleDelete}
             >
               <Trash2 className="w-4 h-4" />

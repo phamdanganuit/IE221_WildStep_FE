@@ -1,21 +1,27 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleUser } from "@fortawesome/free-regular-svg-icons";
-import { faRightFromBracket, faGauge, faGlobe } from "@fortawesome/free-solid-svg-icons";
+import { faRightFromBracket, faGauge, faGlobe, faBars, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "@/store/authStore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useMobileMenu } from "@/contexts/MobileMenuContext";
 
 const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user, clearAuth } = useAuthStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const { showMobileMenu, setShowMobileMenu } = useMobileMenu();
   const [avatarLoading, setAvatarLoading] = useState(false);
   const userMenuRef = useRef(null);
   const languageMenuRef = useRef(null);
   const { t, i18n } = useTranslation();
+  
+  // Check if we're on Profile page
+  const isProfilePage = location.pathname === '/profile';
 
   const languages = [
     { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
@@ -26,16 +32,22 @@ const Header = () => {
   const handleLogout = () => {
     clearAuth();
     setShowUserMenu(false);
+    setShowMobileMenu(false);
   };
 
   const handleProfile = () => {
     navigate("/profile");
     setShowUserMenu(false);
+    setShowMobileMenu(false);
   };
 
   const handleLanguageChange = (languageCode) => {
     i18n.changeLanguage(languageCode);
     setShowLanguageMenu(false);
+  };
+
+  const handleNavClick = () => {
+    setShowMobileMenu(false);
   };
 
   // Close dropdown when clicking outside
@@ -68,98 +80,67 @@ const Header = () => {
   }, [user?.avatar]);
 
   return (
-    <header className="w-full flex items-center justify-between px-10 py-4 bg-color1 text-white">
-      <div className="flex items-center gap-2">
-        <img
-          src="/Logo_main.svg"
-          alt="Wild Step Logo"
-          className="h-6 cursor-pointer"
-          onClick={() => navigate("/")}
-        />
-      </div>
-
-      <nav className="hidden md:flex flex-1 justify-center">
-        <div className="flex items-center gap-10 text-[1.25rem]">
-          <a href="/products?filter=Sản-phẩm-mới" className="hover:text-[#50D5C4] transition whitespace-nowrap">
-            {t('header.nav.newProducts')}
-          </a>
-          <a href="/products?filter=Giảm-giá" className="text-[#50D5C4] font-semibold whitespace-nowrap">
-            {t('header.nav.sale')}
-          </a>
-          <a href="/contact" className="hover:text-[#50D5C4] transition whitespace-nowrap">
-            {t('header.nav.contact')}
-          </a>
-          <a href="/support" className="hover:text-[#50D5C4] transition whitespace-nowrap">
-            {t('header.nav.support')}
-          </a>
+    <>
+      <header className="w-full flex items-center justify-between px-4 sm:px-6 md:px-8 lg:px-10 py-3 md:py-4 bg-color1 text-white sticky top-0 z-50">
+        {/* Logo */}
+        <div className="flex items-center gap-2 z-50">
+          <img
+            src="/Logo_main.svg"
+            alt="Wild Step Logo"
+            className="h-5 sm:h-6 md:h-7 cursor-pointer"
+            onClick={() => {
+              navigate("/");
+              setShowMobileMenu(false);
+            }}
+          />
         </div>
-      </nav>
+
+        {/* Desktop Navigation - Hidden on mobile/tablet */}
+        <nav className="hidden lg:flex flex-1 justify-center">
+          <div className="flex items-center gap-6 xl:gap-10 text-base xl:text-[1.25rem]">
+            <a href="/products?filter=Sản-phẩm-mới" className="hover:text-[#50D5C4] transition whitespace-nowrap">
+              {t('header.nav.newProducts')}
+            </a>
+            <a href="/products?filter=Giảm-giá" className="text-[#50D5C4] font-semibold whitespace-nowrap">
+              {t('header.nav.sale')}
+            </a>
+            <a href="/contact" className="hover:text-[#50D5C4] transition whitespace-nowrap">
+              {t('header.nav.contact')}
+            </a>
+            <a href="/support" className="hover:text-[#50D5C4] transition whitespace-nowrap">
+              {t('header.nav.support')}
+            </a>
+          </div>
+        </nav>
+
+        {/* Mobile/Tablet Hamburger Menu Button */}
+        <button
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+          className="lg:hidden w-10 h-10 flex items-center justify-center text-white z-50"
+          aria-label="Toggle menu"
+        >
+          <FontAwesomeIcon icon={showMobileMenu ? faTimes : faBars} size="lg" />
+        </button>
 
       <div className="flex items-center gap-4">
         {isAuthenticated ? (
           // Giao diện khi đã đăng nhập
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {/* Search Bar */}
-            <div className="flex justify-center items-center bg-white rounded-[1.5rem] px-3 py-2 text-[#0A1E33]">
+            <div className="hidden xl:flex justify-center items-center bg-white rounded-[1.5rem] px-3 py-2 text-[#0A1E33]">
               <img
                 src="/icon/material-symbols_search-rounded.svg"
                 alt="Search"
-                className="w-6 h-6 mr-1"
+                className="w-5 h-5 mr-1"
               />
               <input
                 type="text"
                 placeholder={t('header.search')}
-                className="flex justify-center items-center bg-transparent outline-none text-[1.25rem] px-2"
+                className="flex justify-center items-center bg-transparent outline-none text-base px-2 w-32"
               />
             </div>
 
-            {/* Cart Icon */}
-            <div className="w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer">
-              <img
-                src="/icon/mdi_cart-outline.svg"
-                alt="Cart"
-                className="w-6 h-6"
-              />
-            </div>
-
-            {/* Wishlist Icon */}
-            <div className="w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer">
-              <img
-                src="/icon/mdi_heart-outline.svg"
-                alt="Wishlist"
-                className="w-6 h-6"
-              />
-            </div>
-
-            {/* Language Switcher */}
-            <div className="relative" ref={languageMenuRef}>
-              <div
-                className="w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer"
-                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-              >
-                <FontAwesomeIcon icon={faGlobe} size="lg"/>
-              </div>
-
-              {/* Language Dropdown */}
-              {showLanguageMenu && (
-                <div className="absolute right-0 top-full mt-2 min-w-[180px] bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => handleLanguageChange(lang.code)}
-                      className={`w-full px-4 py-3 text-left text-[1rem] flex items-center gap-3 transition ${
-                        i18n.language === lang.code
-                          ? 'bg-color1 text-white'
-                          : 'text-gray-900 hover:bg-gray-100'
-                      }`}
-                    >
-                      <span className="text-xl">{lang.flag}</span>
-                      <span>{lang.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            
 
             {/* User Profile */}
             <div className="relative" ref={userMenuRef}>
@@ -167,7 +148,7 @@ const Header = () => {
                 className="flex items-center gap-2 cursor-pointer"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                <div className="w-[3rem] h-[3rem] rounded-full overflow-hidden flex items-center justify-center">
+                <div className="w-10 h-10 xl:w-[3rem] xl:h-[3rem] rounded-full overflow-hidden flex items-center justify-center">
                   {user?.avatar ? (
                     <>
                       {avatarLoading && (
@@ -252,24 +233,24 @@ const Header = () => {
           </div>
         ) : (
           // Giao diện khi chưa đăng nhập
-          <div className="flex items-center gap-4">
-            <div className="flex items-center bg-white rounded-[1.5rem] px-3 py-2 text-[#0A1E33]">
+          <div className="flex items-center gap-2 xl:gap-4">
+            <div className="hidden xl:flex items-center bg-white rounded-[1.5rem] px-3 py-2 text-[#0A1E33]">
               <img
                 src="/icon/material-symbols_search-rounded.svg"
                 alt="Search"
-                className="w-6 h-6 mr-1"
+                className="w-5 h-5 mr-1"
               />
               <input
                 type="text"
                 placeholder={t('header.search')}
-                className="bg-transparent outline-none text-[1rem] px-2"
+                className="bg-transparent outline-none text-base px-2 w-32"
               />
             </div>
 
-            {/* Language Switcher for non-authenticated users */}
-            <div className="relative" ref={languageMenuRef}>
+            {/* Language Switcher for non-authenticated users - Hidden on mobile */}
+            <div className="hidden lg:block relative" ref={languageMenuRef}>
               <div
-                className="w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer"
+                className="w-10 h-10 xl:w-[3rem] xl:h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer"
                 onClick={() => setShowLanguageMenu(!showLanguageMenu)}
               >
                 <FontAwesomeIcon icon={faGlobe} size="lg"/>
@@ -298,14 +279,180 @@ const Header = () => {
 
             <button
               onClick={() => navigate("/login")}
-              className="bg-color4 text-[#0A1E33] font-semibold px-4 py-2 rounded-[0.5rem] hover:bg-hover4 transition cursor-pointer"
+              className="bg-color4 text-[#0A1E33] font-semibold px-3 py-1.5 xl:px-4 xl:py-2 text-sm xl:text-base rounded-[0.5rem] hover:bg-hover4 transition cursor-pointer"
             >
               {t('header.login')}
             </button>
           </div>
         )}
       </div>
-    </header>
+      </header>
+
+      {/* Mobile/Tablet Menu Overlay - Only show if NOT on Profile page */}
+      {showMobileMenu && !isProfilePage && (
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setShowMobileMenu(false)}>
+          <div 
+            className="fixed inset-y-0 right-0 w-full sm:w-80 bg-color1 text-white shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Mobile Menu Content */}
+            <div className="flex flex-col p-6 gap-6 mt-16">
+              {/* Search Bar Mobile */}
+              <div className="flex items-center bg-white rounded-[1.5rem] px-3 py-2 text-[#0A1E33]">
+                <img
+                  src="/icon/material-symbols_search-rounded.svg"
+                  alt="Search"
+                  className="w-5 h-5 mr-2"
+                />
+                <input
+                  type="text"
+                  placeholder={t('header.search')}
+                  className="bg-transparent outline-none text-base px-2 w-full"
+                />
+              </div>
+
+              {/* Navigation Links */}
+              <nav className="flex flex-col gap-4 border-t border-white/20 pt-6">
+                <a 
+                  href="/products?filter=Sản-phẩm-mới" 
+                  className="text-lg py-2 hover:text-[#50D5C4] transition"
+                  onClick={handleNavClick}
+                >
+                  {t('header.nav.newProducts')}
+                </a>
+                <a 
+                  href="/products?filter=Giảm-giá" 
+                  className="text-lg py-2 text-[#50D5C4] font-semibold"
+                  onClick={handleNavClick}
+                >
+                  {t('header.nav.sale')}
+                </a>
+                <a 
+                  href="/contact" 
+                  className="text-lg py-2 hover:text-[#50D5C4] transition"
+                  onClick={handleNavClick}
+                >
+                  {t('header.nav.contact')}
+                </a>
+                <a 
+                  href="/support" 
+                  className="text-lg py-2 hover:text-[#50D5C4] transition"
+                  onClick={handleNavClick}
+                >
+                  {t('header.nav.support')}
+                </a>
+              </nav>
+
+              {/* Mobile Actions */}
+              {isAuthenticated ? (
+                <div className="flex flex-col gap-4 border-t border-white/20 pt-6">
+                  {/* User Info */}
+                  <div className="flex items-center gap-3 pb-4">
+                    <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center">
+                      {user?.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt="Avatar"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                          <span className="text-white font-semibold text-lg">
+                            {user?.displayName?.charAt(0)?.toUpperCase() || "U"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium">{user?.displayName || "User"}</p>
+                      <p className="text-sm text-white/70">{user?.email}</p>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="flex gap-3">
+                    <button className="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 py-3 rounded-lg transition">
+                      <img src="/icon/mdi_cart-outline.svg" alt="Cart" className="w-5 h-5" />
+                      <span className="text-sm">Cart</span>
+                    </button>
+                    <button className="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 py-3 rounded-lg transition">
+                      <img src="/icon/mdi_heart-outline.svg" alt="Wishlist" className="w-5 h-5" />
+                      <span className="text-sm">Wishlist</span>
+                    </button>
+                  </div>
+
+                  {/* User Menu Items */}
+                  {user?.role === "admin" && (
+                    <button
+                      onClick={() => {
+                        navigate("/admin/dashboard");
+                        setShowMobileMenu(false);
+                      }}
+                      className="flex items-center gap-3 py-3 px-4 bg-white/10 hover:bg-white/20 rounded-lg transition"
+                    >
+                      <FontAwesomeIcon icon={faGauge} className="w-5 h-5" />
+                      <span>{t('header.admin')}</span>
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={handleProfile}
+                    className="flex items-center gap-3 py-3 px-4 bg-white/10 hover:bg-white/20 rounded-lg transition"
+                  >
+                    <FontAwesomeIcon icon={faCircleUser} className="w-5 h-5" />
+                    <span>{t('header.profile')}</span>
+                  </button>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 py-3 px-4 bg-red-600/80 hover:bg-red-600 rounded-lg transition"
+                  >
+                    <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5" />
+                    <span>{t('header.logout')}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4 border-t border-white/20 pt-6">
+                  <button
+                    onClick={() => {
+                      navigate("/login");
+                      setShowMobileMenu(false);
+                    }}
+                    className="w-full bg-color4 text-[#0A1E33] font-semibold py-3 rounded-lg hover:bg-hover4 transition"
+                  >
+                    {t('header.login')}
+                  </button>
+                </div>
+              )}
+
+              {/* Language Selector Mobile */}
+              <div className="border-t border-white/20 pt-6">
+                <p className="text-sm text-white/70 mb-3">{t('header.language') || 'Language'}</p>
+                <div className="flex flex-col gap-2">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        handleLanguageChange(lang.code);
+                        setShowMobileMenu(false);
+                      }}
+                      className={`flex items-center gap-3 py-2 px-4 rounded-lg transition ${
+                        i18n.language === lang.code
+                          ? 'bg-color4 text-[#0A1E33]'
+                          : 'bg-white/10 hover:bg-white/20'
+                      }`}
+                    >
+                      <span className="text-xl">{lang.flag}</span>
+                      <span>{lang.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

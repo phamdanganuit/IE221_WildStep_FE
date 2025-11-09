@@ -46,40 +46,52 @@ function ChangePassword() {
   }
 
   return (
-    <div className="flex-col space-y-[10px] w-full">
-      <p className="text-2xl font-semibold mb-4">{t('profile.changePasswordPage.title')}</p>
-      <div className="flex justify-between items-center">
-        <form className="w-150 space-y-[10px]" onSubmit={handleSubmit}>
-          <p className="font-semibold">{t('profile.changePasswordPage.currentPassword')} <span className="text-red-500">*</span></p>
-          <Input
-            value={oldPass}
-            onChange={(e) => setOldPass(e.target.value)}
-            required
-            type = "password"
-            className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
-          />
-          <p className="font-semibold">{t('profile.changePasswordPage.newPassword')} <span className="text-red-500">*</span></p>
-          <Input
-            value={newPass}
-            onChange={(e) => setNewPass(e.target.value)}
-            required
-            type = "password"
-            className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
-          />
-          <p className="font-semibold">{t('profile.changePasswordPage.confirmPassword')}</p>
-          <Input
-            value={confirmPass}
-            onChange={(e) => setConfirmPass(e.target.value)}
-            required
-            type = "password"
-            className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
-          />
+    <div className="flex-col space-y-4 sm:space-y-6 w-full">
+      <p className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">{t('profile.changePasswordPage.title')}</p>
+      <div className="w-full">
+        <form className="w-full max-w-2xl space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
+          <div>
+            <p className="font-semibold text-sm sm:text-base mb-2">
+              {t('profile.changePasswordPage.currentPassword')} <span className="text-red-500">*</span>
+            </p>
+            <Input
+              value={oldPass}
+              onChange={(e) => setOldPass(e.target.value)}
+              required
+              type="password"
+              className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-3 py-2.5 sm:py-3 text-sm sm:text-base min-h-[44px]"
+            />
+          </div>
+          <div>
+            <p className="font-semibold text-sm sm:text-base mb-2">
+              {t('profile.changePasswordPage.newPassword')} <span className="text-red-500">*</span>
+            </p>
+            <Input
+              value={newPass}
+              onChange={(e) => setNewPass(e.target.value)}
+              required
+              type="password"
+              className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-3 py-2.5 sm:py-3 text-sm sm:text-base min-h-[44px]"
+            />
+          </div>
+          <div>
+            <p className="font-semibold text-sm sm:text-base mb-2">
+              {t('profile.changePasswordPage.confirmPassword')} <span className="text-red-500">*</span>
+            </p>
+            <Input
+              value={confirmPass}
+              onChange={(e) => setConfirmPass(e.target.value)}
+              required
+              type="password"
+              className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-3 py-2.5 sm:py-3 text-sm sm:text-base min-h-[44px]"
+            />
+          </div>
           <Button
             type="submit"
             disabled={isLoading}
-            className={"font-semibold flex items-center gap-2 mt-5"}
+            className="font-semibold flex items-center gap-2 mt-5 sm:mt-6 w-full sm:w-auto min-h-[44px] px-6 py-2.5 sm:py-3"
           >
-            <Save />
+            <Save className="w-4 h-4 sm:w-5 sm:h-5" />
             {isLoading ? t('profile.changePasswordPage.processing') : t('profile.changePasswordPage.saveChanges')}
           </Button>
         </form>

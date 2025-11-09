@@ -202,32 +202,62 @@ const CustomerReviews = () => {
   const reviews = allFetchedReviews.slice(start, end);
 
   return (
-    <section className="flex flex-col items-center self-center w-full px-10 md:px-20 mt-12 md:mt-20 bg-transparent max-md:max-w-full">
-      <h2 className="text-[#0A1E33] flex items-center justify-center gap-5">
-        <span className="font-semibold text-[2rem]">—</span>
-        <span className="text-[2.5rem] font-semibold">
+    <section className="flex flex-col items-center self-center w-full 
+      px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 
+      mt-8 sm:mt-12 md:mt-16 lg:mt-20 
+      bg-transparent">
+      {/* Title - Responsive */}
+      <h2 className="text-[#0A1E33] flex items-center justify-center 
+        gap-3 sm:gap-4 md:gap-5">
+        <span className="font-semibold text-base sm:text-xl md:text-[1.5rem] lg:text-[2rem]">—</span>
+        <span className="text-xl sm:text-2xl md:text-3xl lg:text-[2.5rem] font-semibold">
           {t('home.customerReviews.title')}
         </span>
-        <span className="font-semibold text-[2rem]">—</span>
+        <span className="font-semibold text-base sm:text-xl md:text-[1.5rem] lg:text-[2rem]">—</span>
       </h2>
-      <div className="grid grid-cols-2 justify-center gap-8 mt-10 mx-auto">
+      
+      {/* Reviews Grid - Responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 
+        justify-center 
+        gap-4 sm:gap-6 md:gap-8 
+        mt-6 sm:mt-8 md:mt-10 
+        w-full max-w-7xl">
         {reviews.map((r) => (
           <div
             key={r.id}
-            className="bg-[#D9D9D9]/80 text-[#333333] rounded-2xl shadow-md  flex-1 items-center p-8 min-h-[16.5rem]  border-2 border-solid bg-opacity-80 border-neutral-200 flex flex-col sm:flex-row gap-5"
+            className="bg-[#D9D9D9]/80 text-[#333333] 
+              rounded-xl sm:rounded-2xl shadow-md 
+              p-4 sm:p-6 md:p-8 
+              min-h-[200px] sm:min-h-[250px] md:min-h-[16.5rem]
+              border-2 border-solid bg-opacity-80 border-neutral-200 
+              flex flex-col sm:flex-row gap-4 sm:gap-5 
+              items-start"
           >
-            {/* Avatar */}
-              <img
-                src={r.avatar}
-                alt={r.name}
-                className="relative shrink-0 rounded-xl shadow-2xl h-[11.25rem] w-[8.25rem] object-cover"
-              />
+            {/* Avatar - Responsive */}
+            <img
+              src={r.avatar}
+              alt={r.name}
+              className="relative shrink-0 rounded-lg sm:rounded-xl shadow-2xl 
+                h-24 w-20 
+                sm:h-32 sm:w-24 
+                md:h-40 md:w-28 
+                lg:h-[11.25rem] lg:w-[8.25rem] 
+                object-cover
+                mx-auto sm:mx-0"
+            />
 
-            {/* Nội dung */}
-            <div className="flex-1 text-left self-start text-[#333333]">
-              <h3 className="text-[1.25rem] font-medium">{r.name}</h3>
-              <StarRating rating={r.rating} />
-              <p className="text-[#333333] text-[1.125rem] font-normal leading-relaxed">
+            {/* Content - Responsive */}
+            <div className="flex-1 text-center sm:text-left self-start text-[#333333]">
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-[1.25rem] font-medium">
+                {r.name}
+              </h3>
+              <div className="flex justify-center sm:justify-start">
+                <StarRating rating={r.rating} />
+              </div>
+              <p className="text-[#333333] 
+                text-xs sm:text-sm md:text-base lg:text-[1.125rem] 
+                font-normal leading-relaxed 
+                line-clamp-4 sm:line-clamp-none">
                 {r.review}
               </p>
             </div>
@@ -235,8 +265,8 @@ const CustomerReviews = () => {
         ))}
       </div>
 
-      {/* Dấu tròn điều hướng */}
-      <div className="flex justify-center mt-10 space-x-3">
+      {/* Pagination Dots - Responsive */}
+      <div className="flex justify-center mt-6 sm:mt-8 md:mt-10 space-x-2 sm:space-x-2.5 md:space-x-3">
         {Array.from({ length: totalPagesUI }).map((_, index) => {
           const pageIdx = index + 1;
           const isActive = pageIdx === currentPage;
@@ -244,10 +274,10 @@ const CustomerReviews = () => {
             <button
               key={pageIdx}
               onClick={() => setCurrentPage(pageIdx)}
-              className={`rounded-full cursor-pointer ${
+              className={`rounded-full cursor-pointer transition-all ${
                 isActive
-                  ? "bg-[#000000]/75 w-4 h-4 scale-115"
-                  : "bg-[#000000]/30 w-4 h-4 hover:bg-[#000000]/60"
+                  ? "bg-[#000000]/75 w-6 h-3 sm:w-7 sm:h-3.5 md:w-8 md:h-4"
+                  : "bg-[#000000]/30 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 hover:bg-[#000000]/60"
               }`}
               aria-label={`${t('home.customerReviews.pageLabel')} ${pageIdx}`}
             ></button>

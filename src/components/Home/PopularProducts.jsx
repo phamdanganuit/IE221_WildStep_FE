@@ -9,44 +9,45 @@ const CARDS_PER_PAGE = 3;
 const ProductCard = ({ image, name, price, oldPrice, className = "" }) => {
   return (
     <div
-      className={`group relative flex flex-col bg-[D9D9D9]/15 rounded-xl border-[1.5px] border-[#DEDEDE] overflow-hidden
-        transition-all duration-300 hover:-translate-y-1
-        md:min-w-0 ${className}`}
+      className={`group relative flex flex-col bg-white rounded-xl sm:rounded-2xl border-2 border-[#DEDEDE] overflow-hidden
+        transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-color4
+        ${className}`}
     >
-      <div className="w-full aspect-square flex items-center justify-center overflow-hidden bg-transparent">
+      <div className="w-full aspect-square flex items-center justify-center overflow-hidden bg-gray-50">
         <img
           src={image}
           alt={name}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
         />
       </div>
 
-      <div className="p-4 flex items-center justify-between bg-[D9D9D9]/15">
-        <div className="flex flex-col gap-1">
-          <h3 className="font-medium text-sm md:text-base text-gray-900">
-            {name}
-          </h3>
-          <p className="font-semibold text-base md:text-lg text-color1">
-            {price}
-            {oldPrice ? (
-              <span className="text-gray-400 text-sm font-medium line-through ml-2">{oldPrice}</span>
-            ) : null}
-          </p>
+      <div className="p-4 sm:p-5 md:p-6 flex flex-col gap-2 bg-white">
+        <h3 className="font-semibold text-base sm:text-lg md:text-xl text-gray-900 line-clamp-2 leading-tight">
+          {name}
+        </h3>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <p className="font-bold text-lg sm:text-xl md:text-2xl text-color1">
+              {price}
+            </p>
+            {oldPrice && (
+              <span className="text-gray-400 text-sm sm:text-base font-medium line-through">
+                {oldPrice}
+              </span>
+            )}
+          </div>
+          <button 
+            className="flex items-center justify-center transition cursor-pointer flex-shrink-0
+              min-h-[44px] min-w-[44px]"
+            aria-label="View product"
+          >
+            <img
+              src="/icon/arrow.svg"
+              alt="Arrow Right"
+              className="hover:scale-110 transition-transform w-8 h-8 sm:w-10 sm:h-10"
+            />
+          </button>
         </div>
-
-        {/* <button
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-color1 text-white hover:scale-105 transition-colors"
-          aria-label="View product"
-        >
-          <ArrowUpRight className="w-4.5 h-5" />
-        </button> */}
-        <button className="flex items-center justify-center transition cursor-pointer">
-          <img
-            src="/icon/arrow.svg"
-            alt="Arrow Right"
-            className="hover:scale-105 w-10 h-10"
-          />
-        </button>
       </div>
     </div>
   );
@@ -100,16 +101,16 @@ const PopularProducts = () => {
 
   if (loading) {
     return (
-      <section className="w-full px-10 md:px-20 mt-12 md:mt-20">
-        <div className="flex flex-col md:flex-row justify-between md:gap-12 items-center">
-          <div className="flex flex-col gap-6 md:w-1/4">
-            <div className="h-8 w-40 bg-gray-200 rounded animate-pulse" />
-            <div className="h-24 w-64 bg-gray-200 rounded animate-pulse" />
-            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
+      <section className="w-full px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 mt-8 sm:mt-12 md:mt-16 lg:mt-20">
+        <div className="flex flex-col lg:flex-row justify-between gap-8 md:gap-10 lg:gap-12 items-center">
+          <div className="flex flex-col gap-4 sm:gap-6 lg:w-1/4 w-full">
+            <div className="h-6 sm:h-8 w-32 sm:w-40 bg-gray-200 rounded animate-pulse mx-auto lg:mx-0" />
+            <div className="h-20 sm:h-24 w-full max-w-md bg-gray-200 rounded animate-pulse mx-auto lg:mx-0" />
+            <div className="h-10 w-28 sm:w-32 bg-gray-200 rounded animate-pulse mx-auto lg:mx-0" />
           </div>
-          <div className="flex-1 grid grid-cols-3 gap-4">
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-64 bg-gray-200 rounded animate-pulse" />
+              <div key={i} className="h-48 sm:h-56 md:h-64 bg-gray-200 rounded animate-pulse" />
             ))}
           </div>
         </div>
@@ -117,103 +118,48 @@ const PopularProducts = () => {
     );
   }
   return (
-    <section className="w-full px-10 md:px-20 mt-12 md:mt-20">
-      <div className="flex flex-col md:flex-row justify-between md:gap-12 items-center">
-        {/* Left Section */}
-        <div className="flex flex-col gap-6 md:w-1/4 text-center md:text-left">
-          <div className="flex flex-col gap-2">
-            <h3 className="text-color1 font-medium mb-2 text-[1.5rem] flex items-center gap-2">
-              <span className="w-8 h-[2px] bg-color1"></span>
-              {t('home.popularProducts.subtitle')}
-            </h3>
+    <section className="w-full px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 mt-8 sm:mt-12 md:mt-16 lg:mt-20">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="flex flex-col gap-3 sm:gap-4 mb-6 sm:mb-8 md:mb-10 text-center">
+          <h3 className="text-color1 font-medium 
+            text-base sm:text-lg md:text-xl lg:text-[1.5rem] 
+            flex items-center justify-center gap-2">
+            <span className="w-6 sm:w-8 h-[2px] bg-color1"></span>
+            {t('home.popularProducts.subtitle')}
+            <span className="w-6 sm:w-8 h-[2px] bg-color1"></span>
+          </h3>
 
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-color1 leading-tight">
-              {t('home.popularProducts.heading')}
-            </h2>
-          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl 
+            font-semibold text-color1 leading-tight">
+            {t('home.popularProducts.heading')}
+          </h2>
 
-          <p className="text-[1.125rem] text-[#000000]/75 leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl 
+            text-[#000000]/75 leading-relaxed 
+            max-w-3xl mx-auto">
             {t('home.popularProducts.description')}
           </p>
-
-          <button className="px-8 py-3 bg-color4 text-white font-semibold rounded hover:bg-hover4 transition-colors shadow-md hover:shadow-lg self-center md:self-start cursor-pointer">
-            {t('home.popularProducts.explore')}
-          </button>
         </div>
 
-        {/* Right Carousel */}
-        <div className="flex-1 w-full md:w-3/4">
-          <div className="flex items-center gap-4">
-            {/* Prev Button */}
-            <button
-              onClick={handlePrev}
-              disabled={currentIndex === 0}
-              className={`flex-shrink-0 w-10 h-10 flex items-center justify-center transition-all ${
-                currentIndex === 0
-                  ? "opacity-30 cursor-not-allowed"
-                  : "hover:bg-gray-100 hover:rounded-full hover:border-2 border-gray-300 cursor-pointer "
-              }`}
-              aria-label="Previous product"
-            >
-              <ChevronLeft className="w-8 h-8" />
-            </button>
+        {/* Products Grid - 2 Columns */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+          {products.slice(0, 8).map((product) => (
+            <ProductCard key={product.id} {...product} />
+          ))}
+        </div>
 
-            {/* Cards Container */}
-            <div className="flex-1 overflow-hidden">
-              <div
-                className="flex gap-4 transition-transform duration-500 ease-out mt-1"
-                style={{
-                  transform: `translateX(-${
-                    currentIndex * (100 / CARDS_PER_PAGE)
-                  }%)`,
-                }}
-              >
-                {products.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex-shrink-0"
-                    style={{
-                      width: `calc(${100 / CARDS_PER_PAGE}% - ${
-                        ((CARDS_PER_PAGE - 1) * 16) / CARDS_PER_PAGE
-                      }px)`,
-                    }}
-                  >
-                    <ProductCard {...product} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Next Button */}
-            <button
-              onClick={handleNext}
-              disabled={currentIndex === maxIndex}
-              className={`flex-shrink-0 w-10 h-10  flex items-center justify-center transition-all ${
-                currentIndex === maxIndex
-                  ? "opacity-30 cursor-not-allowed"
-                  : "hover:bg-gray-100 hover:rounded-full hover:border-2 border-gray-300 cursor-pointer "
-              }`}
-              aria-label="Next product"
-            >
-              <ChevronRight className="w-8 h-8" />
-            </button>
-          </div>
-
-          {/* Pagination Dots */}
-          <div className="flex justify-center gap-2 mt-6">
-            {Array.from({ length: totalPages }).map((_, pageIndex) => (
-              <button
-                key={pageIndex}
-                onClick={() => handleDotClick(pageIndex)}
-                className={`h-3  transition-all duration-300 cursor-pointer ${
-                  currentPage === pageIndex
-                    ? "bg-color1 w-8 rounded-[1.5rem]"
-                    : "bg-gray-300 w-3 rounded-full hover:bg-gray-400"
-                }`}
-                aria-label={`Go to page ${pageIndex + 1}`}
-              />
-            ))}
-          </div>
+        {/* View All Button */}
+        <div className="flex justify-center mt-8 sm:mt-10 md:mt-12">
+          <button className="px-8 py-3 sm:px-10 sm:py-4 
+            bg-color4 text-white font-semibold 
+            text-base sm:text-lg
+            rounded-lg hover:bg-hover4 transition-all 
+            shadow-lg hover:shadow-xl hover:-translate-y-0.5
+            cursor-pointer
+            min-h-[44px]">
+            {t('home.popularProducts.explore')}
+          </button>
         </div>
       </div>
     </section>

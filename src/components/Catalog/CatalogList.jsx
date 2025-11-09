@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
 import CatalogBreadCrumb from "./CatalogBreadCrumb";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTh, faBars, faFilter } from "@fortawesome/free-solid-svg-icons";
+import StarRating from "@/components/ProductDetail/StarRating";
 
 const EXAMPLE_DATA = [
   {
@@ -233,41 +237,86 @@ const ProductCard = ({ product }) => {
   const formatPrice = (price) => {
     return price.toLocaleString('vi-VN')+"₫"
   }
+  
+  // Check if product is new (created within last 10 days)
+  const isNew = product?.createdAt ? (Date.now() - new Date(product.createdAt).getTime()) < (10 * 24 * 60 * 60 * 1000) : false;
+  const rating = product?.rate || 0;
+  const reviewCount = product?.sold || 0;
+  const categoryName = product?.categoryId?.parentId?.name ? `${product.categoryId.parentId.name}` : '';
+  const genderName = categoryName || '';
+  
   return (
     <div
       onClick={() => navigateToProductDetail(product._id)}
       title={product?.name}
-      className={`group relative flex flex-col bg-[D9D9D9]/15 rounded-xl border-[1.5px] border-[#DEDEDE] overflow-hidden
-        transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-2
-        md:min-w-0 cursor-pointer`}
+      className="group relative flex flex-col bg-white rounded-xl sm:rounded-2xl border-2 border-[#DEDEDE] overflow-hidden
+        transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-color4
+        cursor-pointer"
     >
-      <div className="w-full aspect-square flex items-center justify-center overflow-hidden bg-transparent">
+      {/* NEW Badge */}
+      {isNew && (
+        <div className="absolute top-2 sm:top-3 left-0 
+          px-2 py-1 sm:px-3 sm:py-1.5
+          bg-green-500 text-white text-xs sm:text-sm font-bold
+          rounded-tr-lg rounded-br-lg shadow-md
+          z-10">
+          NEW
+        </div>
+      )}
+
+      {/* Discount Badge */}
+      {product?.discount > 0 && !isNew && (
+        <div className="absolute top-2 sm:top-3 md:top-4 left-0 
+          px-2 py-1 sm:px-3 sm:py-1.5
+          bg-red-600 text-white text-xs sm:text-sm font-bold
+          rounded-tr-lg rounded-br-lg shadow-md
+          flex items-center gap-1 z-10">
+          -{product?.discount}%
+        </div>
+      )}
+
+      {/* Product Image - Square */}
+      <div className="w-full aspect-square flex items-center justify-center overflow-hidden bg-gray-50">
         <img
           src={product?.images[0]}
           alt={product?.name}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
         />
       </div>
-      <div className="p-4 flex items-center justify-between bg-[D9D9D9]/15">
-        <div className="flex flex-col gap-1">
-          <p className="font-semibold text-sm md:text-base text-color3">
-            {product?.brandId?.name}
-          </p>
-          <h3 className="font-semibold text-base md:text-lg xl:text-xl text-color1 max-w-full truncate">
-            {product?.name}
-          </h3>
-          <p className="flex items-center gap-2 text-sm md:text-base">
-            {product?.color?.length} màu - {product?.size?.length} kích cỡ
-          </p>
+
+      {/* Product Info */}
+      <div className="p-3 sm:p-4 md:p-5 flex flex-col gap-2 bg-white">
+        {/* Brand | Category */}
+        <p className="font-semibold text-xs sm:text-sm text-color4 uppercase tracking-wide">
+          {product?.brandId?.name} {genderName ? `| ${genderName.toUpperCase()}` : ''}
+        </p>
+        
+        {/* Product Name */}
+        <h3 className="font-semibold text-sm sm:text-base md:text-lg text-gray-900 line-clamp-2 leading-tight">
+          {product?.name}
+        </h3>
+        
+        {/* Rating */}
+        <div className="flex items-center gap-1.5">
+          <StarRating rating={rating} size="w-3 h-3 sm:w-4 sm:h-4" />
+          <span className="text-xs sm:text-sm text-gray-600">
+            {rating} ({reviewCount})
+          </span>
+        </div>
+        
+        {/* Price */}
+        <div className="mt-auto pt-2">
           {product?.discount > 0 ? (
-            <p className="font-semibold text-base md:text-lg text-red-600">
-              {formatPrice(((100 - product?.discount) * product?.originalPrice) / 100)}
-              <span className="text-gray-400 text-sm font-medium line-through ml-2">
+            <div className="flex flex-col gap-0.5">
+              <p className="font-bold text-base sm:text-lg md:text-xl text-red-600">
+                {formatPrice(((100 - product?.discount) * product?.originalPrice) / 100)}
+              </p>
+              <span className="text-gray-400 text-xs sm:text-sm font-medium line-through">
                 {formatPrice(product?.originalPrice)}
-              </span>{" "}
-            </p>
+              </span>
+            </div>
           ) : (
-            <p className="font-semibold text-base md:text-lg text-red-600">
+            <p className="font-bold text-base sm:text-lg md:text-xl text-color1">
               {formatPrice(product?.originalPrice)}
             </p>
           )}
@@ -279,6 +328,8 @@ const ProductCard = ({ product }) => {
 
 function CatalogList({ filters }) {
   const [products, setProducts] = useState([]);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  
   useEffect(() => {
     if (!filters) return;
     const fetchProducts = async () => {
@@ -315,19 +366,61 @@ function CatalogList({ filters }) {
 
     fetchProducts();
   }, [filters]);
+  
   return (
-    <div className="flex flex-col w-full">
-      <div className="mx-4 flex-col space-y-4">
+    <div className="flex flex-col w-full p-4 sm:p-6 md:p-8">
+      <div className="flex-col space-y-4 mb-6">
         <CatalogBreadCrumb category={filters?.category} />
-        <h2 className="font-semibold text-xl">Tất cả sản phẩm</h2>
+        <h2 className="font-semibold text-xl md:text-2xl lg:text-3xl">Tất cả sản phẩm</h2>
+        
+        {/* Filter and Sort Button + Layout Switcher */}
+        <div className=" lg:hidden flex items-center justify-between gap-3">
+          {/* Filter and Sort Button - Only show on mobile/tablet */}
+          <SidebarTrigger className="lg:hidden flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 
+            bg-[#0A1E33] text-white rounded-lg 
+            hover:bg-[#1a2e43] transition-colors
+            font-medium text-sm sm:text-base
+            min-h-[44px]">
+            <FontAwesomeIcon icon={faFilter} className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span>Lọc Và Sắp Xếp</span>
+          </SidebarTrigger>
+          
+          {/* Layout Switcher */}
+          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1 ml-auto">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                viewMode === 'grid' 
+                  ? 'bg-white text-[#0A1E33] shadow-sm' 
+                  : 'text-gray-600 hover:text-[#0A1E33]'
+              }`}
+              aria-label="Grid view"
+            >
+              <FontAwesomeIcon icon={faTh} className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                viewMode === 'list' 
+                  ? 'bg-white text-[#0A1E33] shadow-sm' 
+                  : 'text-gray-600 hover:text-[#0A1E33]'
+              }`}
+              aria-label="List view"
+            >
+              <FontAwesomeIcon icon={faBars} className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Cards Container */}
-      <div className="grid grid-cols-3">
+      {/* Products Grid - 2 Columns */}
+      <div className={`grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 ${
+        viewMode === 'grid' 
+          ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' 
+          : 'grid-cols-1'
+      }`}>
         {products.map((product) => (
-          <div key={product._id} className="col-span-1 p-2">
-            <ProductCard product={product} />
-          </div>
+          <ProductCard key={product._id} product={product} />
         ))}
       </div>
     </div>

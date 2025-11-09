@@ -115,80 +115,96 @@ function EditProfile() {
   }
 
   return (
-    <div className="flex-col space-y-[10px] w-full">
-      <p className="text-2xl font-semibold mb-4">{t('profile.edit.title')}</p>
-      <div className="flex justify-between items-center">
-        <form className="w-150 space-y-[10px]" onSubmit={handleSubmit}>
-          <p className="font-semibold">{t('profile.edit.displayName')} <span className="text-red-500">{t('profile.edit.required')}</span></p>
-          <Input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            required
-            className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
-          />
-          <p className="font-semibold">{t('profile.edit.email')} <span className="text-red-500">{t('profile.edit.required')}</span></p>
-          <Input
-            value={email}
-            required
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
-          />
-          <p className="font-semibold">{t('profile.edit.phone')}</p>
-          <Input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-2"
-          />
-          <p className="font-semibold">{t('profile.edit.gender')}</p>
-          <div className="flex gap-5 items-center">
-            <Label className="flex items-center gap-2">
-              <Input
-                type="radio"
-                checked={sex === t('profile.edit.male')}
-                value={t('profile.edit.male')}
-                onChange={(e) => setSex(e.target.value)}
-                className="w-6 h-6 accent-teal-600"
-              />
-              {t('profile.edit.male')}
-            </Label>
-            <Label className="flex items-center gap-2">
-              <Input
-                type="radio"
-                checked={sex === t('profile.edit.female')}
-                value={t('profile.edit.female')}
-                onChange={(e) => setSex(e.target.value)}
-                className="w-6 h-6 accent-teal-600"
-              />
-              {t('profile.edit.female')}
-            </Label>
-            <Label className="flex items-center gap-2">
-              <Input
-                type="radio"
-                checked={sex === t('profile.edit.other')}
-                value={t('profile.edit.other')}
-                onChange={(e) => setSex(e.target.value)}
-                className="w-6 h-6 accent-teal-600"
-              />
-              {t('profile.edit.other')}
-            </Label>
-          </div>
-          <p className="font-semibold">{t('profile.edit.birthDate')}</p>
-          {!isLoading && (
-            <DatePicker
-              defaultValue={birth}
-              onChange={(date) => setBirth(date)}
+    <div className="flex-col space-y-4 sm:space-y-6 w-full">
+      <p className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">{t('profile.edit.title')}</p>
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6 lg:gap-8">
+        <form className="flex-1 space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
+          <div>
+            <p className="font-semibold text-sm sm:text-base mb-2">
+              {t('profile.edit.displayName')} <span className="text-red-500">{t('profile.edit.required')}</span>
+            </p>
+            <Input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              required
+              className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-3 py-2.5 sm:py-3 text-sm sm:text-base min-h-[44px]"
             />
-          )}
+          </div>
+          <div>
+            <p className="font-semibold text-sm sm:text-base mb-2">
+              {t('profile.edit.email')} <span className="text-red-500">{t('profile.edit.required')}</span>
+            </p>
+            <Input
+              value={email}
+              required
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-3 py-2.5 sm:py-3 text-sm sm:text-base min-h-[44px]"
+            />
+          </div>
+          <div>
+            <p className="font-semibold text-sm sm:text-base mb-2">{t('profile.edit.phone')}</p>
+            <Input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full bg-white rounded-lg outline outline-2 outline-offset-[-2px] outline-gray-200 px-3 py-2.5 sm:py-3 text-sm sm:text-base min-h-[44px]"
+            />
+          </div>
+          <div>
+            <p className="font-semibold text-sm sm:text-base mb-3">{t('profile.edit.gender')}</p>
+            <div className="flex flex-wrap gap-4 sm:gap-5 items-center">
+              <Label className="flex items-center gap-2 cursor-pointer">
+                <Input
+                  type="radio"
+                  checked={sex === t('profile.edit.male')}
+                  value={t('profile.edit.male')}
+                  onChange={(e) => setSex(e.target.value)}
+                  className="w-5 h-5 sm:w-6 sm:h-6 accent-teal-600"
+                />
+                <span className="text-sm sm:text-base">{t('profile.edit.male')}</span>
+              </Label>
+              <Label className="flex items-center gap-2 cursor-pointer">
+                <Input
+                  type="radio"
+                  checked={sex === t('profile.edit.female')}
+                  value={t('profile.edit.female')}
+                  onChange={(e) => setSex(e.target.value)}
+                  className="w-5 h-5 sm:w-6 sm:h-6 accent-teal-600"
+                />
+                <span className="text-sm sm:text-base">{t('profile.edit.female')}</span>
+              </Label>
+              <Label className="flex items-center gap-2 cursor-pointer">
+                <Input
+                  type="radio"
+                  checked={sex === t('profile.edit.other')}
+                  value={t('profile.edit.other')}
+                  onChange={(e) => setSex(e.target.value)}
+                  className="w-5 h-5 sm:w-6 sm:h-6 accent-teal-600"
+                />
+                <span className="text-sm sm:text-base">{t('profile.edit.other')}</span>
+              </Label>
+            </div>
+          </div>
+          <div>
+            <p className="font-semibold text-sm sm:text-base mb-2">{t('profile.edit.birthDate')}</p>
+            {!isLoading && (
+              <DatePicker
+                defaultValue={birth}
+                onChange={(date) => setBirth(date)}
+              />
+            )}
+          </div>
           <Button
             type="submit"
             disabled={isSubmitting}
-            className={"font-semibold flex items-center gap-2 mt-5"}
+            className="font-semibold flex items-center gap-2 mt-5 sm:mt-6 w-full sm:w-auto min-h-[44px] px-6 py-2.5 sm:py-3"
           >
-            <Save />
+            <Save className="w-4 h-4 sm:w-5 sm:h-5" />
             {isSubmitting ? t('profile.edit.saving') : t('profile.edit.saveChanges')}
           </Button>
         </form>
-        <ChangeAvatar avatar={avatar} setAvatar={handleAvatarChange} />
+        <div className="flex-shrink-0 lg:ml-6">
+          <ChangeAvatar avatar={avatar} setAvatar={handleAvatarChange} />
+        </div>
       </div>
     </div>
   );

@@ -91,7 +91,7 @@ const ChiTietSanPham = () => {
           <div className="flex md:gap-20 gap-5 max-md:flex-col">
             <div className="w-[55%] max-md:ml-0 max-md:w-full">
               <div className="w-full max-md:mt-10 max-md:max-w-full">
-                <div className="relative h-[45rem] w-full flex justify-center items-center border border-[#1C2541] rounded-xl overflow-hidden">
+                <div className="relative h-fit w-fit flex justify-center items-center border border-[#1C2541] rounded-xl overflow-hidden">
                   <button
                     onClick={handlePrev}
                     className="absolute left-3 bg-white/70 hover:bg-white rounded-full p-2 shadow-sm"

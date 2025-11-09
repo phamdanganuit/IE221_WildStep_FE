@@ -54,15 +54,20 @@ function Address() {
     );
   }
   return (
-    <div className="flex-col space-y-[10px] w-full">
-      <div className="w-full flex justify-between items-center">
-        <p className="text-2xl font-semibold mb-4">{t('profile.addressPage.title')}</p>
-        <AddressDialog title={t('profile.addressPage.addNew')} submitIcon={<Plus/>} submitText={t('profile.addressPage.add')} onSubmit={handleAdd}/>
+    <div className="flex-col space-y-4 sm:space-y-6 w-full">
+      <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <p className="text-xl sm:text-2xl font-semibold">{t('profile.addressPage.title')}</p>
+        <AddressDialog 
+          title={t('profile.addressPage.addNew')} 
+          submitIcon={<Plus/>} 
+          submitText={t('profile.addressPage.add')} 
+          onSubmit={handleAdd}
+        />
       </div>
-      <div className="w-full flex-col space-y-2 overflow-y-auto max-h-[34.5rem] scrollbar-hide">
+      <div className="w-full flex-col space-y-3 sm:space-y-4 overflow-y-auto max-h-[calc(100vh-20rem)] sm:max-h-[34.5rem] scrollbar-hide pr-2">
         {addressList.length === 0 ? (
-          <div>
-            <p>{t('profile.addressPage.noAddress')}</p>
+          <div className="p-4 sm:p-6 bg-gray-50 rounded-lg">
+            <p className="text-sm sm:text-base text-gray-600">{t('profile.addressPage.noAddress')}</p>
           </div>
         ) : (
           <>

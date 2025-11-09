@@ -14,16 +14,25 @@ function Profile() {
   const [isActive, setActive] = useState(t('profile.title'));
   
   return (
-    <div className="flex flex-col min-h-screen" style={{
+    <div className="flex flex-col min-h-screen overflow-x-hidden" style={{
       objectFit: "contain",
       backgroundImage: "url('/profile-bg.png')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
     }}>
       {/*Header*/}
-    <Header/>
-      {/*Main*/}
-      <div className="flex-1 jusifty-center w-[1100px] px-6 h-full flex pt-10 mx-auto space-x-2 bg-white">
+      <Header/>
+      {/*Main - Responsive Layout */}
+      <div className="flex-1 w-full max-w-7xl px-4 sm:px-6 md:px-8 lg:px-10 
+        h-full flex flex-col lg:flex-row 
+        pt-6 sm:pt-8 md:pt-10 
+        mx-auto 
+        gap-4 sm:gap-6 
+        bg-white/95 backdrop-blur-sm
+        min-h-[calc(100vh-4rem)]">
         <Sidebar isActive={isActive} setActive={setActive} />
-        <div className="w-full pl-2 max-h-screen">
+        <div className="w-full lg:pl-4 max-h-screen overflow-y-auto">
           {isActive === t('profile.title') ? (
             <EditProfile />
           ) : isActive === t('profile.address') ? (

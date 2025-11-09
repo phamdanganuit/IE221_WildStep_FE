@@ -45,8 +45,8 @@ const Banner = () => {
 
   if (loading) {
     return (
-      <section className="px-10 md:px-20 mt-12 md:mt-20">
-        <div className="relative w-full h-[400px] overflow-hidden rounded-2xl shadow-lg bg-gray-200 animate-pulse" />
+      <section className="px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 mt-8 sm:mt-12 md:mt-16 lg:mt-20">
+        <div className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden rounded-xl sm:rounded-2xl shadow-lg bg-gray-200 animate-pulse" />
       </section>
     );
   }
@@ -56,8 +56,8 @@ const Banner = () => {
   }
 
   return (
-    <section className="px-10 md:px-20 mt-12 md:mt-20">
-      <div className="relative w-full h-[400px] overflow-hidden rounded-2xl shadow-lg">
+    <section className="px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 mt-8 sm:mt-12 md:mt-16 lg:mt-20">
+      <div className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden rounded-xl sm:rounded-2xl shadow-lg">
         {/* Slides */}
         <div
           className="flex transition-transform duration-700 ease-in-out"
@@ -70,7 +70,7 @@ const Banner = () => {
               <img
                 src={imageUrl}
                 alt={title}
-                className="w-full h-[400px] object-cover"
+                className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] object-cover"
               />
             );
             return (
@@ -87,35 +87,51 @@ const Banner = () => {
           })}
         </div>
 
-        {/* Nút điều hướng */}
+        {/* Nút điều hướng - Responsive */}
         <button
           onClick={prevSlide}
-          className="absolute cursor-pointer left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 shadow transition-all duration-300 hover:scale-105"
+          className="absolute cursor-pointer 
+            left-2 sm:left-3 md:left-4 
+            top-1/2 -translate-y-1/2 
+            bg-white/80 hover:bg-white text-gray-800 
+            rounded-full 
+            p-2 sm:p-2.5 md:p-3 
+            shadow transition-all duration-300 hover:scale-105
+            w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12
+            flex items-center justify-center"
           aria-label="Previous slide"
         >
-          <FaChevronLeft />
+          <FaChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
 
         <button
           onClick={nextSlide}
-          className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 shadow transition-all duration-300 hover:scale-105"
+          className="absolute cursor-pointer 
+            right-2 sm:right-3 md:right-4 
+            top-1/2 -translate-y-1/2 
+            bg-white/80 hover:bg-white text-gray-800 
+            rounded-full 
+            p-2 sm:p-2.5 md:p-3 
+            shadow transition-all duration-300 hover:scale-105
+            w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12
+            flex items-center justify-center"
           aria-label="Next slide"
         >
-          <FaChevronRight />
+          <FaChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
         </button>
 
-        {/* Dấu chấm chỉ số */
-        }
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
+        {/* Dấu chấm chỉ số - Responsive */}
+        <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-2.5 md:gap-3">
           {banners.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrent(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${
+              className={`rounded-full transition-all duration-300 cursor-pointer ${
                 current === index
-                  ? "bg-[#000000]/85 w-4 h-4 scale-115 border-[0.1rem] border-gray-400"
-                  : "bg-[#000000]/30 w-4 h-4 hover:bg-[#000000]/60"
+                  ? "bg-[#000000]/85 w-6 h-3 sm:w-8 sm:h-3 md:w-10 md:h-4 border-[0.1rem] border-gray-400"
+                  : "bg-[#000000]/30 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 hover:bg-[#000000]/60"
               }`}
+              aria-label={`Go to slide ${index + 1}`}
             ></button>
           ))}
         </div>
