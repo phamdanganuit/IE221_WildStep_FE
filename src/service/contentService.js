@@ -134,6 +134,12 @@ export const searchProducts = async ({ query, page = 1, page_size = 12, sort = "
   return makeRequest(`/products/search?${params.toString()}`);
 };
 
+// GET PRODUCT DETAIL
+export const getProductDetail = async (id) => {
+  // GET /api/products/:id
+  return makeRequest(`/products/${id}`);
+};
+
 export default {
   getPublicBanners,
   getPublicBrands,
@@ -143,6 +149,7 @@ export default {
   getPublicReviews,
   getProductAutocomplete,
   searchProducts,
+  getProductDetail,
 };
 
 

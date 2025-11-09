@@ -46,10 +46,6 @@ const ProductForm = () => {
     stock: "",
     discount: "",
     status: "active",
-    colorHex: "",
-    color_vi: "",
-    color_en: "",
-    color_ja: "",
     material_vi: "",
     material_en: "",
     material_ja: "",
@@ -59,10 +55,9 @@ const ProductForm = () => {
     weight_vi: "",
     weight_en: "",
     weight_ja: "",
-    size_vi: "",
-    size_en: "",
-    size_ja: "",
     tags: [],
+    colors: [],  // Array of {color_name: {vi, en, ja}, hex_color, image, tags}
+    sizes: [],   // Array of {size_name: {vi, en, ja}, tags}
   });
 
   const initializedRef = useRef(false);
@@ -163,11 +158,10 @@ const ProductForm = () => {
       const product = result.data;
       const name = product.name || {};
       const desc = product.description || {};
-      const color = product.color || {};
       const material = product.material || {};
       const gender = product.gender || {};
       const weight = product.weight || {};
-      const size = product.size || {};
+      
       setFormData({
         name_vi: typeof name === 'object' ? (name.vi || '') : (name || ''),
         name_en: typeof name === 'object' ? (name.en || '') : '',
@@ -181,10 +175,6 @@ const ProductForm = () => {
         stock: product.stock || "",
         discount: product.discount || "",
         status: product.status || "active",
-        colorHex: product.colorHex || "",
-        color_vi: typeof color === 'object' ? (color.vi || '') : '',
-        color_en: typeof color === 'object' ? (color.en || '') : '',
-        color_ja: typeof color === 'object' ? (color.ja || '') : '',
         material_vi: typeof material === 'object' ? (material.vi || '') : '',
         material_en: typeof material === 'object' ? (material.en || '') : '',
         material_ja: typeof material === 'object' ? (material.ja || '') : '',
@@ -194,10 +184,9 @@ const ProductForm = () => {
         weight_vi: typeof weight === 'object' ? (weight.vi || '') : (weight ? String(weight) : ''),
         weight_en: typeof weight === 'object' ? (weight.en || '') : '',
         weight_ja: typeof weight === 'object' ? (weight.ja || '') : '',
-        size_vi: typeof size === 'object' ? (size.vi || '') : (typeof size === 'string' ? size : ''),
-        size_en: typeof size === 'object' ? (size.en || '') : '',
-        size_ja: typeof size === 'object' ? (size.ja || '') : '',
         tags: product.tags || [],
+        colors: Array.isArray(product.colors) ? product.colors : [],
+        sizes: Array.isArray(product.sizes) ? product.sizes : [],
       });
       setExistingImages(Array.isArray(product.images) ? product.images : []);
     } else {
@@ -233,13 +222,12 @@ const ProductForm = () => {
       stock: parseInt(formData.stock) || 0,
       discount: parseFloat(formData.discount) || 0,
       status: formData.status,
-      colorHex: formData.colorHex || '',
-      color: { vi: formData.color_vi || '', en: formData.color_en || '', ja: formData.color_ja || '' },
       material: { vi: formData.material_vi || '', en: formData.material_en || '', ja: formData.material_ja || '' },
       gender: { vi: formData.gender_vi || '', en: formData.gender_en || '', ja: formData.gender_ja || '' },
       weight: { vi: formData.weight_vi || '', en: formData.weight_en || '', ja: formData.weight_ja || '' },
-      size: { vi: formData.size_vi || '', en: formData.size_en || '', ja: formData.size_ja || '' },
       tags: formData.tags,
+      colors: formData.colors,   // Array format
+      sizes: formData.sizes,     // Array format
     };
 
     const result = isEdit
@@ -331,6 +319,77 @@ const ProductForm = () => {
     setFormData({
       ...formData,
       tags: formData.tags.filter((_, i) => i !== index),
+    });
+  };
+
+  // Color Management
+  const [colorInput, setColorInput] = useState({
+    color_vi: "",
+    color_en: "",
+    color_ja: "",
+    hex_color: "#000000",
+  });
+
+  const handleAddColor = () => {
+    if (!colorInput.color_vi && !colorInput.color_en && !colorInput.color_ja) {
+      addToast({ type: "error", message: "Vui lòng nhập tên màu (ít nhất 1 ngôn ngữ)" });
+      return;
+    }
+    const newColor = {
+      color_name: {
+        vi: colorInput.color_vi || '',
+        en: colorInput.color_en || '',
+        ja: colorInput.color_ja || ''
+      },
+      hex_color: colorInput.hex_color,
+      image: "",
+      tags: []
+    };
+    setFormData({
+      ...formData,
+      colors: [...formData.colors, newColor]
+    });
+    setColorInput({ color_vi: "", color_en: "", color_ja: "", hex_color: "#000000" });
+  };
+
+  const handleRemoveColor = (index) => {
+    setFormData({
+      ...formData,
+      colors: formData.colors.filter((_, i) => i !== index)
+    });
+  };
+
+  // Size Management
+  const [sizeInput, setSizeInput] = useState({
+    size_vi: "",
+    size_en: "",
+    size_ja: "",
+  });
+
+  const handleAddSize = () => {
+    if (!sizeInput.size_vi && !sizeInput.size_en && !sizeInput.size_ja) {
+      addToast({ type: "error", message: "Vui lòng nhập size (ít nhất 1 ngôn ngữ)" });
+      return;
+    }
+    const newSize = {
+      size_name: {
+        vi: sizeInput.size_vi || '',
+        en: sizeInput.size_en || '',
+        ja: sizeInput.size_ja || ''
+      },
+      tags: []
+    };
+    setFormData({
+      ...formData,
+      sizes: [...formData.sizes, newSize]
+    });
+    setSizeInput({ size_vi: "", size_en: "", size_ja: "" });
+  };
+
+  const handleRemoveSize = (index) => {
+    setFormData({
+      ...formData,
+      sizes: formData.sizes.filter((_, i) => i !== index)
     });
   };
 
@@ -502,59 +561,94 @@ const ProductForm = () => {
             <CardTitle>{t('admin.products.form.specifications')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Color Hex */}
+            {/* Colors - Multiple */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('admin.products.form.colorHexLabel')}
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Màu sắc (Colors)
               </label>
-              <div className="flex items-center gap-3">
-                <Input
-                  type="color"
-                  value={formData.colorHex}
-                  onChange={(e) => setFormData({ ...formData, colorHex: e.target.value })}
-                  className="w-20 h-10 cursor-pointer"
-                />
-                <Input
-                  type="text"
-                  value={formData.colorHex}
-                  onChange={(e) => setFormData({ ...formData, colorHex: e.target.value })}
-                  placeholder={t('admin.products.form.colorHexPlaceholder')}
-                  className="flex-1"
-                />
+              
+              {/* Add Color Form */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Tên màu (VI)</label>
+                    <Input
+                      value={colorInput.color_vi}
+                      onChange={(e) => setColorInput({ ...colorInput, color_vi: e.target.value })}
+                      placeholder="Đen"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Color name (EN)</label>
+                    <Input
+                      value={colorInput.color_en}
+                      onChange={(e) => setColorInput({ ...colorInput, color_en: e.target.value })}
+                      placeholder="Black"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">色名 (JA)</label>
+                    <Input
+                      value={colorInput.color_ja}
+                      onChange={(e) => setColorInput({ ...colorInput, color_ja: e.target.value })}
+                      placeholder="黒"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Mã màu (Hex)</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="color"
+                        value={colorInput.hex_color}
+                        onChange={(e) => setColorInput({ ...colorInput, hex_color: e.target.value })}
+                        className="w-12 h-10 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={colorInput.hex_color}
+                        onChange={(e) => setColorInput({ ...colorInput, hex_color: e.target.value })}
+                        placeholder="#000000"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Button type="button" onClick={handleAddColor} size="sm">
+                  + Thêm màu
+                </Button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">{t('admin.products.form.colorHexDescription')}</p>
-            </div>
 
-            {/* Color Name - Multilingual */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.colorNameMultilingual')}</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.vietnameseLang')}</label>
-                  <Input
-                    value={formData.color_vi}
-                    onChange={(e) => setFormData({ ...formData, color_vi: e.target.value })}
-                    placeholder={t('admin.products.form.colorPlaceholderVI')}
-                  />
+              {/* Colors List */}
+              {formData.colors.length > 0 && (
+                <div className="space-y-2">
+                  {formData.colors.map((color, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg">
+                      <div
+                        className="w-8 h-8 rounded-full border-2 border-gray-300 flex-shrink-0"
+                        style={{ backgroundColor: color.hex_color }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">
+                          {color.color_name.vi || color.color_name.en || color.color_name.ja || 'Unnamed'}
+                        </p>
+                        <p className="text-xs text-gray-500">{color.hex_color}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveColor(index)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.englishLang')}</label>
-                  <Input
-                    value={formData.color_en}
-                    onChange={(e) => setFormData({ ...formData, color_en: e.target.value })}
-                    placeholder={t('admin.products.form.colorPlaceholderEN')}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.japaneseLang')}</label>
-                  <Input
-                    value={formData.color_ja}
-                    onChange={(e) => setFormData({ ...formData, color_ja: e.target.value })}
-                    placeholder={t('admin.products.form.colorPlaceholderJA')}
-                  />
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">{t('admin.products.form.colorNameDescription')}</p>
+              )}
+              {formData.colors.length === 0 && (
+                <p className="text-sm text-gray-500 italic">Chưa có màu nào. Thêm màu bên trên.</p>
+              )}
             </div>
 
             {/* Material - Multilingual */}
@@ -653,36 +747,70 @@ const ProductForm = () => {
               <p className="text-xs text-gray-500 mt-1">{t('admin.products.form.weightDescription')}</p>
             </div>
 
-            {/* Size - Multilingual */}
+            {/* Sizes - Multiple */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.sizeMultilingual')}</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.vietnameseLang')}</label>
-                  <Input
-                    value={formData.size_vi}
-                    onChange={(e) => setFormData({ ...formData, size_vi: e.target.value })}
-                    placeholder={t('admin.products.form.sizePlaceholderVI')}
-                  />
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Kích cỡ (Sizes)
+              </label>
+              
+              {/* Add Size Form */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Size (VI)</label>
+                    <Input
+                      value={sizeInput.size_vi}
+                      onChange={(e) => setSizeInput({ ...sizeInput, size_vi: e.target.value })}
+                      placeholder="EU36"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Size (EN)</label>
+                    <Input
+                      value={sizeInput.size_en}
+                      onChange={(e) => setSizeInput({ ...sizeInput, size_en: e.target.value })}
+                      placeholder="EU36"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Size (JA)</label>
+                    <Input
+                      value={sizeInput.size_ja}
+                      onChange={(e) => setSizeInput({ ...sizeInput, size_ja: e.target.value })}
+                      placeholder="EU36"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.englishLang')}</label>
-                  <Input
-                    value={formData.size_en}
-                    onChange={(e) => setFormData({ ...formData, size_en: e.target.value })}
-                    placeholder={t('admin.products.form.sizePlaceholderEN')}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.japaneseLang')}</label>
-                  <Input
-                    value={formData.size_ja}
-                    onChange={(e) => setFormData({ ...formData, size_ja: e.target.value })}
-                    placeholder={t('admin.products.form.sizePlaceholderJA')}
-                  />
-                </div>
+                <Button type="button" onClick={handleAddSize} size="sm">
+                  + Thêm size
+                </Button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">{t('admin.products.form.sizeDescription')}</p>
+
+              {/* Sizes List */}
+              {formData.sizes.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.sizes.map((size, index) => (
+                    <div
+                      key={index}
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg"
+                    >
+                      <span className="text-sm font-medium">
+                        {size.size_name.vi || size.size_name.en || size.size_name.ja || 'Unnamed'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSize(index)}
+                        className="hover:bg-red-50 rounded-full p-1 text-red-600"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {formData.sizes.length === 0 && (
+                <p className="text-sm text-gray-500 italic">Chưa có size nào. Thêm size bên trên.</p>
+              )}
             </div>
 
             {/* Tags */}

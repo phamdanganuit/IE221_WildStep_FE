@@ -1,19 +1,13 @@
 "use client";
 import React, { useState } from "react";
 
-const SizeSelector = ({ selectedSize, onSizeChange }) => {
-  const sizes = [
-    "EU35.5",
-    "EU36",
-    "EU36.5",
-    "EU37",
-    "EU37.5",
-    "EU38",
-    "EU38.5",
-    "EU39",
-    "EU39.5",
-    "EU40",
-  ];
+const SizeSelector = ({ selectedSize, onSizeChange, productSizes, currentLang = 'vi' }) => {
+  // Convert API format to component format
+  const sizes = productSizes && productSizes.length > 0
+    ? productSizes.map(size => 
+        size.size_name?.[currentLang] || size.size_name?.vi || size.size_name?.en || 'N/A'
+      )
+    : ["Chưa có size"];
 
   return (
     <div className="pb-3 mt-8 w-full leading-tight bg-white max-md:max-w-full">

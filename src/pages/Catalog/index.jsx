@@ -32,40 +32,9 @@ function Catalog() {
       { label: "Trẻ em", value: false },
     ],
     price: { from: "", to: "" },
-    brand: [
-      { label: "Nike", value: false },
-      { label: "Adidas", value: false },
-      { label: "Puma", value: false },
-      { label: "New Balance", value: false },
-      { label: "Converse", value: false },
-      { label: "Fila", value: false },
-      { label: "Vans", value: false },
-      { label: "MLB", value: false },
-    ],
-    size: [
-      { label: "XX-Small", value: false },
-      { label: "X-Small", value: false },
-      { label: "Small", value: false },
-      { label: "Medium", value: false },
-      { label: "Large", value: false },
-      { label: "X-Large", value: false },
-      { label: "XX-Large", value: false },
-      { label: "3X-Large", value: false },
-      { label: "4X-Large", value: false },
-    ],
-    color: [
-      { label: "Đen", value: false, color: "#000000" },
-      { label: "Xanh dương", value: false, color: "#2196F3" },
-      { label: "Nâu", value: false, color: "#8B4513" },
-      { label: "Xanh lá", value: false, color: "#4CAF50" },
-      { label: "Xám", value: false, color: "#9E9E9E" },
-      { label: "Cam", value: false, color: "#FF5722" },
-      { label: "Hồng", value: false, color: "#E91E63" },
-      { label: "Tím", value: false, color: "#9C27B0" },
-      { label: "Đỏ", value: false, color: "#F44336" },
-      { label: "Trắng", value: false, color: "#FFFFFF" },
-      { label: "Vàng", value: false, color: "#FFEB3B" },
-    ],
+    brand: [],  // Will be populated from API
+    size: [],   // Will be populated from API
+    color: [],  // Will be populated from API
   });
   useEffect(() => {
     if (!filterParam && !searchQuery) return;
@@ -125,7 +94,7 @@ function Catalog() {
         <Header/>
       </div>
       <CatalogLayout filters={filters} setFilters={setFilters}>
-        <CatalogList filters={filters} />
+        <CatalogList filters={filters} setFilters={setFilters} />
       </CatalogLayout>
     </div>
   );

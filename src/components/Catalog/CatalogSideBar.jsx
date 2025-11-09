@@ -122,21 +122,30 @@ export function CatalogSidebar({ filters, setFilters }) {
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
-              {filters?.brand.map((item, index) => {
-                return (
-                  <div key={index}>
-                    <label className="flex items-center p-2 gap-2 cursor-pointer">
-                      <Input
-                        type="checkbox"
-                        checked={item.value}
-                        onChange={() => handleBrandChange(index)}
-                        className="w-5 h-5 accent-teal-600" // đặt teal thì mới ra được dấu tích trắng, 5BC0BE ra dấu tích đen :))
-                      />
-                      <p className="text-sm">{item.label}</p>
-                    </label>
-                  </div>
-                );
-              })}
+              {filters?.brand && filters?.brand.length > 0 ? (
+                filters?.brand.map((item, index) => {
+                  return (
+                    <div key={index}>
+                      <label className="flex items-center p-2 gap-2 cursor-pointer justify-between">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="checkbox"
+                            checked={item.value}
+                            onChange={() => handleBrandChange(index)}
+                            className="w-5 h-5 accent-teal-600"
+                          />
+                          <p className="text-sm">{item.label}</p>
+                        </div>
+                        {item.count !== undefined && (
+                          <span className="text-xs text-gray-400">({item.count})</span>
+                        )}
+                      </label>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-gray-500 p-2">Không có dữ liệu</p>
+              )}
             </CollapsibleContent>
           </SidebarGroup>
         </Collapsible>
@@ -151,25 +160,32 @@ export function CatalogSidebar({ filters, setFilters }) {
             </SidebarGroupLabel>
             <CollapsibleContent>
               <div className="flex flex-wrap">
-                {filters?.size.map((item, index) => {
-                  return (
-                    <div
-                      key={index}
-                      className="flex items-center p-2 gap-2 cursor-pointer"
-                    >
-                      <Button
-                        className={`px-3 py-2 rounded-xl ${
-                          item.value
-                            ? "bg-teal-600 text-white"
-                            : "bg-[#F0F0F0] text-gray-500"
-                        }`}
-                        onClick={() => handleSizeChange(index)}
+                {filters?.size && filters?.size.length > 0 ? (
+                  filters?.size.map((item, index) => {
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-center p-2 gap-2 cursor-pointer"
                       >
-                        <p className="text-sm">{item.label}</p>
-                      </Button>
-                    </div>
-                  );
-                })}
+                        <Button
+                          className={`px-3 py-2 rounded-xl ${
+                            item.value
+                              ? "bg-teal-600 text-white"
+                              : "bg-[#F0F0F0] text-gray-500"
+                          }`}
+                          onClick={() => handleSizeChange(index)}
+                        >
+                          <p className="text-sm">
+                            {item.label}
+                            {item.count !== undefined && ` (${item.count})`}
+                          </p>
+                        </Button>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-gray-500 p-2">Không có dữ liệu</p>
+                )}
               </div>
             </CollapsibleContent>
           </SidebarGroup>
@@ -185,31 +201,40 @@ export function CatalogSidebar({ filters, setFilters }) {
             </SidebarGroupLabel>
             <CollapsibleContent>
               <div className="grid grid-cols-2 xl:grid-cols-3 gap-1">
-                {filters?.color.map((item, index) => {
-                  return (
-                    <div
-                      key={index}
-                      className="col-span-1 flex h-full items-center space-y-2 cursor-pointer"
-                    >
-                      <Button
-                        className={`w-full h-full flex flex-col items-center justify-center ${
-                          item.value
-                            ? "ring-2 ring-teal-500"
-                            : "bg-white text-black"
-                        }`}
-                        onClick={() => handleColorChange(index)}
+                {filters?.color && filters?.color.length > 0 ? (
+                  filters?.color.map((item, index) => {
+                    return (
+                      <div
+                        key={index}
+                        className="col-span-1 flex h-full items-center space-y-2 cursor-pointer"
                       >
-                        <div
-                          className="rounded-full w-6 h-6 mx-auto border"
-                          style={{
-                            backgroundColor: item.color,
-                          }}
-                        />
-                        <p className="text-xs text-center">{item.label}</p>
-                      </Button>
-                    </div>
-                  );
-                })}
+                        <Button
+                          className={`w-full h-full flex flex-col items-center justify-center ${
+                            item.value
+                              ? "ring-2 ring-teal-500"
+                              : "bg-white text-black"
+                          }`}
+                          onClick={() => handleColorChange(index)}
+                        >
+                          <div
+                            className="rounded-full w-6 h-6 mx-auto border"
+                            style={{
+                              backgroundColor: item.color,
+                            }}
+                          />
+                          <p className="text-xs text-center">
+                            {item.label}
+                            {item.count !== undefined && (
+                              <span className="block text-gray-400">({item.count})</span>
+                            )}
+                          </p>
+                        </Button>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-gray-500 p-2 col-span-full">Không có dữ liệu</p>
+                )}
               </div>
             </CollapsibleContent>
           </SidebarGroup>

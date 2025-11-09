@@ -15,6 +15,9 @@ const ProductInfo = ({
   handleSizeChange,
   selectedColor,
   handleColorChange,
+  productColors,
+  productSizes,
+  currentLang = 'vi',
 }) => {
   return (
     <div className="flex flex-col w-full max-md:max-w-full">
@@ -58,11 +61,15 @@ const ProductInfo = ({
         <ColorSelector
           selectedColor={selectedColor}
           onColorChange={handleColorChange}
+          productColors={productColors}
+          currentLang={currentLang}
         />
 
         <SizeSelector
           selectedSize={selectedSize}
           onSizeChange={handleSizeChange}
+          productSizes={productSizes}
+          currentLang={currentLang}
         />
 
         <section className="grid grid-cols-2 justify-center items-center mt-6 w-full gap-10 text-xl leading-tight max-md:max-w-full">

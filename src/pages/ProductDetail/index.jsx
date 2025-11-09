@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Header from "../../components/Header";
-// import ProductGallery from "./ProductGallery";
 import ProductInfo from "@/components/ProductDetail/ProductInfo";
 import ReviewSection from "@/components/ProductDetail/Review";
 import RelatedProducts from "@/components/ProductDetail/RelatedProduct";
@@ -15,9 +16,16 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductDescription from "@/components/ProductDetail/ProductDescription";
 import ProductDetail from "@/components/ProductDetail/ProductDetail";
+import { getProductDetail } from "@/service/contentService";
+import { safeText } from "@/lib/i18nUtils";
 
 const ChiTietSanPham = () => {
+  const { id } = useParams(); // Get product ID or slug from URL
+  const { i18n } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
@@ -31,17 +39,53 @@ const ChiTietSanPham = () => {
     setCurrentIndex(index);
   };
 
-  const images = [
-    "https://i.postimg.cc/Yq1XM1XV/Frame-139.png",
-    "https://i.postimg.cc/90ys6swX/Frame-140.png",
-    "https://i.postimg.cc/gj31C1XC/Frame-141.png",
-    "https://i.postimg.cc/mk7KvKz0/Frame-143.png",
-    "https://i.postimg.cc/QCcv2v9Y/Frame-144.png",
-    "https://i.postimg.cc/Y0QT5TLq/Frame-142.png",
-  ];
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
 
-  const [selectedColor, setSelectedColor] = useState("White/Aluminium");
-  const [selectedSize, setSelectedSize] = useState("EU36");
+  // Fetch product data from API
+  useEffect(() => {
+    if (!id) return;
+    
+    const fetchProduct = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const result = await getProductDetail(id);
+        
+        if (result.success && result.data) {
+          setProduct(result.data);
+          
+          // Set default color and size
+          if (result.data.colors && result.data.colors.length > 0) {
+            const firstColor = result.data.colors[0];
+            const colorName = firstColor.color_name?.[i18n.language] || firstColor.color_name?.vi || 'N/A';
+            setSelectedColor(colorName);
+          }
+          
+          if (result.data.sizes && result.data.sizes.length > 0) {
+            const firstSize = result.data.sizes[0];
+            const sizeName = firstSize.size_name?.[i18n.language] || firstSize.size_name?.vi || 'N/A';
+            setSelectedSize(sizeName);
+          }
+        } else {
+          setError(result.error || "Không thể tải thông tin sản phẩm");
+        }
+      } catch (err) {
+        console.error("Error fetching product:", err);
+        setError("Có lỗi xảy ra");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProduct();
+  }, [id, i18n.language]);
+
+  // Get images from product or use placeholder
+  const images = product?.images && product.images.length > 0 
+    ? product.images 
+    : ["https://via.placeholder.com/400"];
 
   const handleAddToCart = () => {
     console.log("Adding to cart:", { selectedColor, selectedSize });
@@ -61,6 +105,60 @@ const ChiTietSanPham = () => {
     setSelectedSize(size);
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex overflow-hidden flex-col pb-20 bg-white min-h-screen">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-color1 mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải sản phẩm...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !product) {
+    return (
+      <div className="flex overflow-hidden flex-col pb-20 bg-white min-h-screen">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="text-6xl mb-4">😞</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Không tìm thấy sản phẩm
+            </h3>
+            <p className="text-gray-600 mb-6">{error || "Sản phẩm không tồn tại"}</p>
+            <button
+              onClick={() => window.location.href = '/products'}
+              className="px-6 py-2 bg-color1 text-white rounded-lg hover:bg-opacity-90 transition"
+            >
+              Xem tất cả sản phẩm
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Format price
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+
+  const originalPrice = product.originalPrice || 0;
+  const discount = product.discount || 0;
+  const salePrice = discount > 0 ? (originalPrice * (100 - discount) / 100) : originalPrice;
+  const productName = safeText(product.name, i18n.language, 'N/A');
+  const categoryName = safeText(product.categoryId?.name, i18n.language, 'N/A');
+  const parentCategoryName = safeText(product.categoryId?.parentId?.name, i18n.language, 'N/A');
+
   return (
     <div className="flex overflow-hidden flex-col pb-20 bg-white">
       <Header />
@@ -71,17 +169,25 @@ const ChiTietSanPham = () => {
               Trang chủ
             </BreadcrumbLink>
           </BreadcrumbItem>
-        <BreadcrumbSeparator> | </BreadcrumbSeparator>
+          <BreadcrumbSeparator> | </BreadcrumbSeparator>
+          {parentCategoryName && parentCategoryName !== 'N/A' && (
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/products">{parentCategoryName}</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator> | </BreadcrumbSeparator>
+            </>
+          )}
+          {categoryName && categoryName !== 'N/A' && (
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/products">{categoryName}</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator> | </BreadcrumbSeparator>
+            </>
+          )}
           <BreadcrumbItem>
-            <BreadcrumbLink href="/shoes">Giày</BreadcrumbLink>
-          </BreadcrumbItem>
-        <BreadcrumbSeparator> | </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/shoes/women">Giày nữ</BreadcrumbLink>
-          </BreadcrumbItem>
-        <BreadcrumbSeparator> | </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            <BreadcrumbPage>Air Jordan 1 Low</BreadcrumbPage>
+            <BreadcrumbPage>{productName}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -134,17 +240,20 @@ const ChiTietSanPham = () => {
             </div>
             <div className="flex w-[45%] max-md:ml-0 max-md:w-full">
               <ProductInfo
-                title="Air Jordan 1 Low"
-                originalPrice="3,239,000₫"
-                salePrice="2,591,199₫"
-                soldCount="1,238"
-                rating="4.5"
+                title={productName}
+                originalPrice={discount > 0 ? formatPrice(originalPrice) : null}
+                salePrice={formatPrice(salePrice)}
+                soldCount={product.sold || 0}
+                rating={product.rate || 0}
                 onAddToCart={handleAddToCart}
                 onBuyNow={handleBuyNow}
                 selectedSize={selectedSize}
                 handleSizeChange={handleSizeChange}
                 selectedColor={selectedColor}
                 handleColorChange={handleColorChange}
+                productColors={product.colors}
+                productSizes={product.sizes}
+                currentLang={i18n.language}
               />
             </div>
           </div>
@@ -165,7 +274,15 @@ const ChiTietSanPham = () => {
         />
 
         <section className="max-md:mt-3 max-md:ml-2.5">
-          <ProductDetail product={{ color: "Đỏ", material: "Da thật cao cấp", colorHex: "#FF0000" }} />
+          <ProductDetail 
+            product={{
+              color: safeText(product.color, i18n.language, ''),
+              material: safeText(product.material, i18n.language, ''),
+              gender: safeText(product.gender, i18n.language, ''),
+              weight: safeText(product.weight, i18n.language, ''),
+              size: safeText(product.size, i18n.language, ''),
+            }} 
+          />
         </section>
 
         <img

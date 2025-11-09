@@ -4,6 +4,9 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTh, faBars, faFilter } from "@fortawesome/free-solid-svg-icons";
 import StarRating from "@/components/ProductDetail/StarRating";
+import { getPublicProducts } from "@/service/contentService";
+import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 const EXAMPLE_DATA = [
   {
@@ -338,107 +341,380 @@ const ProductCard = ({ product }) => {
   );
 };
 
-function CatalogList({ filters }) {
+function CatalogList({ filters, setFilters }) {
+  const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, page_size: 12, total: 0, total_pages: 1 });
+  const [hasInitializedFilters, setHasInitializedFilters] = useState(false);
+  
+  // Get page and sort from URL
+  const currentPage = parseInt(searchParams.get("page")) || 1;
+  const currentSort = searchParams.get("sort") || "popular";
+  
+  // Create filter query params (dependencies for API call)
+  const selectedBrands = filters.brand.filter((b) => b.value).map((b) => b.label).join(",");
+  const selectedGenders = filters.gender.filter((g) => g.value).map((g) => g.label).join(",");
+  const selectedColors = filters.color.filter((c) => c.value).map((c) => c.label).join(",");
+  const selectedSizes = filters.size.filter((s) => s.value).map((s) => s.label).join(",");
+  const priceFrom = filters.price.from;
+  const priceTo = filters.price.to;
+  const searchQuery = filters.search;
+  const category = filters.category;
   
   useEffect(() => {
-    if (!filters) return;
     const fetchProducts = async () => {
-      const params = new URLSearchParams();
-      const selectedBrands = filters.brand
-        .filter((b) => b.value)
-        .map((b) => b.label);
-      const selectedGenders = filters.gender
-        .filter((g) => g.value)
-        .map((g) => g.label);
-      const selectedColors = filters.color
-        .filter((c) => c.value)
-        .map((c) => c.label);
-      const selectedSizes = filters.size
-        .filter((s) => s.value)
-        .map((s) => s.label);
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const result = await getPublicProducts({
+          search: searchQuery || "",
+          brand: selectedBrands || "",
+          gender: selectedGenders || "",
+          color: selectedColors || "",
+          size: selectedSizes || "",
+          priceFrom: priceFrom || "",
+          priceTo: priceTo || "",
+          category: category || "",
+          sort: currentSort,
+          page: currentPage,
+          page_size: 12,
+        });
 
-      // Add search query if exists
-      if (filters.search) params.append("search", filters.search);
-      if (selectedBrands.length)
-        params.append("brand", selectedBrands.join(","));
-      if (selectedGenders.length)
-        params.append("gender", selectedGenders.join(","));
-      if (selectedColors.length)
-        params.append("color", selectedColors.join(","));
-      if (selectedSizes.length) params.append("size", selectedSizes.join(","));
-      if (filters.price.from) params.append("priceFrom", filters.price.from);
-      if (filters.price.to) params.append("priceTo", filters.price.to);
-      if (filters.category) params.append("category", filters.category);
-      console.log(decodeURIComponent(params.toString()));
-      // const res = await fetch(`/api/products?${decodeURIComponent(params.toString())}`);
-      // const data = await res.json();
-      const data = EXAMPLE_DATA; //sử dụng data mẫu
-      setProducts(data);
+        if (result.success && result.data) {
+          setProducts(result.data.data || []);
+          setPagination(result.data.pagination || { page: 1, page_size: 12, total: 0, total_pages: 1 });
+          
+          // Only update filters on first load
+          if (!hasInitializedFilters && result.data.filters) {
+            updateFiltersFromAPI(result.data.filters);
+            setHasInitializedFilters(true);
+          }
+        } else {
+          setError(result.error || "Không thể tải danh sách sản phẩm");
+          setProducts([]);
+        }
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError("Có lỗi xảy ra khi tải sản phẩm");
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProducts();
-  }, [filters]);
+  }, [selectedBrands, selectedGenders, selectedColors, selectedSizes, priceFrom, priceTo, searchQuery, category, currentPage, currentSort]);
+
+  // Update filters with API data while preserving user selections
+  const updateFiltersFromAPI = (apiFilters) => {
+    setFilters((prev) => {
+      const updated = { ...prev };
+
+      // Update brands - Always update, even if empty
+      if (apiFilters.availableBrands) {
+        const currentSelectedBrands = prev.brand.filter(b => b.value).map(b => b.label);
+        updated.brand = apiFilters.availableBrands.length > 0 
+          ? apiFilters.availableBrands.map(brand => ({
+              label: brand.name,
+              value: currentSelectedBrands.includes(brand.name),
+              count: brand.count || 0
+            }))
+          : []; // Empty array if no brands available
+      } else if (prev.brand.length === 0) {
+        // Fallback to default brands if API doesn't return filters
+        updated.brand = [
+          { label: "Nike", value: false },
+          { label: "Adidas", value: false },
+          { label: "Puma", value: false },
+          { label: "New Balance", value: false },
+          { label: "Converse", value: false },
+          { label: "Fila", value: false },
+          { label: "Vans", value: false },
+          { label: "MLB", value: false },
+        ];
+      }
+
+      // Update colors - Always update, even if empty
+      if (apiFilters.availableColors) {
+        const currentSelectedColors = prev.color.filter(c => c.value).map(c => c.label);
+        updated.color = apiFilters.availableColors.length > 0
+          ? apiFilters.availableColors.map(color => ({
+              label: color.name,
+              value: currentSelectedColors.includes(color.name),
+              color: color.hex || "#000000",
+              count: color.count || 0
+            }))
+          : [];
+      } else if (prev.color.length === 0) {
+        // Fallback to default colors if API doesn't return filters
+        updated.color = [
+          { label: "Đen", value: false, color: "#000000" },
+          { label: "Xanh dương", value: false, color: "#2196F3" },
+          { label: "Nâu", value: false, color: "#8B4513" },
+          { label: "Xanh lá", value: false, color: "#4CAF50" },
+          { label: "Xám", value: false, color: "#9E9E9E" },
+          { label: "Cam", value: false, color: "#FF5722" },
+          { label: "Hồng", value: false, color: "#E91E63" },
+          { label: "Tím", value: false, color: "#9C27B0" },
+          { label: "Đỏ", value: false, color: "#F44336" },
+          { label: "Trắng", value: false, color: "#FFFFFF" },
+          { label: "Vàng", value: false, color: "#FFEB3B" },
+        ];
+      }
+
+      // Update sizes - Always update, even if empty
+      if (apiFilters.availableSizes) {
+        const currentSelectedSizes = prev.size.filter(s => s.value).map(s => s.label);
+        updated.size = apiFilters.availableSizes.length > 0
+          ? apiFilters.availableSizes.map(size => ({
+              label: size.size,
+              value: currentSelectedSizes.includes(size.size),
+              count: size.count || 0
+            }))
+          : [];
+      } else if (prev.size.length === 0) {
+        // Fallback to default sizes if API doesn't return filters
+        updated.size = [
+          { label: "XX-Small", value: false },
+          { label: "X-Small", value: false },
+          { label: "Small", value: false },
+          { label: "Medium", value: false },
+          { label: "Large", value: false },
+          { label: "X-Large", value: false },
+          { label: "XX-Large", value: false },
+          { label: "3X-Large", value: false },
+          { label: "4X-Large", value: false },
+        ];
+      }
+
+      return updated;
+    });
+  };
+
+  const handlePageChange = (newPage) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", newPage.toString());
+    setSearchParams(params);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSortChange = (newSort) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("sort", newSort);
+    params.set("page", "1"); // Reset to page 1 when sorting
+    setSearchParams(params);
+  };
   
   return (
     <div className="flex flex-col w-full p-4 sm:p-6 md:p-8">
+      {/* Header Section */}
       <div className="flex-col space-y-4 mb-6">
         <CatalogBreadCrumb category={filters?.category} />
-        <h2 className="font-semibold text-xl md:text-2xl lg:text-3xl">
-          {filters?.search ? `Kết quả tìm kiếm: "${filters.search}"` : 'Tất cả sản phẩm'}
-        </h2>
         
-        {/* Filter and Sort Button + Layout Switcher */}
-        <div className=" lg:hidden flex items-center justify-between gap-3">
-          {/* Filter and Sort Button - Only show on mobile/tablet */}
-          <SidebarTrigger className="lg:hidden flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 
-            bg-[#0A1E33] text-white rounded-lg 
-            hover:bg-[#1a2e43] transition-colors
-            font-medium text-sm sm:text-base
-            min-h-[44px]">
-            <FontAwesomeIcon icon={faFilter} className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span>Lọc Và Sắp Xếp</span>
-          </SidebarTrigger>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <h2 className="font-semibold text-xl md:text-2xl lg:text-3xl">
+            {filters?.search ? `Kết quả tìm kiếm: "${filters.search}"` : 'Tất cả sản phẩm'}
+          </h2>
           
-          {/* Layout Switcher */}
-          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1 ml-auto">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                viewMode === 'grid' 
-                  ? 'bg-white text-[#0A1E33] shadow-sm' 
-                  : 'text-gray-600 hover:text-[#0A1E33]'
-              }`}
-              aria-label="Grid view"
+          {/* Sort Dropdown - Desktop */}
+          <div className="hidden lg:flex items-center gap-2">
+            <label className="text-sm text-gray-600 whitespace-nowrap">
+              Sắp xếp:
+            </label>
+            <select
+              value={currentSort}
+              onChange={(e) => handleSortChange(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-color1 min-w-[180px]"
             >
-              <FontAwesomeIcon icon={faTh} className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                viewMode === 'list' 
-                  ? 'bg-white text-[#0A1E33] shadow-sm' 
-                  : 'text-gray-600 hover:text-[#0A1E33]'
-              }`}
-              aria-label="List view"
+              <option value="popular">Phổ biến nhất</option>
+              <option value="newest">Mới nhất</option>
+              <option value="oldest">Cũ nhất</option>
+              <option value="price_asc">Giá: Thấp đến cao</option>
+              <option value="price_desc">Giá: Cao đến thấp</option>
+              <option value="rating_desc">Đánh giá cao nhất</option>
+              <option value="name_asc">Tên A-Z</option>
+              <option value="name_desc">Tên Z-A</option>
+            </select>
+          </div>
+        </div>
+        
+        {/* Mobile Controls */}
+        <div className="lg:hidden flex flex-col gap-3">
+          {/* Sort Dropdown - Mobile */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600 whitespace-nowrap">
+              Sắp xếp:
+            </label>
+            <select
+              value={currentSort}
+              onChange={(e) => handleSortChange(e.target.value)}
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-color1"
             >
-              <FontAwesomeIcon icon={faBars} className="w-4 h-4 sm:w-5 sm:h-5" />
+              <option value="popular">Phổ biến nhất</option>
+              <option value="newest">Mới nhất</option>
+              <option value="oldest">Cũ nhất</option>
+              <option value="price_asc">Giá: Thấp đến cao</option>
+              <option value="price_desc">Giá: Cao đến thấp</option>
+              <option value="rating_desc">Đánh giá cao nhất</option>
+              <option value="name_asc">Tên A-Z</option>
+              <option value="name_desc">Tên Z-A</option>
+            </select>
+          </div>
+          
+          {/* Filter Button + Layout Switcher */}
+          <div className="flex items-center justify-between gap-3">
+            <SidebarTrigger className="flex items-center gap-2 px-4 py-2.5 bg-[#0A1E33] text-white rounded-lg hover:bg-[#1a2e43] transition-colors font-medium text-sm min-h-[44px]">
+              <FontAwesomeIcon icon={faFilter} className="w-4 h-4" />
+              <span>Lọc</span>
+            </SidebarTrigger>
+            
+            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                  viewMode === 'grid' ? 'bg-white text-[#0A1E33] shadow-sm' : 'text-gray-600'
+                }`}
+              >
+                <FontAwesomeIcon icon={faTh} className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                  viewMode === 'list' ? 'bg-white text-[#0A1E33] shadow-sm' : 'text-gray-600'
+                }`}
+              >
+                <FontAwesomeIcon icon={faBars} className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Product Count */}
+        {!loading && !error && pagination.total > 0 && (
+          <p className="text-sm text-gray-600">
+            Hiển thị {(pagination.page - 1) * pagination.page_size + 1} - {Math.min(pagination.page * pagination.page_size, pagination.total)} của {pagination.total} sản phẩm
+          </p>
+        )}
+      </div>
+
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-color1 mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải sản phẩm...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p className="text-red-600 font-medium">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+          >
+            Thử lại
+          </button>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && products.length === 0 && (
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Không tìm thấy sản phẩm
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác
+            </p>
+            <button
+              onClick={() => window.location.href = '/products'}
+              className="px-6 py-2 bg-color1 text-white rounded-lg hover:bg-opacity-90 transition"
+            >
+              Xem tất cả sản phẩm
             </button>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Products Grid - 2 Columns */}
-      <div className={`grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 ${
-        viewMode === 'grid' 
-          ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' 
-          : 'grid-cols-1'
-      }`}>
-        {products.map((product) => (
-          <ProductCard key={product._id} product={product} />
-        ))}
-      </div>
+      {/* Products Grid */}
+      {!loading && !error && products.length > 0 && (
+        <>
+          <div className={`grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 ${
+            viewMode === 'grid' 
+              ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' 
+              : 'grid-cols-1'
+          }`}>
+            {products.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {pagination.total_pages > 1 && (
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t">
+              <p className="text-sm text-gray-600">
+                Trang {pagination.page} / {pagination.total_pages}
+              </p>
+              
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                <button
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition min-h-[44px]"
+                >
+                  Trước
+                </button>
+
+                {/* Page Numbers */}
+                {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+                  let pageNum;
+                  if (pagination.total_pages <= 5) {
+                    pageNum = i + 1;
+                  } else if (pagination.page <= 3) {
+                    pageNum = i + 1;
+                  } else if (pagination.page >= pagination.total_pages - 2) {
+                    pageNum = pagination.total_pages - 4 + i;
+                  } else {
+                    pageNum = pagination.page - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-4 py-2 border rounded-lg transition min-h-[44px] min-w-[44px] ${
+                        pagination.page === pageNum
+                          ? 'bg-color1 text-white border-color1'
+                          : 'border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.total_pages}
+                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition min-h-[44px]"
+                >
+                  Sau
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

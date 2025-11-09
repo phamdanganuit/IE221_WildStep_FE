@@ -79,14 +79,19 @@ const PopularProducts = () => {
       if (res?.success && Array.isArray(res.data?.data)) {
         const apiProducts = res.data.data.map(p => {
           const currency = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
-          const priceNumber = p.discountPrice ?? p.price;
-          const oldPriceNumber = p.discountPrice ? p.price : null;
+          
+          // Calculate actual price based on discount
+          const originalPrice = p.originalPrice || 0;
+          const discount = p.discount || 0;
+          const discountedPrice = discount > 0 ? (originalPrice * (100 - discount) / 100) : originalPrice;
+          const hasDiscount = discount > 0;
+          
           return {
-            id: p.id,
+            id: p._id || p.id,  // Use _id from MongoDB
             name: safeText(p.name, i18n.language, 'N/A'),
             image: (Array.isArray(p.images) && p.images[0]) || "",
-            price: typeof priceNumber === 'number' ? currency.format(priceNumber) : String(priceNumber ?? ""),
-            oldPrice: typeof oldPriceNumber === 'number' ? currency.format(oldPriceNumber) : null,
+            price: currency.format(discountedPrice),
+            oldPrice: hasDiscount ? currency.format(originalPrice) : null,
           };
         });
         setProducts(apiProducts);
