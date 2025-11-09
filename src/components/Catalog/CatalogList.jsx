@@ -244,6 +244,7 @@ const ProductCard = ({ product }) => {
   const reviewCount = product?.sold || 0;
   const categoryName = product?.categoryId?.parentId?.name ? `${product.categoryId.parentId.name}` : '';
   const genderName = categoryName || '';
+  const colorHex = product?.colorHex || null;
   
   return (
     <div
@@ -253,6 +254,17 @@ const ProductCard = ({ product }) => {
         transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-color4
         cursor-pointer"
     >
+      {/* Color Indicator */}
+      {colorHex && (
+        <div 
+          className="absolute top-2 sm:top-3 right-2 sm:right-3 
+            w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-md
+            z-10"
+          style={{ backgroundColor: colorHex }}
+          title={`Color: ${colorHex}`}
+        />
+      )}
+
       {/* NEW Badge */}
       {isNew && (
         <div className="absolute top-2 sm:top-3 left-0 

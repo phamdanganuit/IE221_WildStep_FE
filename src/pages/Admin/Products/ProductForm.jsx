@@ -32,8 +32,6 @@ const ProductForm = () => {
   const [brands, setBrands] = useState([]);
   const [images, setImages] = useState([]); // new images (create mode)
   const [existingImages, setExistingImages] = useState([]); // urls from server (edit mode)
-  const [sizeInput, setSizeInput] = useState("");
-  const [colorInput, setColorInput] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [formData, setFormData] = useState({
     name_vi: "",
@@ -48,12 +46,22 @@ const ProductForm = () => {
     stock: "",
     discount: "",
     status: "active",
-    specifications: {
-      size: [],
-      color: [],
-      material: "",
-      weight: "",
-    },
+    colorHex: "",
+    color_vi: "",
+    color_en: "",
+    color_ja: "",
+    material_vi: "",
+    material_en: "",
+    material_ja: "",
+    gender_vi: "",
+    gender_en: "",
+    gender_ja: "",
+    weight_vi: "",
+    weight_en: "",
+    weight_ja: "",
+    size_vi: "",
+    size_en: "",
+    size_ja: "",
     tags: [],
   });
 
@@ -155,6 +163,11 @@ const ProductForm = () => {
       const product = result.data;
       const name = product.name || {};
       const desc = product.description || {};
+      const color = product.color || {};
+      const material = product.material || {};
+      const gender = product.gender || {};
+      const weight = product.weight || {};
+      const size = product.size || {};
       setFormData({
         name_vi: typeof name === 'object' ? (name.vi || '') : (name || ''),
         name_en: typeof name === 'object' ? (name.en || '') : '',
@@ -168,12 +181,22 @@ const ProductForm = () => {
         stock: product.stock || "",
         discount: product.discount || "",
         status: product.status || "active",
-        specifications: {
-          size: product.specifications?.size || [],
-          color: product.specifications?.color || [],
-          material: product.specifications?.material || "",
-          weight: product.specifications?.weight || "",
-        },
+        colorHex: product.colorHex || "",
+        color_vi: typeof color === 'object' ? (color.vi || '') : '',
+        color_en: typeof color === 'object' ? (color.en || '') : '',
+        color_ja: typeof color === 'object' ? (color.ja || '') : '',
+        material_vi: typeof material === 'object' ? (material.vi || '') : '',
+        material_en: typeof material === 'object' ? (material.en || '') : '',
+        material_ja: typeof material === 'object' ? (material.ja || '') : '',
+        gender_vi: typeof gender === 'object' ? (gender.vi || '') : (typeof gender === 'string' ? gender : ''),
+        gender_en: typeof gender === 'object' ? (gender.en || '') : '',
+        gender_ja: typeof gender === 'object' ? (gender.ja || '') : '',
+        weight_vi: typeof weight === 'object' ? (weight.vi || '') : (weight ? String(weight) : ''),
+        weight_en: typeof weight === 'object' ? (weight.en || '') : '',
+        weight_ja: typeof weight === 'object' ? (weight.ja || '') : '',
+        size_vi: typeof size === 'object' ? (size.vi || '') : (typeof size === 'string' ? size : ''),
+        size_en: typeof size === 'object' ? (size.en || '') : '',
+        size_ja: typeof size === 'object' ? (size.ja || '') : '',
         tags: product.tags || [],
       });
       setExistingImages(Array.isArray(product.images) ? product.images : []);
@@ -210,7 +233,12 @@ const ProductForm = () => {
       stock: parseInt(formData.stock) || 0,
       discount: parseFloat(formData.discount) || 0,
       status: formData.status,
-      specifications: formData.specifications,
+      colorHex: formData.colorHex || '',
+      color: { vi: formData.color_vi || '', en: formData.color_en || '', ja: formData.color_ja || '' },
+      material: { vi: formData.material_vi || '', en: formData.material_en || '', ja: formData.material_ja || '' },
+      gender: { vi: formData.gender_vi || '', en: formData.gender_en || '', ja: formData.gender_ja || '' },
+      weight: { vi: formData.weight_vi || '', en: formData.weight_en || '', ja: formData.weight_ja || '' },
+      size: { vi: formData.size_vi || '', en: formData.size_en || '', ja: formData.size_ja || '' },
       tags: formData.tags,
     };
 
@@ -287,59 +315,6 @@ const ProductForm = () => {
     }
   };
 
-  const handleAddSize = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const value = sizeInput.trim();
-      if (value && !formData.specifications.size.includes(value)) {
-        setFormData({
-          ...formData,
-          specifications: {
-            ...formData.specifications,
-            size: [...formData.specifications.size, value],
-          },
-        });
-        setSizeInput("");
-      }
-    }
-  };
-
-  const handleRemoveSize = (index) => {
-    setFormData({
-      ...formData,
-      specifications: {
-        ...formData.specifications,
-        size: formData.specifications.size.filter((_, i) => i !== index),
-      },
-    });
-  };
-
-  const handleAddColor = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const value = colorInput.trim();
-      if (value && !formData.specifications.color.includes(value)) {
-        setFormData({
-          ...formData,
-          specifications: {
-            ...formData.specifications,
-            color: [...formData.specifications.color, value],
-          },
-        });
-        setColorInput("");
-      }
-    }
-  };
-
-  const handleRemoveColor = (index) => {
-    setFormData({
-      ...formData,
-      specifications: {
-        ...formData.specifications,
-        color: formData.specifications.color.filter((_, i) => i !== index),
-      },
-    });
-  };
 
   const handleAddTag = (e) => {
     if (e.key === "Enter") {
@@ -521,104 +496,196 @@ const ProductForm = () => {
           </CardContent>
         </Card>
 
-        {/* Specifications */}
+        {/* Product Attributes */}
         <Card>
           <CardHeader>
             <CardTitle>{t('admin.products.form.specifications')}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Color Hex */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('admin.products.form.size')}
+                {t('admin.products.form.colorHexLabel')}
               </label>
-              <Input
-                value={sizeInput}
-                onChange={(e) => setSizeInput(e.target.value)}
-                onKeyDown={handleAddSize}
-                placeholder={t('admin.products.form.size')}
-              />
-              {formData.specifications.size.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.specifications.size.map((size, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-color4 text-white text-sm rounded-full"
-                    >
-                      {size}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSize(index)}
-                        className="hover:bg-white/20 rounded-full p-0.5"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
+              <div className="flex items-center gap-3">
+                <Input
+                  type="color"
+                  value={formData.colorHex}
+                  onChange={(e) => setFormData({ ...formData, colorHex: e.target.value })}
+                  className="w-20 h-10 cursor-pointer"
+                />
+                <Input
+                  type="text"
+                  value={formData.colorHex}
+                  onChange={(e) => setFormData({ ...formData, colorHex: e.target.value })}
+                  placeholder={t('admin.products.form.colorHexPlaceholder')}
+                  className="flex-1"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.products.form.colorHexDescription')}</p>
             </div>
 
+            {/* Color Name - Multilingual */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('admin.products.form.color')}
-              </label>
-              <Input
-                value={colorInput}
-                onChange={(e) => setColorInput(e.target.value)}
-                onKeyDown={handleAddColor}
-                placeholder={t('admin.products.form.color')}
-              />
-              {formData.specifications.color.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.specifications.color.map((color, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-color4 text-white text-sm rounded-full"
-                    >
-                      {color}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveColor(index)}
-                        className="hover:bg-white/20 rounded-full p-0.5"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.colorNameMultilingual')}</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.vietnameseLang')}</label>
+                  <Input
+                    value={formData.color_vi}
+                    onChange={(e) => setFormData({ ...formData, color_vi: e.target.value })}
+                    placeholder={t('admin.products.form.colorPlaceholderVI')}
+                  />
                 </div>
-              )}
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.englishLang')}</label>
+                  <Input
+                    value={formData.color_en}
+                    onChange={(e) => setFormData({ ...formData, color_en: e.target.value })}
+                    placeholder={t('admin.products.form.colorPlaceholderEN')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.japaneseLang')}</label>
+                  <Input
+                    value={formData.color_ja}
+                    onChange={(e) => setFormData({ ...formData, color_ja: e.target.value })}
+                    placeholder={t('admin.products.form.colorPlaceholderJA')}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.products.form.colorNameDescription')}</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.material')}</label>
-                <Input
-                  value={formData.specifications.material}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      specifications: { ...formData.specifications, material: e.target.value },
-                    })
-                  }
-                  placeholder={t('admin.products.form.materialPlaceholder')}
-                />
+            {/* Material - Multilingual */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.materialMultilingual')}</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.vietnameseLang')}</label>
+                  <Input
+                    value={formData.material_vi}
+                    onChange={(e) => setFormData({ ...formData, material_vi: e.target.value })}
+                    placeholder={t('admin.products.form.materialPlaceholderVI')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.englishLang')}</label>
+                  <Input
+                    value={formData.material_en}
+                    onChange={(e) => setFormData({ ...formData, material_en: e.target.value })}
+                    placeholder={t('admin.products.form.materialPlaceholderEN')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.japaneseLang')}</label>
+                  <Input
+                    value={formData.material_ja}
+                    onChange={(e) => setFormData({ ...formData, material_ja: e.target.value })}
+                    placeholder={t('admin.products.form.materialPlaceholderJA')}
+                  />
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.weight')}</label>
-                <Input
-                  value={formData.specifications.weight}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      specifications: { ...formData.specifications, weight: e.target.value },
-                    })
-                  }
-                  placeholder={t('admin.products.form.weightPlaceholder')}
-                />
-              </div>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.products.form.materialDescription')}</p>
             </div>
 
+            {/* Gender - Multilingual */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.genderMultilingual')}</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.vietnameseLang')}</label>
+                  <Input
+                    value={formData.gender_vi}
+                    onChange={(e) => setFormData({ ...formData, gender_vi: e.target.value })}
+                    placeholder={t('admin.products.form.genderPlaceholderVI')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.englishLang')}</label>
+                  <Input
+                    value={formData.gender_en}
+                    onChange={(e) => setFormData({ ...formData, gender_en: e.target.value })}
+                    placeholder={t('admin.products.form.genderPlaceholderEN')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.japaneseLang')}</label>
+                  <Input
+                    value={formData.gender_ja}
+                    onChange={(e) => setFormData({ ...formData, gender_ja: e.target.value })}
+                    placeholder={t('admin.products.form.genderPlaceholderJA')}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.products.form.genderDescription')}</p>
+            </div>
+
+            {/* Weight - Multilingual */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.weightMultilingual')}</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.vietnameseLang')}</label>
+                  <Input
+                    value={formData.weight_vi}
+                    onChange={(e) => setFormData({ ...formData, weight_vi: e.target.value })}
+                    placeholder={t('admin.products.form.weightPlaceholderVI')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.englishLang')}</label>
+                  <Input
+                    value={formData.weight_en}
+                    onChange={(e) => setFormData({ ...formData, weight_en: e.target.value })}
+                    placeholder={t('admin.products.form.weightPlaceholderEN')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.japaneseLang')}</label>
+                  <Input
+                    value={formData.weight_ja}
+                    onChange={(e) => setFormData({ ...formData, weight_ja: e.target.value })}
+                    placeholder={t('admin.products.form.weightPlaceholderJA')}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.products.form.weightDescription')}</p>
+            </div>
+
+            {/* Size - Multilingual */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.sizeMultilingual')}</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.vietnameseLang')}</label>
+                  <Input
+                    value={formData.size_vi}
+                    onChange={(e) => setFormData({ ...formData, size_vi: e.target.value })}
+                    placeholder={t('admin.products.form.sizePlaceholderVI')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.englishLang')}</label>
+                  <Input
+                    value={formData.size_en}
+                    onChange={(e) => setFormData({ ...formData, size_en: e.target.value })}
+                    placeholder={t('admin.products.form.sizePlaceholderEN')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">{t('admin.common.japaneseLang')}</label>
+                  <Input
+                    value={formData.size_ja}
+                    onChange={(e) => setFormData({ ...formData, size_ja: e.target.value })}
+                    placeholder={t('admin.products.form.sizePlaceholderJA')}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">{t('admin.products.form.sizeDescription')}</p>
+            </div>
+
+            {/* Tags */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t('admin.products.form.tags')}
@@ -660,64 +727,113 @@ const ProductForm = () => {
           <CardContent>
             <div>
               {isEdit && existingImages.length > 0 && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.products.form.images')}</label>
-                  {imagesReordered && (
-                    <div className="flex justify-end mb-3">
-                      <Button type="button" onClick={handleSaveImagesOrder}>{t('admin.products.form.saveImageOrder')}</Button>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="text-sm font-medium text-gray-700">
+                      {t('admin.products.form.images')} ({existingImages.length}/5)
+                    </label>
+                    {imagesReordered && (
+                      <Button type="button" size="sm" onClick={handleSaveImagesOrder}>
+                        {t('admin.products.form.saveImageOrder')}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {existingImages.map((url, idx) => (
                       <div
                         key={idx}
-                        className="relative group cursor-move"
+                        className="relative group cursor-move bg-white rounded-lg border-2 border-gray-200 hover:border-color4 transition-all duration-200 overflow-hidden shadow-sm hover:shadow-md"
                         draggable
                         onDragStart={() => handleDragStart(idx)}
                         onDragOver={handleDragOver}
                         onDrop={() => handleDrop(idx)}
                         title={t('admin.products.form.dragToSort')}
                       >
-                        <button type="button" onClick={() => { setPreviewImage(url); setIsPreviewOpen(true); }} className="block w-full">
-                          <div className="relative w-full aspect-square">
-                            <img src={url} alt={`image-${idx}`} className="absolute inset-0 w-full h-full object-cover rounded-md" />
-                          </div>
-                        </button>
+                        {/* Image Number Badge */}
+                        <div className="absolute top-2 left-2 z-10 bg-color4 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
+                          {idx + 1}
+                        </div>
+                        
+                        {/* Delete Button */}
                         <button
                           type="button"
-                          onClick={() => handleDeleteExistingImage(url)}
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-white rounded-full p-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteExistingImage(url);
+                          }}
+                          className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg"
                           aria-label={t('admin.products.form.deleteImage')}
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Drag Indicator */}
+                        <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity py-2 text-center">
+                          <span className="text-white text-xs font-medium">
+                            ⇅ {t('admin.products.form.dragToSort')}
+                          </span>
+                        </div>
+
+                        {/* Image */}
+                        <button 
+                          type="button" 
+                          onClick={() => { setPreviewImage(url); setIsPreviewOpen(true); }} 
+                          className="block w-full h-full"
+                        >
+                          <div className="relative w-full aspect-square bg-gray-100">
+                            <img 
+                              src={url} 
+                              alt={`Product image ${idx + 1}`} 
+                              className="absolute inset-0 w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
                         </button>
                       </div>
                     ))}
                   </div>
+                  <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
+                    <span>💡</span>
+                    <span>{t('admin.products.form.dragToReorder')}</span>
+                  </p>
                 </div>
               )}
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Upload ảnh (tối đa 5 ảnh)
-              </label>
-              <div className="mt-2 flex items-center gap-4">
-                <label className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
-                  <Upload className="w-4 h-4" />
-                  <span className="text-sm">{t('admin.products.form.selectImages')}</span>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
+              {/* Upload Section */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-colors">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  {t('admin.products.form.uploadImagesLabel')}
                 </label>
-                {!isEdit && images.length > 0 && (
-                  <span className="text-sm text-gray-600">{images.length} {t('admin.products.form.imagesSelected')}</span>
-                )}
+                
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <label className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-color4 text-color4 rounded-lg cursor-pointer hover:bg-color4 hover:text-white transition-all shadow-sm hover:shadow-md font-medium">
+                    <Upload className="w-5 h-5" />
+                    <span>{t('admin.products.form.selectImages')}</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                  
+                  {!isEdit && images.length > 0 && (
+                    <div className="flex items-center gap-2 text-sm text-gray-700 bg-white px-4 py-2 rounded-full border border-gray-200">
+                      <span className="font-semibold text-color4">{images.length}</span>
+                      <span>{t('admin.products.form.imagesSelected')}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 text-center space-y-1">
+                  <p className="text-xs text-gray-600">
+                    {t('admin.products.form.imageFormats')}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {t('admin.products.form.maxImages')}: 5 {t('admin.products.form.images').toLowerCase()}
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                {t('admin.products.form.imageFormats')}
-              </p>
             </div>
           </CardContent>
         </Card>

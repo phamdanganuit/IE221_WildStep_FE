@@ -165,7 +165,7 @@ const ChiTietSanPham = () => {
         />
 
         <section className="max-md:mt-3 max-md:ml-2.5">
-          <ProductDetail />
+          <ProductDetail product={{ color: "Đỏ", material: "Da thật cao cấp", colorHex: "#FF0000" }} />
         </section>
 
         <img

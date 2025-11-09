@@ -145,57 +145,55 @@ const ProductDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Specifications */}
-          {product.specifications && (
+          {/* Product Attributes */}
+          {(product.gender || product.material || product.weight || product.size || product.color || product.colorHex) && (
             <Card>
               <CardHeader>
                 <CardTitle>Thông số kỹ thuật</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {product.specifications.size && product.specifications.size.length > 0 && (
+                  {product.gender && (
                     <div className="flex items-start gap-4">
-                      <span className="text-sm font-medium text-gray-600 min-w-[100px]">Size:</span>
-                      <div className="flex flex-wrap gap-2">
-                        {product.specifications.size.map((size, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md"
-                          >
-                            {size}
-                          </span>
-                        ))}
-                      </div>
+                      <span className="text-sm font-medium text-gray-600 min-w-[100px]">Giới tính:</span>
+                      <span className="text-sm text-gray-700">{safeText(product.gender, i18n.language, 'N/A')}</span>
                     </div>
                   )}
 
-                  {product.specifications.color && product.specifications.color.length > 0 && (
+                  {(product.color || product.colorHex) && (
                     <div className="flex items-start gap-4">
                       <span className="text-sm font-medium text-gray-600 min-w-[100px]">Màu sắc:</span>
-                      <div className="flex flex-wrap gap-2">
-                        {product.specifications.color.map((color, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md"
-                          >
-                            {color}
-                          </span>
-                        ))}
+                      <div className="flex items-center gap-2">
+                        {product.colorHex && (
+                          <div 
+                            className="w-6 h-6 rounded-full border-2 border-gray-300" 
+                            style={{ backgroundColor: product.colorHex }}
+                            title={product.colorHex}
+                          />
+                        )}
+                        <span className="text-sm text-gray-700">{safeText(product.color, i18n.language, 'N/A')}</span>
                       </div>
                     </div>
                   )}
 
-                  {product.specifications.material && (
+                  {product.material && (
                     <div className="flex items-start gap-4">
                       <span className="text-sm font-medium text-gray-600 min-w-[100px]">Chất liệu:</span>
-                      <span className="text-sm text-gray-700">{product.specifications.material}</span>
+                      <span className="text-sm text-gray-700">{safeText(product.material, i18n.language, 'N/A')}</span>
                     </div>
                   )}
 
-                  {product.specifications.weight && (
+                  {product.weight && (
                     <div className="flex items-start gap-4">
                       <span className="text-sm font-medium text-gray-600 min-w-[100px]">Trọng lượng:</span>
-                      <span className="text-sm text-gray-700">{product.specifications.weight}</span>
+                      <span className="text-sm text-gray-700">{safeText(product.weight, i18n.language, 'N/A')}</span>
+                    </div>
+                  )}
+
+                  {product.size && (
+                    <div className="flex items-start gap-4">
+                      <span className="text-sm font-medium text-gray-600 min-w-[100px]">Kích thước:</span>
+                      <span className="text-sm text-gray-700">{safeText(product.size, i18n.language, 'N/A')}</span>
                     </div>
                   )}
                 </div>
