@@ -444,6 +444,7 @@
       "phone": "電話番号",
       "orders": "注文",
       "spent": "総支出",
+      "status": "ステータス",
       "joined": "登録日",
       "actions": "操作",
       "search": "名前、メールで検索...",

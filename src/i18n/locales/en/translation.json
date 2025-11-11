@@ -444,6 +444,7 @@
       "phone": "Phone",
       "orders": "Orders",
       "spent": "Total Spent",
+      "status": "Status",
       "joined": "Join Date",
       "actions": "Actions",
       "search": "Search by name, email...",
