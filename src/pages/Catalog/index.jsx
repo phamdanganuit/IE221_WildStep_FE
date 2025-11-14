@@ -18,13 +18,11 @@ function CatalogLayout({ filters, setFilters, children }) {
   );
 }
 
-function Catalog() {
-  const [searchParams] = useSearchParams();
-  const filterParam = searchParams.get("filter");
-  const searchQuery = searchParams.get("search");
-  const [filters, setFilters] = useState({
+// Helper function to initialize filters from URL params
+const initializeFiltersFromParams = (filterParam, searchQuery) => {
+  const baseFilters = {
     category: "", // Sản-phẩm-mới, Giảm-giá, Phụ-kiện
-    search: "", // Từ khóa tìm kiếm
+    search: searchQuery || "", // Từ khóa tìm kiếm
     gender: [
       { label: "Nam", value: false },
       { label: "Nữ", value: false },
@@ -35,57 +33,75 @@ function Catalog() {
     brand: [],  // Will be populated from API
     size: [],   // Will be populated from API
     color: [],  // Will be populated from API
-  });
+  };
+
+  if (!filterParam) {
+    return baseFilters;
+  }
+
+  // Validate filter param
+  if (!/^(Sản-phẩm-mới|Giảm-giá|Phụ-kiện|Nam|Nữ|Trẻ-em|Unisex)$/.test(filterParam)) {
+    return baseFilters;
+  }
+
+  // Process filter param
+  const updated = { ...baseFilters };
+
+  switch (filterParam) {
+    case "Nam":
+      updated.gender = baseFilters.gender.map((g) => ({
+        ...g,
+        value: g.label === "Nam",
+      }));
+      break;
+    case "Nữ":
+      updated.gender = baseFilters.gender.map((g) => ({
+        ...g,
+        value: g.label === "Nữ",
+      }));
+      break;
+    case "Unisex":
+      updated.gender = baseFilters.gender.map((g) => ({
+        ...g,
+        value: g.label === "Unisex",
+      }));
+      break;
+    case "Trẻ-em":
+      updated.gender = baseFilters.gender.map((g) => ({
+        ...g,
+        value: g.label === "Trẻ em",
+      }));
+      break;
+    default:
+      updated.category = filterParam;
+  }
+
+  return updated;
+};
+
+function Catalog() {
+  const [searchParams] = useSearchParams();
+  const filterParam = searchParams.get("filter");
+  const searchQuery = searchParams.get("search");
+  
+  // Initialize filters from URL params immediately
+  const [filters, setFilters] = useState(() => 
+    initializeFiltersFromParams(filterParam, searchQuery)
+  );
+
   useEffect(() => {
-    if (!filterParam && !searchQuery) return;
-    
+    // Only update if params changed
+    const newFilters = initializeFiltersFromParams(filterParam, searchQuery);
     setFilters((prev) => {
-      const updated = { ...prev };
-
-      // Set search query
-      updated.search = searchQuery || "";
-
-      // Only process filter if exists
-      if (filterParam) {
-        if (!/^(Sản-phẩm-mới|Giảm-giá|Phụ-kiện|Nam|Nữ|Trẻ-em|Unisex)$/.test(filterParam)) {
-          searchParams.delete("filter");
-          window.location.href = "/products"
-          return prev;
-        }
-
-        // Reset gender
-        updated.gender = prev.gender.map((g) => ({ ...g, value: false }));
-
-        switch (filterParam) {
-          case "Nam":
-            updated.gender = prev.gender.map((g) => ({
-              ...g,
-              value: g.label === "Nam",
-            }));
-            break;
-          case "Nữ":
-            updated.gender = prev.gender.map((g) => ({
-              ...g,
-              value: g.label === "Nữ",
-            }));
-            break;
-          case "Unisex":
-            updated.gender = prev.gender.map((g) => ({
-              ...g,
-              value: g.label === "Unisex",
-            }));
-            break;
-          case "Trẻ-em":
-            updated.gender = prev.gender.map((g) => ({
-              ...g,
-              value: g.label === "Trẻ em",
-            }));
-            break;
-          default:
-            updated.category = filterParam;
-        }
+      // Check if filters actually changed to avoid unnecessary updates
+      if (
+        prev.category === newFilters.category &&
+        prev.search === newFilters.search &&
+        JSON.stringify(prev.gender) === JSON.stringify(newFilters.gender)
+      ) {
+        return prev;
       }
-      return updated;
+      return newFilters;
     });
   }, [filterParam, searchQuery]);
   return (
