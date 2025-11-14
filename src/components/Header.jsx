@@ -117,25 +117,25 @@ const Header = () => {
           <div className="flex items-center gap-6 xl:gap-10 text-base xl:text-[1.25rem]">
             <a
               href="/products?filter=Sản-phẩm-mới"
-              className="hover:text-[#50D5C4] transition whitespace-nowrap"
+              className={`${decodeURIComponent(location.search).includes("Sản-phẩm-mới") &&"font-semibold text-color4"} hover:text-color4 transition whitespace-nowrap`}
             >
               {t("header.nav.newProducts")}
             </a>
             <a
               href="/products?filter=Giảm-giá"
-              className="text-[#50D5C4] font-semibold whitespace-nowrap"
+              className={`${decodeURIComponent(location.search).includes("Giảm-giá") &&"font-semibold text-color4"} hover:text-color4 transition whitespace-nowrap`}
             >
               {t("header.nav.sale")}
             </a>
             <a
               href="/contact"
-              className="hover:text-[#50D5C4] transition whitespace-nowrap"
+              className={`${location.pathname === "/contact" &&"font-semibold text-color4"} hover:text-color4 transition whitespace-nowrap`}
             >
               {t("header.nav.contact")}
             </a>
             <a
               href="/support"
-              className="hover:text-[#50D5C4] transition whitespace-nowrap"
+              className={`${location.pathname === "/support" &&"font-semibold text-color4"} hover:text-color4 transition whitespace-nowrap`}
             >
               {t("header.nav.support")}
             </a>
