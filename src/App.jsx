@@ -26,6 +26,9 @@ import Categories from "./pages/Admin/Categories";
 import Brands from "./pages/Admin/Brands";
 import Catalog from "./pages/Catalog";
 import Banners from "./pages/Admin/Banners";
+import Contact from "./pages/Contact";
+import Voucher from "./pages/Voucher";
+import Cart from "./pages/Cart";
 
 function AppContent() {
   const { toasts, removeToast } = useToast();
@@ -45,9 +48,12 @@ function AppContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path='/products'element={<Catalog />}/>
+        <Route path="/contact" element={<Contact />}/>
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
+          <Route path="/vouchers" element={<Voucher/>}/>
+          <Route path="/cart" element={<Cart/>}/>
         </Route>
         {/* Admin routes */}
         <Route element={<AdminRoute />}>
