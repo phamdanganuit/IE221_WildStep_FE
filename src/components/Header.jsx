@@ -7,6 +7,7 @@ import {
   faGlobe,
   faBars,
   faTimes,
+  faTicket,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -44,6 +45,12 @@ const Header = () => {
 
   const handleProfile = () => {
     navigate("/profile");
+    setShowUserMenu(false);
+    setShowMobileMenu(false);
+  };
+
+  const handleVoucher = () => {
+    navigate("/vouchers");
     setShowUserMenu(false);
     setShowMobileMenu(false);
   };
@@ -151,7 +158,7 @@ const Header = () => {
               {/* Search Bar */}
               <SearchBox className="hidden xl:flex" />
               {/* Cart Icon */}
-              <div className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer">
+              <div onClick={()=>navigate("/cart")} className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer">
                 <img
                   src="/icon/mdi_cart-outline.svg"
                   alt="Cart"
@@ -277,6 +284,18 @@ const Header = () => {
                           className="w-4 h-4"
                         />
                         {t("header.profile")}
+                      </span>
+                    </button>
+                    <button
+                      onClick={handleVoucher}
+                      className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-gray-900 hover:bg-gray-100 transition"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <FontAwesomeIcon
+                          icon={faTicket}
+                          className="w-4 h-4"
+                        />
+                        {t("header.voucher")}
                       </span>
                     </button>
                     <button
