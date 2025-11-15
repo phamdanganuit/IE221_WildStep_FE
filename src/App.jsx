@@ -1,16 +1,24 @@
 import { Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
 import { ToastProvider, useToast } from "./contexts/ToastContext";
 import { MobileMenuProvider } from "./contexts/MobileMenuContext";
 import ToastContainer from "./components/Toast";
 import { useAuthStore } from "./store/authStore";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
+
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import ProductDetail from "./pages/ProductDetail";
+import Catalog from "./pages/Catalog";
+import Checkout from "./pages/Checkout";
+import MyOrders from "./pages/MyOrder";
+import OrderDetail from "./pages/Order";
+import Contact from "./pages/Contact";
+import Voucher from "./pages/Voucher";
+import Cart from "./pages/Cart";
 
 // Admin imports
 import AdminLayout from "./components/Admin/AdminLayout";
@@ -19,16 +27,12 @@ import ProductList from "./pages/Admin/Products/ProductList";
 import ProductForm from "./pages/Admin/Products/ProductForm";
 import AdminProductDetail from "./pages/Admin/Products/ProductDetail";
 import OrderList from "./pages/Admin/Orders/OrderList";
-import OrderDetail from "./pages/Admin/Orders/OrderDetail";
+import AdminOrderDetail from "./pages/Admin/Orders/OrderDetail";
 import CustomerList from "./pages/Admin/Customers/CustomerList";
 import CustomerDetail from "./pages/Admin/Customers/CustomerDetail";
 import Categories from "./pages/Admin/Categories";
 import Brands from "./pages/Admin/Brands";
-import Catalog from "./pages/Catalog";
 import Banners from "./pages/Admin/Banners";
-import Contact from "./pages/Contact";
-import Voucher from "./pages/Voucher";
-import Cart from "./pages/Cart";
 
 function AppContent() {
   const { toasts, removeToast } = useToast();
@@ -52,6 +56,9 @@ function AppContent() {
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/orders" element={<MyOrders />} />
+          <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/vouchers" element={<Voucher/>}/>
           <Route path="/cart" element={<Cart/>}/>
         </Route>
@@ -64,7 +71,7 @@ function AppContent() {
             <Route path="products/:id" element={<AdminProductDetail />} />
             <Route path="products/:id/edit" element={<ProductForm />} />
             <Route path="orders" element={<OrderList />} />
-            <Route path="orders/:id" element={<OrderDetail />} />
+            <Route path="orders/:id" element={<AdminOrderDetail />} />
             <Route path="customers" element={<CustomerList />} />
             <Route path="customers/:id" element={<CustomerDetail />} />
             <Route path="categories" element={<Categories />} />
