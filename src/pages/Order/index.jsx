@@ -9,6 +9,7 @@ import {
   FiXCircle,
   FiCheck,
 } from "react-icons/fi";
+import { IoIosArrowBack } from "react-icons/io";
 import { HiOutlineInboxArrowDown, HiOutlineNewspaper } from "react-icons/hi2";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -59,7 +60,7 @@ export default function OrderDetailPage() {
       order.selectedAddress.province,
     ]
       .filter(Boolean)
-      .join(". ");
+      .join(", ");
   };
 
   const handleCancelOrder = () => {
@@ -71,7 +72,10 @@ export default function OrderDetailPage() {
       cancelledAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(`order_${order.orderId}`, JSON.stringify(updatedOrder));
+    localStorage.setItem(
+      `order_${order.orderId}`,
+      JSON.stringify(updatedOrder)
+    );
     setOrder(updatedOrder);
 
     const myOrders = JSON.parse(localStorage.getItem("myOrders") || "[]");
@@ -88,10 +92,28 @@ export default function OrderDetailPage() {
       <div className="max-w-[90%] mx-auto p-4 md:p-6 space-y-8">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h2 className="text-[2rem] font-bold">Theo dõi đơn hàng</h2>
-          <Button size="sm" onClick={() => navigate("/cart")}>
-            Tiếp tục mua hàng
+          {/* <h2 className="text-[2rem] font-bold">Theo dõi đơn hàng</h2> */}
+          <Button variant="outline" onClick = {()=>navigate("/orders")}  >
+            <IoIosArrowBack />
+            TRỞ VỀ
           </Button>
+          <div className="flex justify-center items-center gap-2 ">
+            {CANCELLABLE_STATUSES.includes(order.status) && (
+              <div className="flex justify-end">
+                <Button
+                  variant="destructive"
+                  onClick={handleCancelOrder}
+                  className="flex items-center gap-2"
+                >
+                  <FiXCircle className="w-5 h-5" />
+                  Hủy đơn hàng
+                </Button>
+              </div>
+            )}
+            <Button onClick={() => navigate("/cart")}>
+              Tiếp tục mua hàng
+            </Button>
+          </div>
         </div>
 
         {/* Cancelled Notice */}
@@ -102,7 +124,8 @@ export default function OrderDetailPage() {
               Đơn hàng đã bị hủy
             </p>
             <p className="text-sm mt-1">
-              Thời gian hủy: {new Date(order.cancelledAt).toLocaleString("vi-VN")}
+              Thời gian hủy:{" "}
+              {new Date(order.cancelledAt).toLocaleString("vi-VN")}
             </p>
           </div>
         )}
@@ -138,7 +161,10 @@ export default function OrderDetailPage() {
                 const isActive = idx <= currentStep;
 
                 return (
-                  <div key={step.key} className="flex flex-col items-center flex-1">
+                  <div
+                    key={step.key}
+                    className="flex flex-col items-center flex-1"
+                  >
                     <div
                       className={cn(
                         "w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all relative",
@@ -274,7 +300,6 @@ export default function OrderDetailPage() {
                   <span>Voucher từ WildStep</span>
                   <span>-{order.discount.toLocaleString()} VND</span>
                 </div>
-                
               )}
               <div className="border-t pt-2 font-semibold text-lg flex justify-between">
                 <span>Thành tiền</span>
@@ -285,21 +310,6 @@ export default function OrderDetailPage() {
             </div>
           </div>
         </div>
-
-        {/* Cancel Button */}
-        {CANCELLABLE_STATUSES.includes(order.status) && (
-          <div className="flex justify-end">
-            <Button
-              variant="destructive"
-              size="lg"
-              onClick={handleCancelOrder}
-              className="flex items-center gap-2"
-            >
-              <FiXCircle className="w-5 h-5" />
-              Hủy đơn hàng
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );

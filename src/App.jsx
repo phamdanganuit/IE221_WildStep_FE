@@ -14,6 +14,7 @@ import Profile from "./pages/Profile";
 import ProductDetail from "./pages/ProductDetail";
 import Catalog from "./pages/Catalog";
 import Checkout from "./pages/Checkout";
+import MyOrders from "./pages/MyOrder";
 import OrderDetail from "./pages/Order";
 import Contact from "./pages/Contact";
 import Voucher from "./pages/Voucher";
@@ -56,6 +57,7 @@ function AppContent() {
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/orders" element={<MyOrders />} />
           <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/vouchers" element={<Voucher/>}/>
           <Route path="/cart" element={<Cart/>}/>
