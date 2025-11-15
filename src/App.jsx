@@ -26,6 +26,7 @@ import Categories from "./pages/Admin/Categories";
 import Brands from "./pages/Admin/Brands";
 import Catalog from "./pages/Catalog";
 import Banners from "./pages/Admin/Banners";
+import Checkout from "./pages/Checkout";
 
 function AppContent() {
   const { toasts, removeToast } = useToast();
@@ -48,6 +49,7 @@ function AppContent() {
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
+          <Route path="/checkout" element={<Checkout />} />
         </Route>
         {/* Admin routes */}
         <Route element={<AdminRoute />}>
