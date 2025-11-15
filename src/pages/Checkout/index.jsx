@@ -11,7 +11,7 @@ import {
   MdOutlineEast,
   MdOutlineCreditCard,
 } from "react-icons/md";
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 import OrderSummary from "../../components/Checkout/OrderInfo";
 import ShippingInfo from "../../components/Checkout/ShippingInfo";
 import PaymentMethod from "../../components/Checkout/Method";
@@ -133,6 +133,7 @@ export default function CheckoutPage() {
   const [voucherError, setVoucherError] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [orderId, setOrderId] = useState(null);
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -262,11 +263,52 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 1800));
-    setIsLoading(false);
-    setOrderId(`ORDER-${Date.now()}`);
-    goToStep(4);
+    try {
+      await new Promise((r) => setTimeout(r, 1800));
+
+      const newOrderId = `ORDER-${Date.now()}`;
+      setOrderId(newOrderId);
+
+      // LƯU TOÀN BỘ DỮ LIỆU ĐƠN HÀNG
+      const orderData = {
+        orderId: newOrderId,
+        cart,
+        selectedAddress,
+        paymentMethod,
+        subtotal,
+        shipping,
+        discount,
+        total,
+        appliedVoucher,
+        createdAt: new Date().toISOString(),
+        status: "placed", // trạng thái ban đầu
+        estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0], // +5 ngày
+      };
+
+      // Lưu vào localStorage
+      localStorage.setItem(`order_${newOrderId}`, JSON.stringify(orderData));
+
+      // Cập nhật danh sách đơn hàng
+      const myOrders = JSON.parse(localStorage.getItem("myOrders") || "[]");
+      myOrders.unshift(orderData);
+      localStorage.setItem("myOrders", JSON.stringify(myOrders));
+
+      setIsOrderPlaced(true);
+    } catch (err) {
+      setError("Đặt hàng thất bại.");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (isOrderPlaced && orderId) {
+      goToStep(4);
+      setIsOrderPlaced(false);
+    }
+  }, [isOrderPlaced, orderId]);
 
   const steps = [
     { number: 1, label: "Tổng quan đơn hàng", icon: FiShoppingBag },
@@ -365,7 +407,7 @@ export default function CheckoutPage() {
       </div>
 
       {/* STEP 4 */}
-      {step === 4 && (
+      {step === 4 && orderId && (
         <div className="mt-4 p-3 bg-green-50 rounded-lg text-sm border border-green-200">
           <p className="font-medium text-green-700">Đơn hàng đã được đặt!</p>
           <p className="text-green-600">
@@ -415,7 +457,7 @@ export default function CheckoutPage() {
                   setCardDetails={setCardDetails}
                 />
               )}
-              {step === 4 && (
+              {step === 4 && orderId && (
                 <OrderComplete
                   orderId={orderId}
                   cart={cart}
@@ -443,7 +485,6 @@ export default function CheckoutPage() {
                 </Button>
 
                 {step < 3 ? (
-                  // Bước 1 & 2 → luôn là "Tiếp theo"
                   <Button
                     onClick={() => goToStep(step + 1)}
                     disabled={!validateStep()}
@@ -455,7 +496,6 @@ export default function CheckoutPage() {
                 ) : (
                   <>
                     {paymentMethod === "COD" ? (
-                      // COD → "Tiếp theo"
                       <Button
                         onClick={() => goToStep(step + 1)}
                         disabled={!validateStep()}
@@ -465,11 +505,10 @@ export default function CheckoutPage() {
                         <MdOutlineEast className="w-4 h-4" />
                       </Button>
                     ) : (
-                      // Ví điện tử / Thẻ → "Thanh toán"
                       <Button
                         onClick={handlePlaceOrder}
                         disabled={!validateStep() || isLoading}
-                        loading={isLoading}
+                        {...(isLoading && { loading: true })}
                         className={cn(
                           "flex items-center gap-1",
                           isLoading && "cursor-not-allowed"

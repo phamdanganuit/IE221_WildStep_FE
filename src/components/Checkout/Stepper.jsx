@@ -6,7 +6,7 @@ export default function Stepper({ steps, currentStep, onStepClick }) {
       {steps.map((step, index) => {
         const Icon = step.icon;
         const isActive = currentStep === step.number;
-        const isCompleted = currentStep > step.number;
+        const isCompleted = currentStep > step.number || (currentStep === steps.length && step.number === steps.length);
         const canClick = isCompleted || currentStep === step.number;
 
         return (
