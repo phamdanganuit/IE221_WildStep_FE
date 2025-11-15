@@ -2,12 +2,13 @@ import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleUser} from "@fortawesome/free-regular-svg-icons";
 import { HiOutlineArchiveBox } from "react-icons/hi2";
+import { LuTicketPercent } from "react-icons/lu";
 import {
   faRightFromBracket,
   faGauge,
   faGlobe,
   faBars,
-  faTimes,
+  faTimes
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -51,6 +52,12 @@ const Header = () => {
 
   const handleMyOrders = () => {
     navigate("/orders");
+    setShowUserMenu(false);
+    setShowMobileMenu(false);
+  }
+
+  const handleVoucher = () => {
+    navigate("/vouchers");
     setShowUserMenu(false);
     setShowMobileMenu(false);
   };
@@ -124,25 +131,25 @@ const Header = () => {
           <div className="flex items-center gap-6 xl:gap-10 text-base xl:text-[1.25rem]">
             <a
               href="/products?filter=Sản-phẩm-mới"
-              className="hover:text-[#50D5C4] transition whitespace-nowrap"
+              className={`${decodeURIComponent(location.search).includes("Sản-phẩm-mới") &&"font-semibold text-color4"} hover:text-color4 transition whitespace-nowrap`}
             >
               {t("header.nav.newProducts")}
             </a>
             <a
               href="/products?filter=Giảm-giá"
-              className="text-[#50D5C4] font-semibold whitespace-nowrap"
+              className={`${decodeURIComponent(location.search).includes("Giảm-giá") &&"font-semibold text-color4"} hover:text-color4 transition whitespace-nowrap`}
             >
               {t("header.nav.sale")}
             </a>
             <a
               href="/contact"
-              className="hover:text-[#50D5C4] transition whitespace-nowrap"
+              className={`${location.pathname === "/contact" &&"font-semibold text-color4"} hover:text-color4 transition whitespace-nowrap`}
             >
               {t("header.nav.contact")}
             </a>
             <a
               href="/support"
-              className="hover:text-[#50D5C4] transition whitespace-nowrap"
+              className={`${location.pathname === "/support" &&"font-semibold text-color4"} hover:text-color4 transition whitespace-nowrap`}
             >
               {t("header.nav.support")}
             </a>
@@ -158,7 +165,7 @@ const Header = () => {
               {/* Search Bar */}
               <SearchBox className="hidden lg:flex" />
               {/* Cart Icon */}
-              <div className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] items-center justify-center hover:bg-gray-700 transition cursor-pointer">
+              <div onClick={()=>navigate("/cart")} className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] items-center justify-center hover:bg-gray-700 transition cursor-pointer">
                 <img
                   src="/icon/mdi_cart-outline.svg"
                   alt="Cart"
@@ -286,15 +293,27 @@ const Header = () => {
                         {t("header.profile")}
                       </span>
                     </button>
+
                     <button
                       onClick={handleMyOrders}
                       className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-gray-900 hover:bg-gray-100 transition"
                     >
                       <span className="inline-flex items-center gap-2">
                         <HiOutlineArchiveBox className="w-4 h-4 stroke-2"/>
-                        Đơn hàng của tôi
+                        {t("header.myOrders")}
                       </span>
                     </button>
+
+                    <button
+                      onClick={handleVoucher}
+                      className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-gray-900 hover:bg-gray-100 transition"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <LuTicketPercent className="w-4 h-4 stroke-2"/>
+                        {t("header.voucher")}
+                      </span>
+                    </button>
+
                     <button
                       onClick={handleLogout}
                       className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-red-600 hover:bg-red-50 transition"

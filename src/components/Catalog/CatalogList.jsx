@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import CatalogBreadCrumb from "./CatalogBreadCrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -351,6 +351,9 @@ function CatalogList({ filters, setFilters }) {
   const [pagination, setPagination] = useState({ page: 1, page_size: 12, total: 0, total_pages: 1 });
   const [hasInitializedFilters, setHasInitializedFilters] = useState(false);
   
+  // Use ref to prevent duplicate calls in Strict Mode
+  const lastRequestParamsRef = useRef(null);
+  
   // Get page and sort from URL
   const currentPage = parseInt(searchParams.get("page")) || 1;
   const currentSort = searchParams.get("sort") || "popular";
@@ -366,6 +369,28 @@ function CatalogList({ filters, setFilters }) {
   const category = filters.category;
   
   useEffect(() => {
+    // Create request params string for comparison
+    const requestParamsKey = JSON.stringify({
+      search: searchQuery || "",
+      brand: selectedBrands || "",
+      gender: selectedGenders || "",
+      color: selectedColors || "",
+      size: selectedSizes || "",
+      priceFrom: priceFrom || "",
+      priceTo: priceTo || "",
+      category: category || "",
+      sort: currentSort,
+      page: currentPage,
+    });
+    
+    // Check if this is a duplicate request (same params) - prevents Strict Mode double call
+    if (lastRequestParamsRef.current === requestParamsKey) {
+      return; // Skip duplicate request
+    }
+    
+    // Mark this request as the last one
+    lastRequestParamsRef.current = requestParamsKey;
+    
     const fetchProducts = async () => {
       setLoading(true);
       setError(null);
@@ -385,6 +410,11 @@ function CatalogList({ filters, setFilters }) {
           page_size: 12,
         });
 
+        // Only update state if this is still the latest request (prevent stale updates)
+        if (lastRequestParamsRef.current !== requestParamsKey) {
+          return;
+        }
+
         if (result.success && result.data) {
           setProducts(result.data.data || []);
           setPagination(result.data.pagination || { page: 1, page_size: 12, total: 0, total_pages: 1 });
@@ -399,16 +429,23 @@ function CatalogList({ filters, setFilters }) {
           setProducts([]);
         }
       } catch (err) {
+        // Only handle error if this is still the latest request
+        if (lastRequestParamsRef.current !== requestParamsKey) {
+          return;
+        }
         console.error("Error fetching products:", err);
         setError("Có lỗi xảy ra khi tải sản phẩm");
         setProducts([]);
       } finally {
-        setLoading(false);
+        // Always set loading to false if this is still the latest request
+        if (lastRequestParamsRef.current === requestParamsKey) {
+          setLoading(false);
+        }
       }
     };
 
     fetchProducts();
-  }, [selectedBrands, selectedGenders, selectedColors, selectedSizes, priceFrom, priceTo, searchQuery, category, currentPage, currentSort]);
+  }, [selectedBrands, selectedGenders, selectedColors, selectedSizes, priceFrom, priceTo, searchQuery, category, currentPage, currentSort, hasInitializedFilters]);
 
   // Update filters with API data while preserving user selections
   const updateFiltersFromAPI = (apiFilters) => {
