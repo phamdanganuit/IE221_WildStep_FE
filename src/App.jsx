@@ -19,6 +19,7 @@ import OrderDetail from "./pages/Order";
 import Contact from "./pages/Contact";
 import Voucher from "./pages/Voucher";
 import Cart from "./pages/Cart";
+import Support from "./pages/Support";
 
 // Admin imports
 import AdminLayout from "./components/Admin/AdminLayout";
@@ -53,6 +54,7 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
         <Route path='/products'element={<Catalog />}/>
         <Route path="/contact" element={<Contact />}/>
+        <Route path="/support" element={<Support />} />
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
