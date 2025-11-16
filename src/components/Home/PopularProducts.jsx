@@ -3,23 +3,33 @@ import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { getPublicProducts } from "@/service/contentService";
 import { useTranslation } from "react-i18next";
 import { safeText } from "@/lib/i18nUtils";
+import { useNavigate } from "react-router-dom";
 
 const CARDS_PER_PAGE = 3;
 
-const ProductCard = ({ image, name, price, oldPrice, className = "" }) => {
+const ProductCard = ({ id, image, images, name, price, oldPrice, className = "", isHovered, onMouseEnter, onMouseLeave }) => {
+  const displayImage = isHovered && images && images.length > 1 ? images[1] : image;
+  const navigate = useNavigate();
+  
+  const handleClick = () => {
+    navigate(`/product/${id}`);
+  };
+  
   return (
     <div
       className={`group relative flex flex-col bg-[D9D9D9]/15 rounded-xl border-[1.5px] border-[#DEDEDE] overflow-hidden
         transition-all duration-300 hover:-translate-y-1
-        md:min-w-0 ${className}`}
+        md:min-w-0 cursor-pointer ${className}`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onClick={handleClick}
     >
-      <div className="h-[16rem] max-md:h-[12rem] pt-6 flex items-center justify-center overflow-hidden bg-transparent">
-        <img
-          src={image}
-          alt={name}
-          className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-        />
-      </div>
+      <div 
+        className="h-[17.6rem] max-md:h-[13.2rem] bg-center bg-cover bg-no-repeat transition-all duration-500 ease-in-out"
+        style={{
+          backgroundImage: `url(${displayImage})`
+        }}
+      />
 
       <div className="p-4 flex items-center justify-between">
         <div className="flex flex-col gap-1">
@@ -48,6 +58,7 @@ const ProductCard = ({ image, name, price, oldPrice, className = "" }) => {
 const PopularProducts = () => {
   const { t, i18n } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [hoveredProduct, setHoveredProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, page_size: 12, total: 0, total_pages: 0 });
@@ -82,6 +93,7 @@ const PopularProducts = () => {
             id: p._id || p.id,  // Use _id from MongoDB
             name: safeText(p.name, i18n.language, 'N/A'),
             image: (Array.isArray(p.images) && p.images[0]) || "",
+            images: Array.isArray(p.images) ? p.images : [],
             price: currency.format(discountedPrice),
             oldPrice: hasDiscount ? currency.format(originalPrice) : null,
           };
@@ -122,7 +134,7 @@ const PopularProducts = () => {
   }
   return (
     <section className="py-8 px-10 md:px-20">
-      <div className="flex flex-col md:flex-row justify-between md:gap-12 items-center">
+      <div className="flex flex-col md:flex-row cursor-pointer justify-between md:gap-12 items-center">
         {/* Left Section */}
         <div className="flex flex-col gap-6 md:w-1/4 text-center md:text-left">
           <div className="flex flex-col gap-2">
@@ -182,7 +194,12 @@ const PopularProducts = () => {
                       }px)`,
                     }}
                   >
-                    <ProductCard {...product} />
+                    <ProductCard 
+                      {...product} 
+                      isHovered={hoveredProduct === product.id}
+                      onMouseEnter={() => setHoveredProduct(product.id)}
+                      onMouseLeave={() => setHoveredProduct(null)}
+                    />
                   </div>
                 ))}
               </div>
