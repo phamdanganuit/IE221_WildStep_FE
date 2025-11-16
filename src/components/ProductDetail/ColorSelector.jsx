@@ -2,13 +2,37 @@ import React, { useState } from "react";
 
 const ColorSelector = ({selectedColor, onColorChange, productColors, currentLang = 'vi'}) => {
   // Convert API format to component format
-  // New API structure: specifications.colors = [{ name: "White/Aluminium", hex: "#FFFFFF", image: "..." }]
+  // Backend API supports 2 formats:
+  // Format 1: { name: "Đen", hex: "#000000", image: "..." }
+  // Format 2: { color_name: {vi, en, ja}, hex_color: "#FFFFFF", image: "..." }
   const allColors = productColors && productColors.length > 0 
-    ? productColors.map(color => ({
-        name: color.name || 'Unnamed',
-        hex: color.hex || '#CCCCCC',
-        image: color.image || ''
-      }))
+    ? productColors.map(color => {
+        // Extract localized color name - support both formats
+        let colorName = 'Unnamed';
+        
+        // Try color_name first (multilingual object)
+        if (color.color_name) {
+          if (typeof color.color_name === 'object') {
+            colorName = color.color_name[currentLang] || color.color_name.vi || color.color_name.en || color.color_name.ja || 'Unnamed';
+          } else {
+            colorName = color.color_name;
+          }
+        } 
+        // Fallback to name field (simple string)
+        else if (color.name) {
+          if (typeof color.name === 'object') {
+            colorName = color.name[currentLang] || color.name.vi || color.name.en || color.name.ja || 'Unnamed';
+          } else {
+            colorName = color.name;
+          }
+        }
+        
+        return {
+          name: colorName,
+          hex: color.hex_color || color.hex || '#CCCCCC',
+          image: color.image || ''
+        };
+      })
     : [
         { name: "Chưa có màu", hex: "#CCCCCC", image: "" }
       ];
@@ -36,10 +60,10 @@ const ColorSelector = ({selectedColor, onColorChange, productColors, currentLang
             tabIndex={selectedColor === color.name ? 0 : -1}
           >
             {color.image ? (
-              <img
-                src={color.image}
-                alt={color.name}
-                className="object-contain w-full rounded-lg aspect-square hover:opacity-80"
+              <div
+                className="w-full aspect-square rounded-lg bg-center bg-cover bg-no-repeat hover:opacity-80"
+                style={{ backgroundImage: `url(${color.image})` }}
+                title={color.name}
               />
             ) : (
               // Fallback to color hex if no image is provided

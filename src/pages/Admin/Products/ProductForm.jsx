@@ -185,7 +185,12 @@ const ProductForm = () => {
         weight_en: typeof weight === 'object' ? (weight.en || '') : '',
         weight_ja: typeof weight === 'object' ? (weight.ja || '') : '',
         tags: product.tags || [],
-        colors: Array.isArray(product.colors) ? product.colors : [],
+        colors: Array.isArray(product.colors) ? product.colors.map(c => ({
+          color_name: c.color_name || { vi: '', en: '', ja: '' },
+          hex_color: c.hex_color || c.hex || '#000000',
+          image: c.image || '',
+          tags: c.tags || []
+        })) : [],
         sizes: Array.isArray(product.sizes) ? product.sizes : [],
       });
       setExistingImages(Array.isArray(product.images) ? product.images : []);
@@ -213,6 +218,24 @@ const ProductForm = () => {
       return;
     }
 
+    // Collect color images to upload
+    const colorImagesToUpload = [];
+    const colorsData = formData.colors.map((color) => {
+      const colorObj = {
+        color_name: color.color_name,
+        hex_color: color.hex_color,
+        image: color.image || "", // Keep existing URL or empty
+        tags: color.tags || []
+      };
+      
+      // If there's a new image file, store it for upload
+      if (color.imageFile) {
+        colorImagesToUpload.push(color.imageFile);
+      }
+      
+      return colorObj;
+    });
+
     const submitData = {
       name: { vi: formData.name_vi || '', en: formData.name_en || '', ja: formData.name_ja || '' },
       description: { vi: formData.description_vi || '', en: formData.description_en || '', ja: formData.description_ja || '' },
@@ -226,7 +249,7 @@ const ProductForm = () => {
       gender: { vi: formData.gender_vi || '', en: formData.gender_en || '', ja: formData.gender_ja || '' },
       weight: { vi: formData.weight_vi || '', en: formData.weight_en || '', ja: formData.weight_ja || '' },
       tags: formData.tags,
-      colors: formData.colors,   // Array format
+      colors: colorsData,   // Array format with image URLs
       sizes: formData.sizes,     // Array format
     };
 
@@ -235,10 +258,20 @@ const ProductForm = () => {
       : await createProduct(submitData);
 
     if (result.success) {
-      // Upload images if any
+      const productId = isEdit ? id : (result.data._id || result.data.id);
+      
+      // Upload general product images if any
       if (images.length > 0) {
-        const productId = isEdit ? id : (result.data._id || result.data.id);
         await uploadProductImages(productId, images);
+      }
+
+      // Upload color images if any (append to product images)
+      if (colorImagesToUpload.length > 0) {
+        await uploadProductImages(productId, colorImagesToUpload);
+        addToast({
+          type: "info",
+          message: `Đã upload ${colorImagesToUpload.length} ảnh màu. Cần cập nhật lại link ảnh cho từng màu thủ công.`,
+        });
       }
 
       addToast({
@@ -328,7 +361,28 @@ const ProductForm = () => {
     color_en: "",
     color_ja: "",
     hex_color: "#000000",
+    image: null, // File object
+    imagePreview: "", // Preview URL
   });
+
+  const handleColorImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        addToast({ type: "error", message: "Ảnh phải nhỏ hơn 2MB" });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setColorInput({ 
+          ...colorInput, 
+          image: file,
+          imagePreview: reader.result 
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleAddColor = () => {
     if (!colorInput.color_vi && !colorInput.color_en && !colorInput.color_ja) {
@@ -342,14 +396,22 @@ const ProductForm = () => {
         ja: colorInput.color_ja || ''
       },
       hex_color: colorInput.hex_color,
-      image: "",
+      image: colorInput.imagePreview || "", // Store preview URL or empty
+      imageFile: colorInput.image, // Store file for upload
       tags: []
     };
     setFormData({
       ...formData,
       colors: [...formData.colors, newColor]
     });
-    setColorInput({ color_vi: "", color_en: "", color_ja: "", hex_color: "#000000" });
+    setColorInput({ 
+      color_vi: "", 
+      color_en: "", 
+      color_ja: "", 
+      hex_color: "#000000",
+      image: null,
+      imagePreview: ""
+    });
   };
 
   const handleRemoveColor = (index) => {
@@ -612,6 +674,39 @@ const ProductForm = () => {
                       />
                     </div>
                   </div>
+                  {/* NEW: Image upload for color variant */}
+                  <div className="md:col-span-2">
+                    <label className="block text-xs text-gray-600 mb-1">
+                      🖼️ Ảnh sản phẩm với màu này (tùy chọn)
+                    </label>
+                    <div className="flex items-start gap-3">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleColorImageChange}
+                        className="flex-1"
+                      />
+                      {colorInput.imagePreview && (
+                        <div className="relative w-16 h-16 border-2 border-gray-300 rounded-lg overflow-hidden flex-shrink-0">
+                          <img 
+                            src={colorInput.imagePreview} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setColorInput({ ...colorInput, image: null, imagePreview: "" })}
+                            className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-1"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Ảnh sản phẩm trong màu này (VD: giày màu trắng, giày màu đen)
+                    </p>
+                  </div>
                 </div>
                 <Button type="button" onClick={handleAddColor} size="sm">
                   + Thêm màu
@@ -623,15 +718,29 @@ const ProductForm = () => {
                 <div className="space-y-2">
                   {formData.colors.map((color, index) => (
                     <div key={index} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg">
-                      <div
-                        className="w-8 h-8 rounded-full border-2 border-gray-300 flex-shrink-0"
-                        style={{ backgroundColor: color.hex_color }}
-                      />
+                      {/* Color preview or image */}
+                      {color.image ? (
+                        <div className="w-12 h-12 rounded-lg border-2 border-gray-300 flex-shrink-0 overflow-hidden">
+                          <img 
+                            src={color.image} 
+                            alt={color.color_name.vi || 'Color'} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="w-12 h-12 rounded-lg border-2 border-gray-300 flex-shrink-0"
+                          style={{ backgroundColor: color.hex_color }}
+                        />
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900">
                           {color.color_name.vi || color.color_name.en || color.color_name.ja || 'Unnamed'}
                         </p>
-                        <p className="text-xs text-gray-500">{color.hex_color}</p>
+                        <p className="text-xs text-gray-500">
+                          {color.hex_color}
+                          {color.image && <span className="ml-2">📷 Có ảnh</span>}
+                        </p>
                       </div>
                       <Button
                         type="button"

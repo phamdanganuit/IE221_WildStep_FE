@@ -83,18 +83,42 @@ const ProductDetail = ({ product }) => {
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-600">Màu sắc:</span>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {colors.map((color, idx) => (
-                        <div key={idx} className="flex items-center gap-1">
-                          {color.hex && (
-                            <div 
-                              className="w-6 h-6 rounded-full border-2 border-gray-300" 
-                              style={{ backgroundColor: color.hex }}
-                              title={color.name}
-                            />
-                          )}
-                          <span className="text-gray-900 text-sm">{color.name}</span>
-                        </div>
-                      ))}
+                      {colors.map((color, idx) => {
+                        // Extract localized color name - support both formats
+                        let colorName = 'Unnamed';
+                        
+                        // Try color_name first (multilingual object)
+                        if (color.color_name) {
+                          if (typeof color.color_name === 'object') {
+                            colorName = color.color_name.vi || color.color_name.en || color.color_name.ja || 'Unnamed';
+                          } else {
+                            colorName = color.color_name;
+                          }
+                        }
+                        // Fallback to name field (simple string)
+                        else if (color.name) {
+                          if (typeof color.name === 'object') {
+                            colorName = color.name.vi || color.name.en || color.name.ja || 'Unnamed';
+                          } else {
+                            colorName = color.name;
+                          }
+                        }
+                        
+                        const hexColor = color.hex_color || color.hex;
+                        
+                        return (
+                          <div key={idx} className="flex items-center gap-1">
+                            {hexColor && (
+                              <div 
+                                className="w-6 h-6 rounded-full border-2 border-gray-300" 
+                                style={{ backgroundColor: hexColor }}
+                                title={colorName}
+                              />
+                            )}
+                            <span className="text-gray-900 text-sm">{colorName}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

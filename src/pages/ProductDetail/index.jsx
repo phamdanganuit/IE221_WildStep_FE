@@ -59,7 +59,27 @@ const ChiTietSanPham = () => {
           // Set default color and size from specifications
           if (result.data.specifications?.colors && result.data.specifications.colors.length > 0) {
             const firstColor = result.data.specifications.colors[0];
-            setSelectedColor(firstColor.name || 'N/A');
+            // Extract localized color name - support both formats
+            let colorName = 'N/A';
+            
+            // Try color_name first (multilingual object)
+            if (firstColor.color_name) {
+              if (typeof firstColor.color_name === 'object') {
+                colorName = firstColor.color_name[i18n.language] || firstColor.color_name.vi || firstColor.color_name.en || firstColor.color_name.ja || 'N/A';
+              } else {
+                colorName = firstColor.color_name;
+              }
+            }
+            // Fallback to name field (simple string)
+            else if (firstColor.name) {
+              if (typeof firstColor.name === 'object') {
+                colorName = firstColor.name[i18n.language] || firstColor.name.vi || firstColor.name.en || firstColor.name.ja || 'N/A';
+              } else {
+                colorName = firstColor.name;
+              }
+            }
+            
+            setSelectedColor(colorName);
           }
           
           if (result.data.specifications?.sizes && result.data.specifications.sizes.length > 0) {
