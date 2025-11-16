@@ -37,11 +37,9 @@ const ProductCard = ({ id, image, images, name, price, oldPrice, className = "",
             {name}
           </h3>
           <p className="font-bold text-base md:text-lg text-color1">{price}</p>
-          {oldPrice && (
-            <span className="text-gray-400 text-xs md:text-sm font-medium line-through">
-              {oldPrice}
-            </span>
-          )}
+          <span className="text-gray-400 text-xs md:text-sm font-medium line-through min-h-[1.25rem]">
+            {oldPrice || '\u00A0'}
+          </span>
         </div>
 
         <button
