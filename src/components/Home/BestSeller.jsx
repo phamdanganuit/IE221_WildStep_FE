@@ -88,7 +88,7 @@ export default function BestSellers() {
     );
   };
   return (
-    <section className="w-full px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 mt-8 sm:mt-12 md:mt-16 lg:mt-20 bg-transparent">
+    <section className="py-8 px-10 md:px-20">
       {/* Tiêu đề - Responsive */}
       <div className="text-center mb-6 sm:mb-8 md:mb-10 lg:mb-12">
         <h2 className="text-[#0A1E33] flex items-center justify-center gap-3 sm:gap-4 md:gap-5">

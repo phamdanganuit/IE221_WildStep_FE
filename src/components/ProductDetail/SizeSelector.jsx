@@ -3,10 +3,9 @@ import React, { useState } from "react";
 
 const SizeSelector = ({ selectedSize, onSizeChange, productSizes, currentLang = 'vi' }) => {
   // Convert API format to component format
+  // New API structure: specifications.sizes = ["EU36", "EU37", "EU38", ...]
   const sizes = productSizes && productSizes.length > 0
-    ? productSizes.map(size => 
-        size.size_name?.[currentLang] || size.size_name?.vi || size.size_name?.en || 'N/A'
-      )
+    ? productSizes
     : ["Chưa có size"];
 
   return (

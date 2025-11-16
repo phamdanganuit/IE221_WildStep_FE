@@ -9,6 +9,8 @@ const ProductInfo = ({
   salePrice,
   soldCount,
   rating,
+  reviewCount = 0,
+  stock = 0,
   onAddToCart,
   onBuyNow,
   selectedSize,
@@ -48,6 +50,9 @@ const ProductInfo = ({
             <span className="flex self-stretch items-center my-auto">
               {rating}
             </span>
+            <span className="text-sm text-stone-500 ml-1">
+              ({reviewCount})
+            </span>
           </div>
         </div>
       </div>
@@ -72,10 +77,19 @@ const ProductInfo = ({
           currentLang={currentLang}
         />
 
+        {/* Stock indicator */}
+        <div className="mt-4 flex items-center gap-2">
+          <span className="text-sm text-gray-600">Tồn kho:</span>
+          <span className={`text-sm font-medium ${stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {stock > 0 ? `${stock} sản phẩm` : 'Hết hàng'}
+          </span>
+        </div>
+
         <section className="grid grid-cols-2 justify-center items-center mt-6 w-full gap-10 text-xl leading-tight max-md:max-w-full">
           <button
             onClick={onAddToCart}
-            className="flex w-full overflow-hidden justify-between items-center self-stretch px-12 py-4 my-auto font-semibold text-white bg-color4 rounded-lg max-md:px-5 hover:bg-hover4 focus:outline-none focus:ring-2 transition-colors"
+            disabled={stock === 0}
+            className="flex w-full overflow-hidden justify-between items-center self-stretch px-12 py-4 my-auto font-semibold text-white bg-color4 rounded-lg max-md:px-5 hover:bg-hover4 focus:outline-none focus:ring-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             aria-label="Add product to shopping cart"
           >
             <span className="self-stretch my-auto">Thêm vào giỏ hàng</span>
@@ -84,7 +98,8 @@ const ProductInfo = ({
           <Button
             variant="outline"
             onClick={onBuyNow}
-            className="flex w-full h-full text-xl font-semibold self-stretch my-auto max-md:px-5"
+            disabled={stock === 0}
+            className="flex w-full h-full text-xl font-semibold self-stretch my-auto max-md:px-5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Mua ngay
             </Button>

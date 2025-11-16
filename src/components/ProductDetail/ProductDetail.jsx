@@ -5,13 +5,13 @@ const ProductDetail = ({ product }) => {
   const [open, setOpen] = useState(true);
   const [showMore, setShowMore] = useState(false);
 
-  // Extract product attributes if available
-  const color = product?.color || null;
+  // Extract product attributes from new API structure
   const material = product?.material || null;
-  const colorHex = product?.colorHex || null;
-  const gender = product?.gender || null;
   const weight = product?.weight || null;
-  const size = product?.size || null;
+  const origin = product?.origin || null;
+  const style = product?.style || null;
+  const colors = product?.colors || [];
+  const sizes = product?.sizes || [];
 
   const content = `
   Phiên bản Low sở hữu lớp da cao cấp kết hợp với chất liệu tổng hợp ở phần thân giày.
@@ -22,9 +22,8 @@ const ProductDetail = ({ product }) => {
   Mũi giày dạng lỗ
   Đế giữa bằng mút xốp
   Độ bám cao su
-  Màu sắc hiện thị: Mystic Hibiscus/Đen/Sữa dừa
-  Kiểu dáng: DC0774-605
-  Quốc gia/khu vực xuất xứ: Indonesia
+  ${style ? `Kiểu dáng: ${style}` : ''}
+  ${origin ? `Quốc gia/khu vực xuất xứ: ${origin}` : ''}
   `.trim();
 
   const lines = content
@@ -52,31 +51,10 @@ const ProductDetail = ({ product }) => {
       {open && (
         <div className="mt-4 text-gray-700 text-[1rem] leading-relaxed transition-all">
           {/* Product Info Grid */}
-          {(gender || color || material || weight || size) && (
+          {(material || weight || origin || style || colors.length > 0 || sizes.length > 0) && (
             <div className="mb-4 p-4 bg-gray-50 rounded-lg">
               <h3 className="font-semibold mb-2 text-lg">Thông số kỹ thuật</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {gender && (
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-600">Giới tính:</span>
-                    <span className="text-gray-900">{gender}</span>
-                  </div>
-                )}
-                {color && (
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-600">Màu sắc:</span>
-                    <div className="flex items-center gap-2">
-                      {colorHex && (
-                        <div 
-                          className="w-6 h-6 rounded-full border-2 border-gray-300" 
-                          style={{ backgroundColor: colorHex }}
-                          title={colorHex}
-                        />
-                      )}
-                      <span className="text-gray-900">{color}</span>
-                    </div>
-                  </div>
-                )}
                 {material && (
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-600">Chất liệu:</span>
@@ -89,10 +67,41 @@ const ProductDetail = ({ product }) => {
                     <span className="text-gray-900">{weight}</span>
                   </div>
                 )}
-                {size && (
+                {origin && (
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-600">Kích thước:</span>
-                    <span className="text-gray-900">{size}</span>
+                    <span className="font-medium text-gray-600">Xuất xứ:</span>
+                    <span className="text-gray-900">{origin}</span>
+                  </div>
+                )}
+                {style && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-600">Kiểu dáng:</span>
+                    <span className="text-gray-900">{style}</span>
+                  </div>
+                )}
+                {colors.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-600">Màu sắc:</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {colors.map((color, idx) => (
+                        <div key={idx} className="flex items-center gap-1">
+                          {color.hex && (
+                            <div 
+                              className="w-6 h-6 rounded-full border-2 border-gray-300" 
+                              style={{ backgroundColor: color.hex }}
+                              title={color.name}
+                            />
+                          )}
+                          <span className="text-gray-900 text-sm">{color.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {sizes.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-600">Sizes:</span>
+                    <span className="text-gray-900">{sizes.join(', ')}</span>
                   </div>
                 )}
               </div>

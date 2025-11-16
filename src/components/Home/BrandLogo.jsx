@@ -42,13 +42,10 @@ export default function BrandLogos() {
   const logos = brands.map(b => ({ src: b.logo, alt: safeText(b.name, i18n.language, 'N/A'), href: b.website }));
 
   return (
-    <section className="relative w-full overflow-hidden 
-      py-6 sm:py-7 md:py-8 
-      px-0 bg-slate-900">
+    <section className="relative w-screen overflow-hidden py-8 px-10 md:px-20 bg-slate-900">    
       <div className="relative">
-        <InfiniteSlider duration={40} durationOnHover={Infinity} gap={64}>
-          {/* Nhân đôi mảng để chạy seamless */}
-          {[...logos, ...logos].map((logo, index) => (
+        <InfiniteSlider className="w-screen overflow-hidden" duration={40} durationOnHover={Infinity} gap={80}>
+          {[...logos, ...logos, ...logos].map((logo, index) => (
             <div key={index} className="flex items-center justify-center">
               {logo.href ? (
                 <a href={logo.href} target="_blank" rel="noreferrer" aria-label={logo.alt}>

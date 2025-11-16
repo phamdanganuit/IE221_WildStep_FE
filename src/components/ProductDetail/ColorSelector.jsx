@@ -2,10 +2,11 @@ import React, { useState } from "react";
 
 const ColorSelector = ({selectedColor, onColorChange, productColors, currentLang = 'vi'}) => {
   // Convert API format to component format
+  // New API structure: specifications.colors = [{ name: "White/Aluminium", hex: "#FFFFFF", image: "..." }]
   const allColors = productColors && productColors.length > 0 
     ? productColors.map(color => ({
-        name: color.color_name?.[currentLang] || color.color_name?.vi || color.color_name?.en || 'Unnamed',
-        hex: color.hex_color || '#CCCCCC',
+        name: color.name || 'Unnamed',
+        hex: color.hex || '#CCCCCC',
         image: color.image || ''
       }))
     : [

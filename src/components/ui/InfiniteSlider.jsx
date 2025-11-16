@@ -22,7 +22,7 @@ export function InfiniteSlider({
   useEffect(() => {
     let controls;
     const size = direction === 'horizontal' ? width : height;
-    const contentSize = size + gap;
+    const contentSize = size;
     const from = reverse ? -contentSize / 2 : 0;
     const to = reverse ? 0 : -contentSize / 2;
 
@@ -30,7 +30,8 @@ export function InfiniteSlider({
       controls = animate(translation, [translation.get(), to], {
         ease: 'linear',
         duration:
-          currentDuration * Math.abs((translation.get() - to) / contentSize),
+          currentDuration *
+          Math.abs((translation.get() - to) / Math.abs(to - from)),
         onComplete: () => {
           setIsTransitioning(false);
           setKey((prevKey) => prevKey + 1);
@@ -62,24 +63,7 @@ export function InfiniteSlider({
     reverse,
   ]);
 
-  const hoverProps = {
-  onHoverStart: () => translation.stop(), // dừng animation
-  onHoverEnd: () => {
-    const size = direction === 'horizontal' ? width : height;
-    const contentSize = size + gap;
-    const from = reverse ? -contentSize / 2 : 0;
-    const to = reverse ? 0 : -contentSize / 2;
-
-    animate(translation, [translation.get(), to], {
-      ease: 'linear',
-      duration: duration * Math.abs((translation.get() - to) / contentSize),
-      repeat: Infinity,
-      repeatType: 'loop',
-      repeatDelay: 0,
-      onRepeat: () => translation.set(from),
-    });
-  },
-};
+  const hoverProps = {};
 
   return (
     <div className={cn('overflow-hidden', className)}>

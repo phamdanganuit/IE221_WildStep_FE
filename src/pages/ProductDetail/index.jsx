@@ -56,17 +56,15 @@ const ChiTietSanPham = () => {
         if (result.success && result.data) {
           setProduct(result.data);
           
-          // Set default color and size
-          if (result.data.colors && result.data.colors.length > 0) {
-            const firstColor = result.data.colors[0];
-            const colorName = firstColor.color_name?.[i18n.language] || firstColor.color_name?.vi || 'N/A';
-            setSelectedColor(colorName);
+          // Set default color and size from specifications
+          if (result.data.specifications?.colors && result.data.specifications.colors.length > 0) {
+            const firstColor = result.data.specifications.colors[0];
+            setSelectedColor(firstColor.name || 'N/A');
           }
           
-          if (result.data.sizes && result.data.sizes.length > 0) {
-            const firstSize = result.data.sizes[0];
-            const sizeName = firstSize.size_name?.[i18n.language] || firstSize.size_name?.vi || 'N/A';
-            setSelectedSize(sizeName);
+          if (result.data.specifications?.sizes && result.data.specifications.sizes.length > 0) {
+            const firstSize = result.data.specifications.sizes[0];
+            setSelectedSize(firstSize);
           }
         } else {
           setError(result.error || "Không thể tải thông tin sản phẩm");
@@ -152,12 +150,14 @@ const ChiTietSanPham = () => {
     }).format(price);
   };
 
-  const originalPrice = product.originalPrice || 0;
+  // Extract data from new API structure
+  const originalPrice = product.price || 0;
   const discount = product.discount || 0;
-  const salePrice = discount > 0 ? (originalPrice * (100 - discount) / 100) : originalPrice;
+  const salePrice = product.discountPrice || originalPrice;
   const productName = safeText(product.name, i18n.language, 'N/A');
-  const categoryName = safeText(product.categoryId?.name, i18n.language, 'N/A');
-  const parentCategoryName = safeText(product.categoryId?.parentId?.name, i18n.language, 'N/A');
+  const categoryName = safeText(product.category?.name, i18n.language, 'N/A');
+  const brandName = safeText(product.brand?.name, i18n.language, 'N/A');
+  const description = safeText(product.description, i18n.language, '');
 
   return (
     <div className="flex overflow-hidden flex-col pb-20 bg-white">
@@ -170,10 +170,10 @@ const ChiTietSanPham = () => {
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator> | </BreadcrumbSeparator>
-          {parentCategoryName && parentCategoryName !== 'N/A' && (
+          {brandName && brandName !== 'N/A' && (
             <>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/products">{parentCategoryName}</BreadcrumbLink>
+                <BreadcrumbLink href="/products">{brandName}</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator> | </BreadcrumbSeparator>
             </>
@@ -181,7 +181,9 @@ const ChiTietSanPham = () => {
           {categoryName && categoryName !== 'N/A' && (
             <>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/products">{categoryName}</BreadcrumbLink>
+                <BreadcrumbLink href={`/products?category_slug=${product.category?.slug || ''}`}>
+                  {categoryName}
+                </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator> | </BreadcrumbSeparator>
             </>
@@ -243,16 +245,18 @@ const ChiTietSanPham = () => {
                 title={productName}
                 originalPrice={discount > 0 ? formatPrice(originalPrice) : null}
                 salePrice={formatPrice(salePrice)}
-                soldCount={product.sold || 0}
-                rating={product.rate || 0}
+                soldCount={product.soldCount || 0}
+                rating={product.rating || 0}
+                reviewCount={product.reviewCount || 0}
+                stock={product.stock || 0}
                 onAddToCart={handleAddToCart}
                 onBuyNow={handleBuyNow}
                 selectedSize={selectedSize}
                 handleSizeChange={handleSizeChange}
                 selectedColor={selectedColor}
                 handleColorChange={handleColorChange}
-                productColors={product.colors}
-                productSizes={product.sizes}
+                productColors={product.specifications?.colors || []}
+                productSizes={product.specifications?.sizes || []}
                 currentLang={i18n.language}
               />
             </div>
@@ -265,7 +269,7 @@ const ChiTietSanPham = () => {
           className="object-contain w-full max-md:max-w-full"
         />
         <section className="max-md:mt-3 max-md:ml-2.5">
-          <ProductDescription />
+          <ProductDescription description={description} />
         </section>
         <img
           src="https://api.builder.io/api/v1/image/assets/7e6ace8706ad423985a91f95c2918220/2c690c8f3c4b63372042985765f6e103dad8f008?placeholderIfAbsent=true"
@@ -276,11 +280,12 @@ const ChiTietSanPham = () => {
         <section className="max-md:mt-3 max-md:ml-2.5">
           <ProductDetail 
             product={{
-              color: safeText(product.color, i18n.language, ''),
-              material: safeText(product.material, i18n.language, ''),
-              gender: safeText(product.gender, i18n.language, ''),
-              weight: safeText(product.weight, i18n.language, ''),
-              size: safeText(product.size, i18n.language, ''),
+              material: product.specifications?.material || '',
+              weight: product.specifications?.weight || '',
+              origin: product.specifications?.origin || '',
+              style: product.specifications?.style || '',
+              colors: product.specifications?.colors || [],
+              sizes: product.specifications?.sizes || [],
             }} 
           />
         </section>
