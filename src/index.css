@@ -15,6 +15,7 @@ html {
   }
   @media (min-width: 1024px) {
     font-size: 16px;
+    /* font-size: calc(100vw / 1728 * 16); */
   }
 }
 

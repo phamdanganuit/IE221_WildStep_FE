@@ -76,7 +76,7 @@ function Contact() {
                 </div>
               </CardContent>
               <CardFooter>
-                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <Button className={"rounded-full w-10 h-10"}>
                     <a target="_blank" href="https://x.com">
                       <FaTwitter className="w-8 h-8" />

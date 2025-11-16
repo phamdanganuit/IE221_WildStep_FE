@@ -1,12 +1,14 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleUser } from "@fortawesome/free-regular-svg-icons";
+import { faCircleUser} from "@fortawesome/free-regular-svg-icons";
+import { HiOutlineArchiveBox } from "react-icons/hi2";
+import { LuTicketPercent } from "react-icons/lu";
 import {
   faRightFromBracket,
   faGauge,
   faGlobe,
   faBars,
-  faTimes,
+  faTimes
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -44,6 +46,18 @@ const Header = () => {
 
   const handleProfile = () => {
     navigate("/profile");
+    setShowUserMenu(false);
+    setShowMobileMenu(false);
+  };
+
+  const handleMyOrders = () => {
+    navigate("/orders");
+    setShowUserMenu(false);
+    setShowMobileMenu(false);
+  }
+
+  const handleVoucher = () => {
+    navigate("/vouchers");
     setShowUserMenu(false);
     setShowMobileMenu(false);
   };
@@ -91,7 +105,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="w-full flex items-center justify-between px-4 sm:px-6 md:px-8 lg:px-10 py-3 md:py-4 bg-color1 text-white sticky top-0 z-50">
+      <header className="w-full flex items-center justify-between px-4 sm:px-6 md:px-8 lg:px-10 py-2 md:py-4 bg-color1 text-white sticky top-0 z-50">
         <button
           onClick={() => setShowMobileMenu(!showMobileMenu)}
           className="lg:hidden w-10 h-10 flex items-center justify-center text-white z-50"
@@ -149,9 +163,9 @@ const Header = () => {
             // Giao diện khi đã đăng nhập
             <div className="flex items-center gap-2">
               {/* Search Bar */}
-              <SearchBox className="hidden xl:flex" />
+              <SearchBox className="hidden lg:flex" />
               {/* Cart Icon */}
-              <div className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer">
+              <div onClick={()=>navigate("/cart")} className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] items-center justify-center hover:bg-gray-700 transition cursor-pointer">
                 <img
                   src="/icon/mdi_cart-outline.svg"
                   alt="Cart"
@@ -160,7 +174,7 @@ const Header = () => {
               </div>
 
               {/* Wishlist Icon */}
-              <div className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer">
+              <div className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] items-center justify-center hover:bg-gray-700 transition cursor-pointer">
                 <img
                   src="/icon/mdi_heart-outline.svg"
                   alt="Wishlist"
@@ -171,7 +185,7 @@ const Header = () => {
               {/* Language Switcher */}
               <div className="relative" ref={languageMenuRef}>
                 <div
-                  className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] flex items-center justify-center hover:bg-gray-700 transition cursor-pointer"
+                  className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] items-center justify-center hover:bg-gray-700 transition cursor-pointer"
                   onClick={() => setShowLanguageMenu(!showLanguageMenu)}
                 >
                   <FontAwesomeIcon icon={faGlobe} size="lg" />
@@ -279,6 +293,27 @@ const Header = () => {
                         {t("header.profile")}
                       </span>
                     </button>
+
+                    <button
+                      onClick={handleMyOrders}
+                      className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-gray-900 hover:bg-gray-100 transition"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <HiOutlineArchiveBox className="w-4 h-4 stroke-2"/>
+                        {t("header.myOrders")}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={handleVoucher}
+                      className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-gray-900 hover:bg-gray-100 transition"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <LuTicketPercent className="w-4 h-4 stroke-2"/>
+                        {t("header.voucher")}
+                      </span>
+                    </button>
+
                     <button
                       onClick={handleLogout}
                       className="cursor-pointer w-full px-4 py-2 text-left text-[1rem] text-red-600 hover:bg-red-50 transition"
@@ -354,9 +389,9 @@ const Header = () => {
             {/* Mobile Menu Content */}
             <div className="flex flex-col p-6 gap-6 mt-16">
               {/* Search Bar Mobile */}
-              <SearchBox 
-                isMobile={true} 
-                onClose={() => setShowMobileMenu(false)} 
+              <SearchBox
+                isMobile={true}
+                onClose={() => setShowMobileMenu(false)}
               />
 
               {/* Navigation Links */}
