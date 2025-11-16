@@ -65,6 +65,7 @@ const ProductForm = () => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [dragIndex, setDragIndex] = useState(null);
   const [imagesReordered, setImagesReordered] = useState(false);
+  const [productImageUrl, setProductImageUrl] = useState("");
 
   const handleDragStart = (index) => {
     setDragIndex(index);
@@ -167,13 +168,13 @@ const ProductForm = () => {
         name_en: typeof name === 'object' ? (name.en || '') : '',
         name_ja: typeof name === 'object' ? (name.ja || '') : '',
         categoryId: product.categoryId || product.category?.id || "",
-        brandId: product.brandId || "",
+        brandId: product.brandId || product.brand?.id || "",
         price: product.price || "",
         description_vi: typeof desc === 'object' ? (desc.vi || '') : (desc || ''),
         description_en: typeof desc === 'object' ? (desc.en || '') : '',
         description_ja: typeof desc === 'object' ? (desc.ja || '') : '',
         stock: product.stock || "",
-        discount: product.discount || "",
+        discount: product.discount || 0,
         status: product.status || "active",
         material_vi: typeof material === 'object' ? (material.vi || '') : '',
         material_en: typeof material === 'object' ? (material.en || '') : '',
@@ -288,6 +289,67 @@ const ProductForm = () => {
     setLoading(false);
   };
 
+  // Handle URL input for product images
+  const handleProductImageUrlChange = async (url) => {
+    setProductImageUrl(url);
+    
+    if (!url.trim()) return;
+    
+    try {
+      new URL(url);
+    } catch {
+      return;
+    }
+
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      if (blob.size > 5 * 1024 * 1024) {
+        addToast({ type: "error", message: "Ảnh từ URL phải nhỏ hơn 5MB" });
+        return;
+      }
+
+      const filename = url.split('/').pop()?.split('?')[0] || 'image.jpg';
+      const file = new File([blob], filename, { type: blob.type });
+      
+      if (isEdit) {
+        const result = await uploadProductImages(id, [file]);
+        if (result.success) {
+          const newImages = Array.isArray(result.data?.images) ? result.data.images : [];
+          setExistingImages((prev) => {
+            const merged = [...prev];
+            newImages.forEach((url) => {
+              if (!merged.includes(url)) merged.push(url);
+            });
+            return merged;
+          });
+          addToast({ type: "success", message: "Đã thêm ảnh từ URL" });
+          setProductImageUrl("");
+        }
+      } else {
+        setImages((prev) => [...prev, file]);
+        addToast({ type: "success", message: "Đã thêm ảnh từ URL" });
+        setProductImageUrl("");
+      }
+    } catch (error) {
+      console.error("Error loading image from URL:", error);
+      addToast({ type: "error", message: "Không thể tải ảnh từ URL này" });
+    }
+  };
+
+  const handleProductImageDrop = async (e) => {
+    e.preventDefault();
+    const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+    if (url) {
+      handleProductImageUrlChange(url);
+    }
+  };
+
+  const handleProductImageDragOver = (e) => {
+    e.preventDefault();
+  };
+
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 5) {
@@ -363,6 +425,7 @@ const ProductForm = () => {
     hex_color: "#000000",
     image: null, // File object
     imagePreview: "", // Preview URL
+    imageUrl: "", // URL input
   });
 
   const handleColorImageChange = (e) => {
@@ -377,11 +440,66 @@ const ProductForm = () => {
         setColorInput({ 
           ...colorInput, 
           image: file,
-          imagePreview: reader.result 
+          imagePreview: reader.result,
+          imageUrl: "" // Clear URL when file is selected
         });
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Handle URL input for color image
+  const handleColorImageUrlChange = async (url) => {
+    setColorInput({ ...colorInput, imageUrl: url });
+    
+    if (!url.trim()) return;
+    
+    // Validate URL
+    try {
+      new URL(url);
+    } catch {
+      return; // Invalid URL, wait for user to finish typing
+    }
+
+    // Fetch image from URL and convert to blob
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      if (blob.size > 5 * 1024 * 1024) { // 5MB limit for URL
+        addToast({ type: "error", message: "Ảnh từ URL phải nhỏ hơn 5MB" });
+        return;
+      }
+
+      // Create file from blob
+      const filename = url.split('/').pop()?.split('?')[0] || 'image.jpg';
+      const file = new File([blob], filename, { type: blob.type });
+      
+      setColorInput({
+        ...colorInput,
+        image: file,
+        imagePreview: url,
+        imageUrl: url
+      });
+      
+      addToast({ type: "success", message: "Đã tải ảnh từ URL" });
+    } catch (error) {
+      console.error("Error loading image from URL:", error);
+      addToast({ type: "error", message: "Không thể tải ảnh từ URL này" });
+    }
+  };
+
+  // Handle drag and drop for URL
+  const handleColorImageDrop = async (e) => {
+    e.preventDefault();
+    const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+    if (url) {
+      handleColorImageUrlChange(url);
+    }
+  };
+
+  const handleColorImageDragOver = (e) => {
+    e.preventDefault();
   };
 
   const handleAddColor = () => {
@@ -410,7 +528,8 @@ const ProductForm = () => {
       color_ja: "", 
       hex_color: "#000000",
       image: null,
-      imagePreview: ""
+      imagePreview: "",
+      imageUrl: ""
     });
   };
 
@@ -596,10 +715,31 @@ const ProductForm = () => {
                 <Input
                   type="number"
                   value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                  onChange={(e) => {
+                    const stockValue = parseInt(e.target.value) || 0;
+                    let newStatus = formData.status;
+                    
+                    // Auto update status based on stock
+                    if (stockValue === 0) {
+                      newStatus = 'out_of_stock';
+                    } else if (stockValue < 10) {
+                      newStatus = 'low_stock';
+                    } else if (formData.status === 'out_of_stock' || formData.status === 'low_stock') {
+                      newStatus = 'active';
+                    }
+                    
+                    setFormData({ 
+                      ...formData, 
+                      stock: e.target.value,
+                      status: newStatus
+                    });
+                  }}
                   placeholder={t('admin.products.form.stockPlaceholder')}
                   min="0"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Trạng thái tự động: 0 = Hết hàng, &lt;10 = Sắp hết, ≥10 = Hoạt động
+                </p>
               </div>
             </div>
 
@@ -612,7 +752,12 @@ const ProductForm = () => {
               >
                 <option value="active">{t('admin.products.active')}</option>
                 <option value="inactive">{t('admin.products.inactive')}</option>
+                <option value="low_stock">Sắp hết hàng</option>
+                <option value="out_of_stock">Hết hàng</option>
               </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Tự động cập nhật theo tồn kho (có thể chỉnh thủ công)
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -679,33 +824,53 @@ const ProductForm = () => {
                     <label className="block text-xs text-gray-600 mb-1">
                       🖼️ Ảnh sản phẩm với màu này (tùy chọn)
                     </label>
-                    <div className="flex items-start gap-3">
+                    
+                    {/* URL Input */}
+                    <div className="mb-2">
                       <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleColorImageChange}
-                        className="flex-1"
+                        type="text"
+                        value={colorInput.imageUrl}
+                        onChange={(e) => handleColorImageUrlChange(e.target.value)}
+                        onDrop={handleColorImageDrop}
+                        onDragOver={handleColorImageDragOver}
+                        placeholder="Paste hoặc kéo thả link ảnh vào đây (https://...)"
+                        className="w-full"
                       />
+                      <p className="text-xs text-gray-400 mt-1">
+                        💡 Kéo thả link ảnh từ browser hoặc paste URL vào
+                      </p>
+                    </div>
+
+                    {/* File Upload */}
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleColorImageChange}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Hoặc chọn file từ máy tính
+                        </p>
+                      </div>
+                      
                       {colorInput.imagePreview && (
-                        <div className="relative w-16 h-16 border-2 border-gray-300 rounded-lg overflow-hidden flex-shrink-0">
+                        <div className="relative w-20 h-20 border-2 border-gray-300 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50">
                           <img 
                             src={colorInput.imagePreview} 
                             alt="Preview" 
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                           <button
                             type="button"
-                            onClick={() => setColorInput({ ...colorInput, image: null, imagePreview: "" })}
-                            className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-1"
+                            onClick={() => setColorInput({ ...colorInput, image: null, imagePreview: "", imageUrl: "" })}
+                            className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-1 hover:bg-red-600"
                           >
                             <X className="w-3 h-3" />
                           </button>
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Ảnh sản phẩm trong màu này (VD: giày màu trắng, giày màu đen)
-                    </p>
                   </div>
                 </div>
                 <Button type="button" onClick={handleAddColor} size="sm">
@@ -1040,6 +1205,31 @@ const ProductForm = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   {t('admin.products.form.uploadImagesLabel')}
                 </label>
+                
+                {/* URL Input */}
+                <div className="mb-4">
+                  <Input
+                    type="text"
+                    value={productImageUrl}
+                    onChange={(e) => handleProductImageUrlChange(e.target.value)}
+                    onDrop={handleProductImageDrop}
+                    onDragOver={handleProductImageDragOver}
+                    placeholder="Paste hoặc kéo thả link ảnh vào đây (https://...)"
+                    className="w-full"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    💡 Kéo thả link ảnh từ browser hoặc paste URL vào
+                  </p>
+                </div>
+
+                <div className="relative mb-3">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-gray-300" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-gray-50 px-2 text-gray-500">Hoặc</span>
+                  </div>
+                </div>
                 
                 <div className="flex flex-col items-center justify-center gap-3">
                   <label className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-color4 text-color4 rounded-lg cursor-pointer hover:bg-color4 hover:text-white transition-all shadow-sm hover:shadow-md font-medium">
