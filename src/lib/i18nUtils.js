@@ -104,3 +104,66 @@ export const safeText = (value, lang, fallbackDisplay = 'N/A') => {
   return picked && String(picked).trim() ? picked : fallbackDisplay;
 };
 
+/**
+ * Create slug from text (remove accents, lowercase, replace spaces with hyphens)
+ * @param {string} text - Text to convert to slug
+ * @returns {string} - Slug string
+ */
+export const createSlugFromText = (text) => {
+  if (!text) return '';
+  
+  // Remove Vietnamese accents
+  const removeAccents = (str) => {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D');
+  };
+  
+  return removeAccents(text)
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+};
+
+/**
+ * Parse multi-language slug and extract the part for current language
+ * Format: vi-giay-chay-bo-en-running-shoes-ja-ランニングシューズ
+ * @param {string} slug - Multi-language slug
+ * @param {string} lang - Current language (vi, en, ja)
+ * @returns {string} - Slug for current language or original slug if format doesn't match
+ */
+export const parseMultiLanguageSlug = (slug, lang) => {
+  if (!slug) return '';
+  
+  // Pattern: vi-xxx-en-yyy-ja-zzz
+  const pattern = /^(vi-([^-]+(?:-[^-]+)*))(-en-([^-]+(?:-[^-]+)*))?(-ja-([^-]+(?:-[^-]+)*))?$/;
+  const match = slug.match(pattern);
+  
+  if (!match) {
+    // If doesn't match multi-language format, return as is
+    return slug;
+  }
+  
+  // Extract parts
+  const viPart = match[2] || '';
+  const enPart = match[4] || '';
+  const jaPart = match[6] || '';
+  
+  // Return the part for current language
+  switch (lang) {
+    case 'vi':
+      return viPart || slug;
+    case 'en':
+      return enPart || viPart || slug;
+    case 'ja':
+      return jaPart || viPart || slug;
+    default:
+      return viPart || slug;
+  }
+};
+

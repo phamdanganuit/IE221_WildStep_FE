@@ -11,6 +11,8 @@ import { ScrollArea } from "../ui/scroll-area";
 import { MdOutlineShoppingCartCheckout } from "react-icons/md";
 import { useToast } from "@/contexts/ToastContext";
 import { getMyCard } from "@/service/cartService";
+import { useTranslation } from "react-i18next";
+import { safeText } from "@/lib/i18nUtils";
 
 const formatPrice = (price) => {
   return price.toLocaleString("vi-VN") + "₫";
@@ -20,10 +22,12 @@ function ProductCardCart({ isSelected, selectProduct, cp, updateQuantity }) {
   const product = cp.product;
   const option = cp.option;
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
   const isNew = product?.createdAt
     ? Date.now() - new Date(product.createdAt).getTime() <
       10 * 24 * 60 * 60 * 1000
     : false;
+  const brandName = safeText(product?.brandId?.name, i18n.language, '');
 
   const setQuantity = (quantity) => {
     updateQuantity(cp._id, quantity);
@@ -79,7 +83,7 @@ function ProductCardCart({ isSelected, selectProduct, cp, updateQuantity }) {
                 {product?.name}
               </p>
               <p className="text-[0.8rem] lg:text-[0.9rem] mr-5">
-                {product?.brandId?.name}
+                {brandName}
               </p>
             </div>
           </div>

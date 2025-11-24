@@ -17,7 +17,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductDescription from "@/components/ProductDetail/ProductDescription";
 import ProductDetail from "@/components/ProductDetail/ProductDetail";
 import { getProductDetail } from "@/service/contentService";
-import { safeText } from "@/lib/i18nUtils";
+import { safeText, createSlugFromText, parseMultiLanguageSlug } from "@/lib/i18nUtils";
 
 const ChiTietSanPham = () => {
   const { id } = useParams(); // Get product ID or slug from URL
@@ -177,6 +177,14 @@ const ChiTietSanPham = () => {
   const productName = safeText(product.name, i18n.language, 'N/A');
   const categoryName = safeText(product.category?.name, i18n.language, 'N/A');
   const brandName = safeText(product.brand?.name, i18n.language, 'N/A');
+  
+  // Get category slug - use API slug as-is (backend expects full slug)
+  // Don't parse multi-language slug, backend should handle matching
+  let categorySlug = product.category?.slug || '';
+  if (!categorySlug && categoryName && categoryName !== 'N/A') {
+    // Fallback: create slug from categoryName if no slug from API
+    categorySlug = createSlugFromText(categoryName);
+  }
   const description = safeText(product.description, i18n.language, '');
 
   return (
@@ -216,7 +224,7 @@ const ChiTietSanPham = () => {
               <BreadcrumbSeparator> | </BreadcrumbSeparator>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to={`/products?brand=${encodeURIComponent(brandName)}&category_slug=${product.category?.slug || ''}`}>
+                  <Link to={`/products?brand=${encodeURIComponent(brandName)}&category_slug=${encodeURIComponent(categorySlug)}`}>
                     {categoryName}
                   </Link>
                 </BreadcrumbLink>

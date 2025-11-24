@@ -4,9 +4,10 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTh, faBars, faFilter } from "@fortawesome/free-solid-svg-icons";
 import StarRating from "@/components/ProductDetail/StarRating";
-import { getPublicProducts } from "@/service/contentService";
+import { getPublicProducts, getPublicCategories } from "@/service/contentService";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+import { safeText, parseMultiLanguageSlug } from "@/lib/i18nUtils";
 
 const EXAMPLE_DATA = [
   {
@@ -234,6 +235,7 @@ const EXAMPLE_DATA = [
 ];
 
 const ProductCard = ({ product }) => {
+  const { i18n } = useTranslation();
   const navigateToProductDetail = (productId) => {
     window.location.href = `/product/${productId}`;
   };
@@ -248,6 +250,7 @@ const ProductCard = ({ product }) => {
   const categoryName = product?.categoryId?.parentId?.name ? `${product.categoryId.parentId.name}` : '';
   const genderName = categoryName || '';
   const colorHex = product?.colorHex || null;
+  const brandName = safeText(product?.brandId?.name, i18n.language, '');
   
   return (
     <div
@@ -303,7 +306,7 @@ const ProductCard = ({ product }) => {
       <div className="p-3 sm:p-4 md:p-5 flex flex-col gap-2 bg-white">
         {/* Brand | Category */}
         <p className="font-semibold text-xs sm:text-sm text-color4 uppercase tracking-wide">
-          {product?.brandId?.name} {genderName ? `| ${genderName.toUpperCase()}` : ''}
+          {brandName} {genderName ? `| ${genderName.toUpperCase()}` : ''}
         </p>
         
         {/* Product Name */}
@@ -342,7 +345,7 @@ const ProductCard = ({ product }) => {
 };
 
 function CatalogList({ filters, setFilters }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
@@ -350,6 +353,7 @@ function CatalogList({ filters, setFilters }) {
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({ page: 1, page_size: 12, total: 0, total_pages: 1 });
   const [hasInitializedFilters, setHasInitializedFilters] = useState(false);
+  const [categoryName, setCategoryName] = useState('');
   
   // Use ref to prevent duplicate calls in Strict Mode
   const lastRequestParamsRef = useRef(null);
@@ -360,6 +364,57 @@ function CatalogList({ filters, setFilters }) {
   const categorySlug = searchParams.get("category_slug") || "";
   const brandFromUrl = searchParams.get("brand") || "";
   
+  // Fetch category name from API when categorySlug changes
+  useEffect(() => {
+    const fetchCategoryName = async () => {
+      if (!categorySlug) {
+        setCategoryName('');
+        return;
+      }
+
+      // First try to get from products if available
+      if (products && products.length > 0 && products[0]?.category) {
+        const name = safeText(products[0].category.name, i18n.language, '');
+        if (name) {
+          setCategoryName(name);
+          return;
+        }
+      }
+
+      // Fallback: fetch from categories API
+      try {
+        const result = await getPublicCategories();
+        if (result.success && result.data?.data) {
+          // Find category by slug in the tree
+          const findCategoryBySlug = (categories, slug) => {
+            for (const cat of categories) {
+              if (cat.slug === slug) {
+                return cat;
+              }
+              if (cat.children) {
+                const found = findCategoryBySlug(cat.children, slug);
+                if (found) return found;
+              }
+            }
+            return null;
+          };
+
+          const foundCategory = findCategoryBySlug(result.data.data, categorySlug);
+          if (foundCategory) {
+            setCategoryName(safeText(foundCategory.name, i18n.language, ''));
+          } else {
+            setCategoryName('');
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching category name:", err);
+        setCategoryName('');
+      }
+    };
+
+    fetchCategoryName();
+  }, [categorySlug, products, i18n.language]);
+
   // Reset filters when URL params change (especially when brand/category_slug is removed)
   useEffect(() => {
     // If brand is not in URL but was selected in filters, reset it
@@ -454,6 +509,14 @@ function CatalogList({ filters, setFilters }) {
           setProducts(result.data.data || []);
           setPagination(result.data.pagination || { page: 1, page_size: 12, total: 0, total_pages: 1 });
           
+          // Update category name from products if available
+          if (result.data.data && result.data.data.length > 0 && result.data.data[0]?.category) {
+            const name = safeText(result.data.data[0].category.name, i18n.language, '');
+            if (name) {
+              setCategoryName(name);
+            }
+          }
+          
           // Only update filters on first load
           if (!hasInitializedFilters && result.data.filters) {
             updateFiltersFromAPI(result.data.filters);
@@ -492,11 +555,17 @@ function CatalogList({ filters, setFilters }) {
         // If brand is in URL, use it; otherwise clear selections (don't preserve)
         const brandsToSelect = brandFromUrl ? [brandFromUrl] : [];
         updated.brand = apiFilters.availableBrands.length > 0 
-          ? apiFilters.availableBrands.map(brand => ({
-              label: brand.name,
-              value: brandsToSelect.includes(brand.name),
-              count: brand.count || 0
-            }))
+          ? apiFilters.availableBrands.map(brand => {
+              // Extract localized brand name
+              const localizedBrandName = typeof brand.name === 'object' 
+                ? safeText(brand.name, i18n.language, brand.name.vi || brand.name.en || brand.name.ja || '')
+                : brand.name;
+              return {
+                label: localizedBrandName,
+                value: brandsToSelect.includes(localizedBrandName) || brandsToSelect.includes(brand.name?.vi) || brandsToSelect.includes(brand.name?.en) || brandsToSelect.includes(brand.name?.ja),
+                count: brand.count || 0
+              };
+            })
           : []; // Empty array if no brands available
       } else if (prev.brand.length === 0) {
         // Fallback to default brands if API doesn't return filters
@@ -590,7 +659,7 @@ function CatalogList({ filters, setFilters }) {
         <CatalogBreadCrumb 
           category={filters?.category} 
           brandName={brandFromUrl || (filters.brand.find(b => b.value)?.label)}
-          categoryName={categorySlug ? categorySlug.replace(/-/g, " ") : ""}
+          categoryName={categoryName}
         />
         
         <div className="flex items-center justify-between flex-wrap gap-4">
