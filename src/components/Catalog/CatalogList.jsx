@@ -357,9 +357,42 @@ function CatalogList({ filters, setFilters }) {
   // Get page and sort from URL
   const currentPage = parseInt(searchParams.get("page")) || 1;
   const currentSort = searchParams.get("sort") || "popular";
+  const categorySlug = searchParams.get("category_slug") || "";
+  const brandFromUrl = searchParams.get("brand") || "";
+  
+  // Reset filters when URL params change (especially when brand/category_slug is removed)
+  useEffect(() => {
+    // If brand is not in URL but was selected in filters, reset it
+    if (!brandFromUrl) {
+      setFilters((prev) => {
+        const hasSelectedBrand = prev.brand.some((b) => b.value);
+        if (hasSelectedBrand) {
+          return {
+            ...prev,
+            brand: prev.brand.map((b) => ({ ...b, value: false })),
+          };
+        }
+        return prev;
+      });
+    }
+    
+    // If category_slug is not in URL but category filter exists, reset it
+    if (!categorySlug) {
+      setFilters((prev) => {
+        if (prev.category) {
+          return {
+            ...prev,
+            category: "",
+          };
+        }
+        return prev;
+      });
+    }
+  }, [brandFromUrl, categorySlug]);
   
   // Create filter query params (dependencies for API call)
-  const selectedBrands = filters.brand.filter((b) => b.value).map((b) => b.label).join(",");
+  // Use URL params if available, otherwise use filters state (but only if URL doesn't have brand)
+  const selectedBrands = brandFromUrl || filters.brand.filter((b) => b.value).map((b) => b.label).join(",");
   const selectedGenders = filters.gender.filter((g) => g.value).map((g) => g.label).join(",");
   const selectedColors = filters.color.filter((c) => c.value).map((c) => c.label).join(",");
   const selectedSizes = filters.size.filter((s) => s.value).map((s) => s.label).join(",");
@@ -379,6 +412,7 @@ function CatalogList({ filters, setFilters }) {
       priceFrom: priceFrom || "",
       priceTo: priceTo || "",
       category: category || "",
+      category_slug: categorySlug || "",
       sort: currentSort,
       page: currentPage,
     });
@@ -405,6 +439,7 @@ function CatalogList({ filters, setFilters }) {
           priceFrom: priceFrom || "",
           priceTo: priceTo || "",
           category: category || "",
+          category_slug: categorySlug || "",
           sort: currentSort,
           page: currentPage,
           page_size: 12,
@@ -445,7 +480,7 @@ function CatalogList({ filters, setFilters }) {
     };
 
     fetchProducts();
-  }, [selectedBrands, selectedGenders, selectedColors, selectedSizes, priceFrom, priceTo, searchQuery, category, currentPage, currentSort, hasInitializedFilters]);
+  }, [selectedBrands, selectedGenders, selectedColors, selectedSizes, priceFrom, priceTo, searchQuery, category, categorySlug, brandFromUrl, currentPage, currentSort, hasInitializedFilters]);
 
   // Update filters with API data while preserving user selections
   const updateFiltersFromAPI = (apiFilters) => {
@@ -454,11 +489,12 @@ function CatalogList({ filters, setFilters }) {
 
       // Update brands - Always update, even if empty
       if (apiFilters.availableBrands) {
-        const currentSelectedBrands = prev.brand.filter(b => b.value).map(b => b.label);
+        // If brand is in URL, use it; otherwise clear selections (don't preserve)
+        const brandsToSelect = brandFromUrl ? [brandFromUrl] : [];
         updated.brand = apiFilters.availableBrands.length > 0 
           ? apiFilters.availableBrands.map(brand => ({
               label: brand.name,
-              value: currentSelectedBrands.includes(brand.name),
+              value: brandsToSelect.includes(brand.name),
               count: brand.count || 0
             }))
           : []; // Empty array if no brands available
@@ -551,7 +587,11 @@ function CatalogList({ filters, setFilters }) {
     <div className="flex flex-col w-full p-4 sm:p-6 md:p-8">
       {/* Header Section */}
       <div className="flex-col space-y-4 mb-6">
-        <CatalogBreadCrumb category={filters?.category} />
+        <CatalogBreadCrumb 
+          category={filters?.category} 
+          brandName={brandFromUrl || (filters.brand.find(b => b.value)?.label)}
+          categoryName={categorySlug ? categorySlug.replace(/-/g, " ") : ""}
+        />
         
         <div className="flex items-center justify-between flex-wrap gap-4">
           <h2 className="font-semibold text-xl md:text-2xl lg:text-3xl">

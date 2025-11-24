@@ -89,7 +89,7 @@ const ProductInfo = ({
           <button
             onClick={onAddToCart}
             disabled={stock === 0}
-            className="flex w-full overflow-hidden justify-between items-center self-stretch px-12 py-4 my-auto font-semibold text-white bg-color4 rounded-lg max-md:px-5 hover:bg-hover4 focus:outline-none focus:ring-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="flex w-full overflow-hidden justify-center items-center self-stretch px-12 py-4 my-auto font-semibold text-white bg-color4 rounded-lg max-md:px-5 hover:bg-hover4 focus:outline-none focus:ring-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             aria-label="Add product to shopping cart"
           >
             <span className="self-stretch my-auto">Thêm vào giỏ hàng</span>

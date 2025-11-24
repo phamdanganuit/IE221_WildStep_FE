@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "../../components/Header";
 import ProductInfo from "@/components/ProductDetail/ProductInfo";
@@ -185,29 +185,45 @@ const ChiTietSanPham = () => {
       <Breadcrumb className="px-20 max-md:px-10 mt-6 w-full max-md:max-w-full">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/" className="flex items-center gap-1">
-              Trang chủ
+            <BreadcrumbLink asChild>
+              <Link to="/" className="flex items-center gap-1">
+                Trang chủ
+              </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator> | </BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/products" className="flex items-center gap-1">
+                Tất cả sản phẩm
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
           {brandName && brandName !== 'N/A' && (
             <>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/products">{brandName}</BreadcrumbLink>
-              </BreadcrumbItem>
               <BreadcrumbSeparator> | </BreadcrumbSeparator>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to={`/products?brand=${encodeURIComponent(brandName)}`}>
+                    {brandName}
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
             </>
           )}
           {categoryName && categoryName !== 'N/A' && (
             <>
+              <BreadcrumbSeparator> | </BreadcrumbSeparator>
               <BreadcrumbItem>
-                <BreadcrumbLink href={`/products?category_slug=${product.category?.slug || ''}`}>
-                  {categoryName}
+                <BreadcrumbLink asChild>
+                  <Link to={`/products?brand=${encodeURIComponent(brandName)}&category_slug=${product.category?.slug || ''}`}>
+                    {categoryName}
+                  </Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator> | </BreadcrumbSeparator>
             </>
           )}
+          <BreadcrumbSeparator> | </BreadcrumbSeparator>
           <BreadcrumbItem>
             <BreadcrumbPage>{productName}</BreadcrumbPage>
           </BreadcrumbItem>
