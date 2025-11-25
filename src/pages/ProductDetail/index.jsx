@@ -17,7 +17,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductDescription from "@/components/ProductDetail/ProductDescription";
 import ProductDetail from "@/components/ProductDetail/ProductDetail";
 import { getProductDetail } from "@/service/contentService";
+import { addToCart } from "@/service/cartService";
 import { safeText, createSlugFromText, parseMultiLanguageSlug } from "@/lib/i18nUtils";
+import { useToast } from "@/contexts/ToastContext";
 
 const ChiTietSanPham = () => {
   const { id } = useParams(); // Get product ID or slug from URL
@@ -41,6 +43,8 @@ const ChiTietSanPham = () => {
 
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const { success, error: showError } = useToast();
 
   // Fetch product data from API
   useEffect(() => {
@@ -105,14 +109,63 @@ const ChiTietSanPham = () => {
     ? product.images 
     : ["https://via.placeholder.com/400"];
 
-  const handleAddToCart = () => {
-    console.log("Adding to cart:", { selectedColor, selectedSize });
-    // Add to cart logic here
+  const handleAddToCart = async () => {
+    if (!product?.id) {
+      showError("Không tìm thấy thông tin sản phẩm");
+      return;
+    }
+
+    if (!selectedSize) {
+      showError("Vui lòng chọn size");
+      return;
+    }
+
+    if (!selectedColor) {
+      showError("Vui lòng chọn màu");
+      return;
+    }
+
+    // Convert product.id to string if it's an object
+    let productId = product.id;
+    if (typeof productId === 'object') {
+      productId = productId.toString();
+    } else {
+      productId = String(productId);
+    }
+
+    // Ensure size and color are strings
+    const sizeStr = String(selectedSize).trim();
+    const colorStr = String(selectedColor).trim();
+
+    try {
+      const res = await addToCart(
+        productId,
+        quantity, // Sử dụng quantity từ state
+        sizeStr,
+        colorStr
+      );
+
+      if (res.success) {
+        success(res.message || "Đã thêm sản phẩm vào giỏ hàng");
+        // Reset quantity về 1 sau khi thêm vào giỏ hàng thành công
+        setQuantity(1);
+      } else {
+        showError(res.error || "Không thể thêm sản phẩm vào giỏ hàng");
+      }
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+      showError(err.message || "Đã xảy ra lỗi khi thêm sản phẩm vào giỏ hàng");
+    }
   };
 
   const handleBuyNow = () => {
     console.log("Buy now:", { selectedColor, selectedSize });
-    // Buy now logic here
+    // TODO: Implement buy now logic (navigate to checkout with this product)
+    // For now, just add to cart and navigate
+    handleAddToCart().then(() => {
+      // Navigate to checkout page
+      // navigate("/checkout");
+    });
   };
 
   const handleColorChange = (color) => {
@@ -302,6 +355,8 @@ const ChiTietSanPham = () => {
                 productColors={product.specifications?.colors || []}
                 productSizes={product.specifications?.sizes || []}
                 currentLang={i18n.language}
+                quantity={quantity}
+                setQuantity={setQuantity}
               />
             </div>
           </div>

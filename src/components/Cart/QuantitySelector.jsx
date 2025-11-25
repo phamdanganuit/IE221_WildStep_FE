@@ -3,15 +3,25 @@ import { Button } from "../ui/button";
 import { Minus, Plus } from "lucide-react";
 import { Input } from "../ui/input";
 
-function QuantitySelector({ quantity, setQuantity }) {
+function QuantitySelector({ quantity, setQuantity, max }) {
   const plusQuantity = () => {
-    setQuantity(quantity + 1);
+    const newQuantity = quantity + 1;
+    if (!max || newQuantity <= max) {
+      setQuantity(newQuantity);
+    }
   };
   const minusQuantity = () => {
     setQuantity(quantity - 1);
   };
   const editQuantity = (e) => {
-    setQuantity(parseInt(e.target.value));
+    let newQuantity = parseInt(e.target.value) || 1;
+    if (max && newQuantity > max) {
+      newQuantity = max;
+    }
+    if (newQuantity < 1) {
+      newQuantity = 1;
+    }
+    setQuantity(newQuantity);
   };
   return (
     <div className="flex w-full justify-between items-center md:space-x-1">
@@ -29,8 +39,14 @@ function QuantitySelector({ quantity, setQuantity }) {
         onChange={editQuantity}
         type="number"
         min={1}
+        max={max}
       />
-      <Button variant={"ghost"} size={"icon-sm"} onClick={plusQuantity}>
+      <Button 
+        variant={"ghost"} 
+        size={"icon-sm"} 
+        onClick={plusQuantity}
+        disabled={max && quantity >= max}
+      >
         <Plus />
       </Button>
     </div>

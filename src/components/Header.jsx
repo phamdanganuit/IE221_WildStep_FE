@@ -16,6 +16,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useMobileMenu } from "@/contexts/MobileMenuContext";
 import SearchBox from "@/components/SearchBox";
+import { getCartCount } from "@/service/cartService";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -25,12 +26,15 @@ const Header = () => {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const { showMobileMenu, setShowMobileMenu } = useMobileMenu();
   const [avatarLoading, setAvatarLoading] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const userMenuRef = useRef(null);
   const languageMenuRef = useRef(null);
   const { t, i18n } = useTranslation();
 
   // Check if we're on Profile page
   const isProfilePage = location.pathname === "/profile";
+  // Check if we're on Cart page (to avoid unnecessary API calls)
+  const isCartPage = location.pathname === "/cart";
 
   const languages = [
     { code: "vi", name: "Tiếng Việt", flag: "🇻🇳" },
@@ -103,6 +107,27 @@ const Header = () => {
     }
   }, [user?.avatar]);
 
+  // Fetch cart count when authenticated or location changes
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      // Skip fetching count when on cart page (CartList already has cart data)
+      if (isCartPage) {
+        return;
+      }
+      
+      if (isAuthenticated) {
+        const result = await getCartCount();
+        if (result.success) {
+          setCartCount(result.count || 0);
+        }
+      } else {
+        setCartCount(0);
+      }
+    };
+    fetchCartCount();
+    // No interval polling - only fetch when route or auth state changes
+  }, [isAuthenticated, location.pathname, isCartPage]);
+
   return (
     <>
       <header className="w-full flex items-center justify-between px-4 sm:px-6 md:px-8 lg:px-10 py-2 md:py-4 bg-color1 text-white sticky top-0 z-50">
@@ -165,12 +190,17 @@ const Header = () => {
               {/* Search Bar */}
               <SearchBox className="hidden lg:flex" />
               {/* Cart Icon */}
-              <div onClick={()=>navigate("/cart")} className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] items-center justify-center hover:bg-gray-700 transition cursor-pointer">
+              <div onClick={()=>navigate("/cart")} className="hidden md:inline-flex relative w-[3rem] h-[3rem] rounded-[30px] items-center justify-center hover:bg-gray-700 transition cursor-pointer">
                 <img
                   src="/icon/mdi_cart-outline.svg"
                   alt="Cart"
                   className="w-6 h-6"
                 />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
               </div>
 
               {/* Wishlist Icon */}
@@ -456,13 +486,24 @@ const Header = () => {
 
                   {/* Quick Actions */}
                   <div className="flex gap-3">
-                    <button className="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 py-3 rounded-lg transition">
+                    <button 
+                      onClick={() => {
+                        navigate("/cart");
+                        setShowMobileMenu(false);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 py-3 rounded-lg transition relative"
+                    >
                       <img
                         src="/icon/mdi_cart-outline.svg"
                         alt="Cart"
                         className="w-5 h-5"
                       />
                       <span className="text-sm">Cart</span>
+                      {cartCount > 0 && (
+                        <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                          {cartCount > 99 ? '99+' : cartCount}
+                        </span>
+                      )}
                     </button>
                     <button className="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 py-3 rounded-lg transition">
                       <img

@@ -1,102 +1,10 @@
 const base_url = import.meta.env.VITE_BACKEND_URL;
 import { getStoredToken } from "./authService";
 
-/*
-return {
-        success: true,
-        data: {
-          _id: "dafafgd3135r31",
-          userId: "954321345674321",
-          cart_products: [
-            {
-              _id: "cart_product_id",
-              product: {
-                _id: "exampleId",
-                name: "Converse x NARUTO Chuck Taylor All Star",
-                originalPrice: 5432200,
-                sold: 31,
-                rate: 4.3,
-                stock: 12,
-                discount: 10,
-                description:
-                  "The OG classic reworked with colors, graphics and details inspired by Naruto and his unique powers.",
-                images: [
-                  "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/50266e78-2bcf-4dfe-bce4-293a63a05dae/NIKE+AVA+ROVER.png",
-                ],
-                brandId: {
-                  name: "Converse",
-                },
-                sizeTable:
-                  "https://templates.mediamodifier.com/63ff3c773e8bc57b10ca810b/size-table-chart-template-for-shoes.jpg",
-                categoryId: {
-                  name: "Giày chạy bộ",
-                  parentId: {
-                    name: "Nam",
-                  },
-                },
-                createdAt: "2025-10-20T10:00:00Z",
-              },
-              option: {
-                // Lựa chọn của người dùng khi thêm vào giỏ hàng
-                size: {
-                  name: "US M10/W12",
-                  tags: ["XX-Large"],
-                },
-                color: {
-                  colorName: "Mặc định",
-                  image: "...",
-                  tags: ["Đen", "Trắng", "Cam"],
-                },
-                quantity: 1,
-              },
-            },
-            {
-              _id: "cart_product_id2",
-              product: {
-                _id: "exampleId",
-                name: "Converse x NARUTO Chuck Taylor All Star",
-                originalPrice: 5432200,
-                sold: 31,
-                rate: 4.3,
-                stock: 12,
-                discount: 10,
-                description:
-                  "The OG classic reworked with colors, graphics and details inspired by Naruto and his unique powers.",
-                images: [
-                  "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/4effb1e7-75b8-49bd-9fd6-d8b1a1fe7acb/NIKE+AVA+ROVER.png",
-                ],
-                brandId: {
-                  name: "Converse",
-                },
-                sizeTable:
-                  "https://templates.mediamodifier.com/63ff3c773e8bc57b10ca810b/size-table-chart-template-for-shoes.jpg",
-                categoryId: {
-                  name: "Giày chạy bộ",
-                  parentId: {
-                    name: "Nam",
-                  },
-                },
-                createdAt: "2025-10-20T10:00:00Z",
-              },
-              option: {
-                // Lựa chọn của người dùng khi thêm vào giỏ hàng
-                size: {
-                  name: "US M10/W12",
-                  tags: ["XX-Large"],
-                },
-                color: {
-                  colorName: "Mặc định",
-                  image: "...",
-                  tags: ["Đen", "Trắng", "Cam"],
-                },
-                quantity: 1,
-              },
-            },
-          ],
-        },
-      };
-*/
-
+/**
+ * Lấy giỏ hàng của user hiện tại
+ * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ */
 export const getMyCard = async () => {
   try {
     const token = getStoredToken();
@@ -110,7 +18,8 @@ export const getMyCard = async () => {
       if (res.status === 401) {
         throw new Error("Token không hợp lệ hoặc đã hết hạn");
       }
-      throw new Error("Không thể lấy giỏ hàng");
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || "Không thể lấy giỏ hàng");
     }
     const data = await res.json();
     return {
@@ -126,33 +35,243 @@ export const getMyCard = async () => {
   }
 };
 
-export const removeFromCart = async (cartProductId) => {
-  // cardProduct khác product vì có thêm cả option
+/**
+ * Thêm sản phẩm vào giỏ hàng
+ * @param {string} productId - ID của sản phẩm
+ * @param {number} quantity - Số lượng (min: 1, max: 99)
+ * @param {string} size - Tên size (phải khớp với size_name trong product)
+ * @param {string} color - Tên màu (phải khớp với color_name trong product)
+ * @returns {Promise<{success: boolean, data?: object, message?: string, error?: string}>}
+ */
+export const addToCart = async (productId, quantity, size, color) => {
   try {
     const token = getStoredToken();
-    const res = await fetch(`${base_url}/removeCartProduct`, {
-      method: "DELETE",
+    
+    // Validate inputs
+    if (!productId) {
+      throw new Error("Product ID không được để trống");
+    }
+    if (!size || !size.trim()) {
+      throw new Error("Size không được để trống");
+    }
+    if (!color || !color.trim()) {
+      throw new Error("Color không được để trống");
+    }
+    
+    // Mặc định quantity = 1 nếu không được truyền hoặc không hợp lệ
+    let finalQuantity = 1;
+    if (quantity !== undefined && quantity !== null) {
+      const numQuantity = Number(quantity);
+      if (!isNaN(numQuantity) && numQuantity >= 1 && numQuantity <= 99) {
+        finalQuantity = numQuantity;
+      }
+    }
+
+    const requestBody = {
+      productId: String(productId).trim(),
+      quantity: finalQuantity,
+      size: String(size).trim(),
+      color: String(color).trim(),
+    };
+
+    console.log('AddToCart API Request:', {
+      url: `${base_url}/cart/items`,
+      method: 'POST',
+      body: requestBody
+    });
+
+    const res = await fetch(`${base_url}/cart/items`, {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ cartProductId }),
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log('AddToCart API Response:', {
+      status: res.status,
+      statusText: res.statusText,
+      ok: res.ok
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error("Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
+      }
+      
+      let errorData;
+      try {
+        errorData = await res.json();
+      } catch (e) {
+        errorData = { detail: `HTTP ${res.status}: ${res.statusText}` };
+      }
+      
+      console.error('AddToCart API Error:', errorData);
+      
+      const errorMessage = errorData.detail || 
+                          errorData.message || 
+                          `Không thể thêm sản phẩm vào giỏ hàng (${res.status})`;
+      throw new Error(errorMessage);
+    }
+    
+    const data = await res.json();
+    console.log('AddToCart API Success:', data);
+    
+    return {
+      success: true,
+      data,
+      message: data.message || "Đã thêm sản phẩm vào giỏ hàng",
+    };
+  } catch (error) {
+    console.error("Không thể thêm sản phẩm vào giỏ hàng: ", error);
+    return {
+      success: false,
+      error: error.message || "Đã xảy ra lỗi khi thêm sản phẩm vào giỏ hàng",
+    };
+  }
+};
+
+/**
+ * Cập nhật số lượng sản phẩm trong giỏ hàng
+ * @param {string|number} cartItemId - ID hoặc index của cart item
+ * @param {number} quantity - Số lượng mới (min: 1, max: 99)
+ * @returns {Promise<{success: boolean, data?: object, message?: string, error?: string}>}
+ */
+export const updateCartItemQuantity = async (cartItemId, quantity) => {
+  try {
+    const token = getStoredToken();
+    const res = await fetch(`${base_url}/cart/items/${cartItemId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ quantity }),
     });
     if (!res.ok) {
       if (res.status === 401) {
         throw new Error("Token không hợp lệ hoặc đã hết hạn");
       }
-      throw new Error("Không thể lấy xóa sản phẩm khỏi giỏ hàng");
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || "Không thể cập nhật số lượng");
     }
+    const data = await res.json();
     return {
       success: true,
-      message: "Xóa sản phẩm khỏi giỏ hàng thành công!",
+      data,
+      message: data.message || "Đã cập nhật số lượng thành công",
     };
   } catch (error) {
-    console.log("Không thể lấy xóa sản phẩm khỏi giỏ hàng: ", error);
+    console.log("Không thể cập nhật số lượng: ", error);
+    return {
+      success: false,
+      error: error.message || "Đã xảy ra lỗi khi cập nhật số lượng",
+    };
+  }
+};
+
+/**
+ * Xóa sản phẩm khỏi giỏ hàng
+ * @param {string|number} cartItemId - ID hoặc index của cart item
+ * @returns {Promise<{success: boolean, message?: string, error?: string}>}
+ */
+export const removeFromCart = async (cartItemId) => {
+  try {
+    const token = getStoredToken();
+    const res = await fetch(`${base_url}/cart/items/${cartItemId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error("Token không hợp lệ hoặc đã hết hạn");
+      }
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || "Không thể xóa sản phẩm khỏi giỏ hàng");
+    }
+    // Response có thể là 200 với body hoặc 204 No Content
+    const data = res.status === 204 ? {} : await res.json().catch(() => ({}));
+    return {
+      success: true,
+      message: data.message || "Xóa sản phẩm khỏi giỏ hàng thành công!",
+    };
+  } catch (error) {
+    console.log("Không thể xóa sản phẩm khỏi giỏ hàng: ", error);
     return {
       success: false,
       error: error.message || "Đã xảy ra lỗi khi xóa sản phẩm khỏi giỏ hàng",
+    };
+  }
+};
+
+/**
+ * Xóa tất cả sản phẩm khỏi giỏ hàng
+ * @returns {Promise<{success: boolean, message?: string, error?: string}>}
+ */
+export const clearCart = async () => {
+  try {
+    const token = getStoredToken();
+    const res = await fetch(`${base_url}/cart/items`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error("Token không hợp lệ hoặc đã hết hạn");
+      }
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || "Không thể xóa giỏ hàng");
+    }
+    const data = res.status === 204 ? {} : await res.json().catch(() => ({}));
+    return {
+      success: true,
+      message: data.message || "Đã xóa tất cả sản phẩm khỏi giỏ hàng",
+    };
+  } catch (error) {
+    console.log("Không thể xóa giỏ hàng: ", error);
+    return {
+      success: false,
+      error: error.message || "Đã xảy ra lỗi khi xóa giỏ hàng",
+    };
+  }
+};
+
+/**
+ * Lấy tổng số lượng sản phẩm trong giỏ hàng (cho badge)
+ * @returns {Promise<{success: boolean, count?: number, error?: string}>}
+ */
+export const getCartCount = async () => {
+  try {
+    const token = getStoredToken();
+    const res = await fetch(`${base_url}/cart/count`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error("Token không hợp lệ hoặc đã hết hạn");
+      }
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || "Không thể lấy số lượng giỏ hàng");
+    }
+    const data = await res.json();
+    return {
+      success: true,
+      count: data.count || 0,
+    };
+  } catch (error) {
+    console.log("Không thể lấy số lượng giỏ hàng: ", error);
+    return {
+      success: false,
+      error: error.message || "Đã xảy ra lỗi khi lấy số lượng giỏ hàng",
+      count: 0,
     };
   }
 };

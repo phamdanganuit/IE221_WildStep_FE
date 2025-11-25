@@ -14,15 +14,21 @@ import { ChevronLeftIcon, Trash } from "lucide-react";
 import { removeFromCart } from "@/service/cartService";
 import { useToast } from "@/contexts/ToastContext";
 
-function RemoveDialog({ cp }) {
+function RemoveDialog({ cartItem, index }) {
   const { success, error } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const handleDelete = async () => {
     setLoading(true);
-    const res = await removeFromCart(cp._id);
-    if (res.success) success(res.message);
-    else error(res.error);
+    // Use index as cartItemId (hoặc có thể dùng identifier khác tùy backend)
+    const res = await removeFromCart(index);
+    if (res.success) {
+      success(res.message);
+      // Reload page or refresh cart list
+      window.location.reload();
+    } else {
+      error(res.error);
+    }
     setLoading(false);
     setOpen(false);
   };

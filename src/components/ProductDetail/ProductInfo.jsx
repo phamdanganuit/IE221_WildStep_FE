@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import ColorSelector from "./ColorSelector";
 import SizeSelector from "./SizeSelector";
 import { Button } from "../ui/button";
+import QuantitySelector from "../Cart/QuantitySelector";
 
 const ProductInfo = ({
   title,
@@ -20,7 +21,10 @@ const ProductInfo = ({
   productColors,
   productSizes,
   currentLang = 'vi',
+  quantity = 1,
+  setQuantity,
 }) => {
+
   return (
     <div className="flex flex-col w-full max-md:max-w-full">
       <h1 className="self-start text-4xl font-bold tracking-normal leading-tight text-slate-900">
@@ -77,12 +81,24 @@ const ProductInfo = ({
           currentLang={currentLang}
         />
 
-        {/* Stock indicator */}
-        <div className="mt-4 flex items-center gap-2">
-          <span className="text-sm text-gray-600">Tồn kho:</span>
-          <span className={`text-sm font-medium ${stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {stock > 0 ? `${stock} sản phẩm` : 'Hết hàng'}
-          </span>
+        {/* Quantity selector */}
+        <div className="mt-4 flex flex-col gap-2">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-gray-700">Số lượng:</span>
+            <div className="w-32">
+              <QuantitySelector
+                quantity={quantity}
+                setQuantity={setQuantity}
+                max={stock}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Stock còn lại:</span>
+            <span className={`text-sm font-medium ${stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {stock > 0 ? `${stock} sản phẩm` : 'Hết hàng'}
+            </span>
+          </div>
         </div>
 
         <section className="grid grid-cols-2 justify-center items-center mt-6 w-full gap-10 text-xl leading-tight max-md:max-w-full">
