@@ -12,7 +12,7 @@ function RegisterPage() {
     >
       <button
         onClick={() => navigate("/")}
-        className="absolute left-[45%] top-[2rem] py-[1.25rem] max-w-full cursor-pointer"
+        className="absolute left-[45%] top-8 py-5 max-w-full cursor-pointer"
       >
         <img
           src="/Logo.svg"

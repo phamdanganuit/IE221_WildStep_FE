@@ -51,6 +51,7 @@ function LoginForm() {
         error(result.error);
       }
     } catch (err) {
+      console.error("Lỗi đăng nhập:", err);
       error("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
@@ -58,10 +59,10 @@ function LoginForm() {
   };
 
   return (
-    <section className="flex w-auto h-full relative justify-center items-center p-[1rem] max-md:px-[1.25rem] max-md:py-[2.5rem] max-md:w-full">
-      <div className="flex flex-col justify-center items-center mt-[0.75rem] max-md:mt-[2.5rem] max-md:max-w-full">
-        <main className="flex flex-col gap-[0.75rem] mt-[2.5rem] w-full max-md:mt-[2.5rem] max-md:max-w-full">
-          <header className="flex flex-col justify-start items-start gap-[0.25rem]">
+    <section className="flex w-auto h-full relative justify-center items-center p-4 max-md:px-5 max-md:py-10 max-md:w-full">
+      <div className="flex flex-col justify-center items-center mt-3 max-md:mt-10 max-md:max-w-full">
+        <main className="flex flex-col gap-3 mt-10 w-full max-md:mt-10 max-md:max-w-full">
+          <header className="flex flex-col justify-start items-start gap-1">
             <h1 className="text-[3rem] font-semibold text-color4 max-md:text-[2.25rem]">
             {t('login.title')}
             </h1>
@@ -83,7 +84,7 @@ function LoginForm() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex flex-col justify-center px-[1.25rem] py-[1.5rem] mt-[0.375rem] w-full text-[1.25rem] text-[#000000]/50 tracking-tight whitespace-nowrap rounded-[1rem] border-[0.125rem] border-solid bg-opacity-0 border-[#333678]/50 border-opacity-50 min-h-[4rem] max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color4 focus:border-color4"
+                className="flex flex-col justify-center px-5 py-6 mt-1.5 w-full text-[1.25rem] text-[#000000]/50 tracking-tight whitespace-nowrap rounded-2xl border-2 border-solid bg-opacity-0 border-[#333678]/50 border-opacity-50 min-h-16 max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color4 focus:border-color4"
                 placeholder={t('login.emailPlaceholder')}
                 required
                 aria-describedby="email-help"
@@ -91,7 +92,7 @@ function LoginForm() {
               />
             </div>
 
-            <div className="mt-[1rem] w-full font-medium text-[#000000]/50 max-md:max-w-full">
+            <div className="mt-4 w-full font-medium text-[#000000]/50 max-md:max-w-full">
               <label htmlFor="password" className="text-[1rem] tracking-tight">
               {t('login.password')}
               </label>
@@ -102,7 +103,7 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t('login.passwordPlaceholder')}
-                  className="flex flex-col justify-center px-[1.25rem] py-[1.5rem] mt-[0.375rem] w-full text-[1.25rem] tracking-tight rounded-[1rem] border-[0.125rem] border-solid border-[#333678]/50 min-h-[4rem] max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color4 focus:border-color4"
+                  className="flex flex-col justify-center px-5 py-6 mt-1.5 w-full text-[1.25rem] tracking-tight rounded-2xl border-2 border-solid border-[#333678]/50 min-h-16 max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color4 focus:border-color4"
                   required
                   aria-describedby="password-help"
                   disabled={isLoading}
@@ -110,7 +111,7 @@ function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-[1.25rem] top-1/2 transform -translate-y-1/2 focus:outline-none focus:ring-2 focus:ring-color4 rounded cursor-pointer"
+                  className="absolute right-5 top-1/2 transform -translate-y-1/2 focus:outline-none focus:ring-2 focus:ring-color4 rounded cursor-pointer"
                   aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                   disabled={isLoading}
                 >
@@ -123,9 +124,9 @@ function LoginForm() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-[2.5rem] justify-between items-center mt-[1rem] w-full text-[1.25rem] tracking-tight max-md:max-w-full">
-              <div className="flex gap-[0.625rem]">
-                <label className="flex gap-[0.625rem] items-center self-stretch my-auto text-black">
+            <div className="flex flex-wrap gap-10 justify-between items-center mt-4 w-full text-[1.25rem] tracking-tight max-md:max-w-full">
+              <div className="flex gap-2.5">
+                <label className="flex gap-2.5 items-center self-stretch my-auto text-black">
                   <input
                     type="checkbox"
                     checked={rememberMe}
@@ -134,13 +135,13 @@ function LoginForm() {
                     disabled={isLoading}
                   />
                   <div
-                    className={`w-[1.25rem] h-[1.25rem] border-[0.125rem] border-color4 rounded cursor-pointer ${
+                    className={`w-5 h-5 border-2 border-color4 rounded cursor-pointer ${
                       rememberMe ? "bg-color4" : "bg-transparent"
                     } flex items-center justify-center`}
                   >
                     {rememberMe && (
                       <svg
-                        className="w-[1.25rem] h-[1.25rem] text-white"
+                        className="w-5 h-5 text-white"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -169,13 +170,13 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`flex gap-[0.625rem] justify-center items-center px-[0.0625rem] py-[1.25rem] mt-[1rem] max-w-full text-[1.5rem] font-semibold tracking-tight text-center text-white bg-color4 rounded-[1rem] min-h-[4rem] w-full hover:bg-hover4 hover:shadow-lg hover:-translate-y-[0.25rem] transition-all duration-200 ease-in-out cursor-pointer ${
+              className={`flex gap-2.5 justify-center items-center px-[0.0625rem] py-5 mt-4 max-w-full text-[1.5rem] font-semibold tracking-tight text-center text-white bg-color4 rounded-2xl min-h-16 w-full hover:bg-hover4 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 ease-in-out cursor-pointer ${
                 isLoading ? 'opacity-50 cursor-not-allowed hover:translate-y-0 hover:shadow-none' : ''
               }`}
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin h-[1.25rem] w-[1.25rem] text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -187,7 +188,7 @@ function LoginForm() {
             </button>
           </form>
 
-          <div className="flex gap-[0.375rem] items-center self-start text-[1.25rem] tracking-tight">
+          <div className="flex gap-1.5 items-center self-start text-[1.25rem] tracking-tight">
             <p className="self-stretch my-auto text-black">
               {t('login.noAccount')}
             </p>
@@ -199,7 +200,7 @@ function LoginForm() {
             </button>
           </div>
 
-          <div className="flex w-full gap-[1.25rem] items-center justify-between text-[1.25rem] tracking-tight text-black max-md:max-w-full">
+          <div className="flex w-full gap-5 items-center justify-between text-[1.25rem] tracking-tight text-black max-md:max-w-full">
             <img
               src="https://api.builder.io/api/v1/image/assets/7e6ace8706ad423985a91f95c2918220/88e5e0c07683d0c404879328cec4e8151ffff570?placeholderIfAbsent=true"
               alt="Social login divider"

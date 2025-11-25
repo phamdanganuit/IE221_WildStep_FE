@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { FaStar } from "react-icons/fa";
+import { uploadReviewImages } from "@/service/reviewService";
+import { useToast } from "@/contexts/ToastContext";
 
-const MAX_IMAGE_FIELDS = 4;
+const MAX_IMAGE_FIELDS = 5;
 
 const ReviewDialog = ({
   open,
@@ -22,10 +24,14 @@ const ReviewDialog = ({
   onSubmit,
   loading = false,
 }) => {
+  const { addToast } = useToast();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [images, setImages] = useState([""]);
   const [formError, setFormError] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const headerTitle = mode === "edit" ? "Chỉnh sửa đánh giá" : "Viết đánh giá";
 
@@ -35,6 +41,7 @@ const ReviewDialog = ({
       setComment("");
       setImages([""]);
       setFormError("");
+      setUploadError("");
       return;
     }
 
@@ -55,24 +62,130 @@ const ReviewDialog = ({
       setImages([""]);
     }
     setFormError("");
+    setUploadError("");
   }, [open, item]);
 
-  const canAddMoreImages = useMemo(
-    () => images.length < MAX_IMAGE_FIELDS,
-    [images.length]
+  const actualImages = useMemo(
+    () => images.filter((url) => url.trim().length > 0),
+    [images]
   );
+
+  const canAddMoreImages = actualImages.length < MAX_IMAGE_FIELDS;
 
   const handleImageChange = (index, value) => {
     setImages((prev) => {
       const clone = [...prev];
       clone[index] = value;
+      const filled = clone.filter((url) => url.trim().length > 0);
+      if (
+        filled.length < MAX_IMAGE_FIELDS &&
+        clone.every((url) => url.trim().length > 0)
+      ) {
+        clone.push("");
+      }
+      if (filled.length === 0 && clone.length === 0) {
+        return [""];
+      }
       return clone;
     });
   };
 
   const handleAddImageField = () => {
     if (!canAddMoreImages) return;
-    setImages((prev) => [...prev, ""]);
+    setImages((prev) => {
+      const hasEmpty = prev.some((url) => !url || url.trim().length === 0);
+      if (hasEmpty) return prev;
+      return [...prev, ""].slice(0, MAX_IMAGE_FIELDS);
+    });
+  };
+
+  const mergeUploadedImages = (newUrls = []) => {
+    if (!Array.isArray(newUrls) || newUrls.length === 0) return;
+    setImages((prev) => {
+      let next = [...prev];
+      for (const rawUrl of newUrls) {
+        const normalized = String(rawUrl || "").trim();
+        if (!normalized) continue;
+        const alreadyExists = next.some(
+          (value) => value.trim() === normalized
+        );
+        if (alreadyExists) continue;
+        const emptyIndex = next.findIndex(
+          (value) => !value || value.trim().length === 0
+        );
+        if (emptyIndex !== -1) {
+          next[emptyIndex] = normalized;
+          continue;
+        }
+        if (next.length < MAX_IMAGE_FIELDS) {
+          next = [...next, normalized];
+        }
+      }
+
+      const filled = next.filter((url) => url.trim().length > 0);
+      if (
+        filled.length < MAX_IMAGE_FIELDS &&
+        next.every((url) => url.trim().length > 0)
+      ) {
+        next = [...next, ""];
+      }
+      const limited =
+        next.length > MAX_IMAGE_FIELDS
+          ? next.slice(0, MAX_IMAGE_FIELDS)
+          : next;
+      return limited.length === 0 ? [""] : limited;
+    });
+  };
+
+  const handleTriggerUpload = () => {
+    if (!canAddMoreImages) {
+      setUploadError(`Chỉ được thêm tối đa ${MAX_IMAGE_FIELDS} ảnh.`);
+      return;
+    }
+    setUploadError("");
+    fileInputRef.current?.click();
+  };
+
+  const handleFilesSelected = async (event) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (files.length === 0) return;
+
+    const remainingSlots = MAX_IMAGE_FIELDS - actualImages.length;
+    if (remainingSlots <= 0) {
+      setUploadError(`Chỉ được thêm tối đa ${MAX_IMAGE_FIELDS} ảnh.`);
+      return;
+    }
+
+    const allowedFiles = files.slice(0, remainingSlots);
+    setUploading(true);
+    setUploadError("");
+
+    const result = await uploadReviewImages(allowedFiles);
+
+    setUploading(false);
+
+    if (!result.success) {
+      setUploadError(result.error || "Không thể tải ảnh, vui lòng thử lại.");
+      return;
+    }
+
+    const uploadedUrls = Array.isArray(result.images)
+      ? result.images
+      : Array.isArray(result.data?.images)
+        ? result.data.images
+        : [];
+
+    if (!uploadedUrls.length) {
+      setUploadError("Hệ thống không trả về URL ảnh hợp lệ.");
+      return;
+    }
+
+    mergeUploadedImages(uploadedUrls);
+    addToast({
+      type: "success",
+      message: `Đã tải ${uploadedUrls.length} ảnh thành công.`,
+    });
   };
 
   const handleSubmit = () => {
@@ -86,9 +199,13 @@ const ReviewDialog = ({
       return;
     }
 
-    const filteredImages = images
-      .map((url) => url.trim())
-      .filter((url) => url.length > 0);
+    const filteredImages = Array.from(
+      new Set(
+        images
+          .map((url) => url.trim())
+          .filter((url) => url.length > 0)
+      )
+    ).slice(0, MAX_IMAGE_FIELDS);
 
     onSubmit?.({
       rating,
@@ -156,18 +273,42 @@ const ReviewDialog = ({
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Link ảnh (tùy chọn)</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleAddImageField}
-                disabled={!canAddMoreImages}
-              >
-                Thêm ảnh
-              </Button>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label>Ảnh đính kèm (tối đa {MAX_IMAGE_FIELDS})</Label>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTriggerUpload}
+                  disabled={!canAddMoreImages || uploading}
+                >
+                  {uploading ? "Đang tải..." : "Tải ảnh"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAddImageField}
+                  disabled={!canAddMoreImages}
+                >
+                  Thêm link
+                </Button>
+              </div>
             </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={handleFilesSelected}
+            />
+            {uploadError && (
+              <p className="text-sm text-red-500" role="alert">
+                {uploadError}
+              </p>
+            )}
             <div className="space-y-2">
               {images.map((url, idx) => (
                 <Input
@@ -178,6 +319,18 @@ const ReviewDialog = ({
                 />
               ))}
             </div>
+            {actualImages.length > 0 && (
+              <div className="flex flex-wrap gap-3 pt-2">
+                {actualImages.map((url, idx) => (
+                  <img
+                    key={`${url}-${idx}`}
+                    src={url}
+                    alt="Ảnh đánh giá"
+                    className="w-16 h-16 rounded-md object-cover border"
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {formError && (

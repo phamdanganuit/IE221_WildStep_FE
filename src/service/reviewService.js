@@ -148,6 +148,64 @@ export const reactToReview = async (reviewId, action = "like") => {
   }
 };
 
+export const uploadReviewImages = async (files = []) => {
+  const hasFiles = Array.isArray(files) ? files.length > 0 : !!files;
+  if (!hasFiles) {
+    return { success: false, error: "Vui lòng chọn ít nhất một ảnh để tải lên" };
+  }
+
+  const token = getStoredToken();
+  if (!token) {
+    return { success: false, error: "Vui lòng đăng nhập để tải ảnh đánh giá" };
+  }
+
+  const formData = new FormData();
+  let appended = 0;
+  (Array.isArray(files) ? files : [files]).forEach((file) => {
+    const isBrowserFile =
+      typeof File !== "undefined" && file instanceof File;
+    const isFileLike =
+      file && typeof file === "object" && "name" in file && "size" in file;
+    if (isBrowserFile || isFileLike) {
+      formData.append("files", file);
+      appended += 1;
+    }
+  });
+
+  if (appended === 0) {
+    return { success: false, error: "Không có tệp hợp lệ được chọn để tải lên" };
+  }
+
+  try {
+    const res = await fetch(`${base_url}/reviews/upload-image`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const error = await parseErrorResponse(res);
+      return { success: false, error };
+    }
+
+    const data = await res.json().catch(() => ({}));
+    const images =
+      (Array.isArray(data?.images) && data.images) ||
+      (Array.isArray(data?.data?.images) && data.data.images) ||
+      (Array.isArray(data?.data) && data.data) ||
+      [];
+
+    return { success: true, data, images };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || "Không thể tải ảnh đánh giá",
+    };
+  }
+};
+
 export const getReviewableItems = async (orderId) => {
   if (!orderId) {
     return { success: false, error: "Thiếu orderId để tải danh sách đánh giá" };
@@ -266,6 +324,7 @@ export default {
   getProductReviews,
   createProductReview,
   reactToReview,
+  uploadReviewImages,
   getReviewableItems,
   submitOrderReviews,
   updateOrderReview,

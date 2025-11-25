@@ -100,6 +100,7 @@ function RegisterForm() {
         error(result.error);
       }
     } catch (err) {
+      console.error("Lỗi đăng ký:", err);
       error("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
@@ -107,21 +108,21 @@ function RegisterForm() {
   };
 
   return (
-    <section className="flex w-auto h-full relative justify-center items-center p-[1rem] max-md:px-[1.25rem] max-md:py-[2.5rem] max-md:w-full">
+    <section className="flex w-auto h-full relative justify-center items-center p-4 max-md:px-5 max-md:py-10 max-md:w-full">
       <style>{`
       @keyframes shakeX { 
         0% { transform: translateX(0); } 
-        20% { transform: translateX(-0.375rem); } 
-        40% { transform: translateX(0.375rem); } 
-        60% { transform: translateX(-0.25rem); } 
-        80% { transform: translateX(0.25rem); } 
+        20% { transform: translateX(-6px); } 
+        40% { transform: translateX(6px); } 
+        60% { transform: translateX(-4px); } 
+        80% { transform: translateX(4px); } 
         100% { transform: translateX(0); } 
       }
       .shake { animation: shakeX 0.6s ease-in-out; }
       `}</style>
-      <div className="flex flex-col justify-center items-center mt-[2rem] max-md:mt-[2.5rem] max-md:max-w-full">
-        <main className="flex flex-col gap-[0.75rem] mt-[0.75rem] w-full max-md:mt-[2.5rem] max-md:max-w-full">
-          <header className="flex flex-col justify-start items-start gap-[0.25rem]">
+      <div className="flex flex-col justify-center items-center mt-8 max-md:mt-10 max-md:max-w-full">
+        <main className="flex flex-col gap-3 mt-3 w-full max-md:mt-10 max-md:max-w-full">
+          <header className="flex flex-col justify-start items-start gap-1">
             <h1 className="text-[3rem] font-semibold text-color2 max-md:text-[2.25rem]">
               {t('register.title')}
             </h1>
@@ -132,7 +133,7 @@ function RegisterForm() {
 
           <form
             onSubmit={handleSubmit}
-            className="mt-[1rem] w-full max-md:max-w-full"
+            className="mt-4 w-full max-md:max-w-full"
           >
             <div className="w-full font-medium max-md:max-w-full">
               <label
@@ -146,19 +147,19 @@ function RegisterForm() {
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="flex flex-col justify-center px-[1.25rem] py-[1rem] mt-[0.375rem] w-full text-[1.25rem] text-[#000000]/50 tracking-tight whitespace-nowrap rounded-[1rem] border-[0.125rem] border-solid bg-opacity-0 border-[#333678]/50 border-opacity-50 min-h-[4rem] max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color2 focus:border-color2"
+                className="flex flex-col justify-center px-5 py-4 mt-1.5 w-full text-[1.25rem] text-[#000000]/50 tracking-tight whitespace-nowrap rounded-2xl border-2 border-solid bg-opacity-0 border-[#333678]/50 border-opacity-50 min-h-16 max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color2 focus:border-color2"
                 placeholder={t('register.fullNamePlaceholder')}
                 aria-describedby="fullname-help"
                 disabled={isLoading}
               />
               {errors.fullName && (
-                <p className="mt-[0.5rem] text-sm text-red-600" id="fullname-help">
+                <p className="mt-2 text-sm text-red-600" id="fullname-help">
                   {errors.fullName}
                 </p>
               )}
             </div>
 
-            <div className="mt-[1rem] w-full font-medium max-md:max-w-full">
+            <div className="mt-4 w-full font-medium max-md:max-w-full">
               <label htmlFor="email" className="text-[1rem] text-[#000000]/50">
                 {t('register.email')}
               </label>
@@ -167,19 +168,19 @@ function RegisterForm() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex flex-col justify-center px-[1.25rem] py-[1rem] mt-[0.375rem] w-full text-[1.25rem] text-[#000000]/50 tracking-tight whitespace-nowrap rounded-[1rem] border-[0.125rem] border-solid bg-opacity-0 border-[#333678]/50 border-opacity-50 min-h-[4rem] max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color2 focus:border-color2"
+                className="flex flex-col justify-center px-5 py-4 mt-1.5 w-full text-[1.25rem] text-[#000000]/50 tracking-tight whitespace-nowrap rounded-2xl border-2 border-solid bg-opacity-0 border-[#333678]/50 border-opacity-50 min-h-16 max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color2 focus:border-color2"
                 placeholder={t('register.emailPlaceholder')}
                 aria-describedby="email-help"
                 disabled={isLoading}
               />
               {errors.email && (
-                <p className="mt-[0.5rem] text-sm text-red-600" id="email-help">
+                <p className="mt-2 text-sm text-red-600" id="email-help">
                   {errors.email}
                 </p>
               )}
             </div>
 
-            <div className="mt-[1rem] w-full font-medium text-[#000000]/50 max-md:max-w-full">
+            <div className="mt-4 w-full font-medium text-[#000000]/50 max-md:max-w-full">
               <label htmlFor="password" className="text-[1rem] tracking-tight">
                 {t('register.password')}
               </label>
@@ -190,14 +191,14 @@ function RegisterForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t('register.passwordPlaceholder')}
-                  className="flex flex-col justify-center px-[1.25rem] py-[1rem] mt-[0.375rem] w-full text-[1.25rem] tracking-tight rounded-[1rem] border-[0.125rem] border-solid border-[#333678]/50 min-h-[4rem] max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color2 focus:border-color2"
+                  className="flex flex-col justify-center px-5 py-4 mt-1.5 w-full text-[1.25rem] tracking-tight rounded-2xl border-2 border-solid border-[#333678]/50 min-h-16 max-md:max-w-full focus:outline-none focus:ring-2 focus:ring-color2 focus:border-color2"
                   aria-describedby="password-help"
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-[1.25rem] top-1/2 transform -translate-y-1/2 focus:outline-none focus:ring-2 focus:ring-color2 rounded cursor-pointer"
+                  className="absolute right-5 top-1/2 transform -translate-y-1/2 focus:outline-none focus:ring-2 focus:ring-color2 rounded cursor-pointer"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   disabled={isLoading}
                 >
@@ -209,14 +210,14 @@ function RegisterForm() {
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-[0.5rem] text-sm text-red-600" id="password-help">
+                <p className="mt-2 text-sm text-red-600" id="password-help">
                   {errors.password}
                 </p>
               )}
             </div>
 
-            <div className="flex flex-wrap gap-[2.5rem] justify-between items-center mt-[1rem] w-full text-[1.25rem] tracking-tight max-md:max-w-full">
-              <div className="flex gap-[0.625rem] items-center self-stretch my-auto text-black ">
+            <div className="flex flex-wrap gap-10 justify-between items-center mt-4 w-full text-[1.25rem] tracking-tight max-md:max-w-full">
+              <div className="flex gap-2.5 items-center self-stretch my-auto text-black ">
                 <input
                   id="agree"
                   type="checkbox"
@@ -236,7 +237,7 @@ function RegisterForm() {
                       setCheck((s) => !s);
                     }
                   }}
-                  className={`w-[1.25rem] h-[1.25rem] rounded cursor-pointer flex items-center justify-center border-[0.125rem]
+                  className={`w-5 h-5 rounded cursor-pointer flex items-center justify-center border-2
                   ${
                     check
                       ? "bg-color2 border-color2"
@@ -248,7 +249,7 @@ function RegisterForm() {
                 >
                   {check && (
                     <svg
-                      className="w-[1.25rem] h-[1.25rem] text-white"
+                      className="w-5 h-5 text-white"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -282,13 +283,13 @@ function RegisterForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`flex gap-[0.625rem] justify-center items-center px-[0.0625rem] py-[1rem] mt-[1rem] max-w-full text-[1.5rem] font-semibold tracking-tight text-center text-white bg-color2 rounded-[1rem] min-h-[4rem] w-full hover:bg-[#003366] hover:shadow-lg hover:-translate-y-[0.25rem] transition-all duration-200 ease-in-out cursor-pointer ${
+              className={`flex gap-2.5 justify-center items-center px-[0.0625rem] py-4 mt-4 max-w-full text-[1.5rem] font-semibold tracking-tight text-center text-white bg-color2 rounded-2xl min-h-16 w-full hover:bg-[#003366] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 ease-in-out cursor-pointer ${
                 isLoading ? 'opacity-50 cursor-not-allowed hover:translate-y-0 hover:shadow-none' : ''
               }`}
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin h-[1.25rem] w-[1.25rem] text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -300,7 +301,7 @@ function RegisterForm() {
             </button>
           </form>
 
-          <div className="flex gap-[0.375rem] items-center self-start text-[1.25rem] tracking-tight">
+          <div className="flex gap-1.5 items-center self-start text-[1.25rem] tracking-tight">
             <p className="self-stretch my-auto text-black">{t('register.haveAccount')}</p>
             <button
               onClick={() => navigate("/login")}
@@ -310,7 +311,7 @@ function RegisterForm() {
             </button>
           </div>
 
-          <div className="flex w-full gap-[1.25rem] items-center justify-between text-[1.25rem] tracking-tight text-black max-md:max-w-full">
+          <div className="flex w-full gap-5 items-center justify-between text-[1.25rem] tracking-tight text-black max-md:max-w-full">
             <img
               src="https://api.builder.io/api/v1/image/assets/7e6ace8706ad423985a91f95c2918220/88e5e0c07683d0c404879328cec4e8151ffff570?placeholderIfAbsent=true"
               alt="Social login divider"

@@ -19,7 +19,7 @@ function LoginPage() {
       </div>
       <button
         onClick={() => navigate("/")}
-        className="absolute right-[2.5rem] top-[2rem] py-[1.25rem] max-w-full cursor-pointer"
+        className="absolute right-10 top-8 py-5 max-w-full cursor-pointer"
       >
         <img
           src="/Logo.svg"
