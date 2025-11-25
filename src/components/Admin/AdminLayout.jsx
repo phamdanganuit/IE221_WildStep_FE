@@ -129,8 +129,8 @@ const AdminLayout = () => {
                         : "text-gray-300 hover:bg-color2"
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span>{item.label}</span>
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <span className="truncate">{item.label}</span>
                   </button>
                 );
               })}

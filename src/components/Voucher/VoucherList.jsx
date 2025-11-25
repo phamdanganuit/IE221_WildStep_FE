@@ -18,11 +18,14 @@ const VoucherCard = ({ voucher }) => {
     });
   };
 
+  // Kiểm tra voucher vận chuyển: categories rỗng hoặc không có
+  const isShippingVoucher = !voucher?.categories?.length && !voucher?.category?.length;
+
   return (
     <Card className={"col-span-1 w-full"}>
       <CardContent className={"flex items-center space-x-4 relative"}>
         <VoucherOption voucher={voucher} />
-        {voucher?.category?.length <= 0 ? (
+        {isShippingVoucher ? (
           <div className="flex flex-col w-24 flex-shrink-0 aspect-square justify-center items-center bg-color3 text-white p-2 rounded-lg">
             <Truck className="w-12 h-12" />
             <p className="text-xs text-nowrap">Vận chuyển</p>

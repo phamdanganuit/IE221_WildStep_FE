@@ -3,7 +3,7 @@ import { getVouchers, createVoucher, updateVoucher, deleteVoucher, getCategories
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Edit, Trash2, Ticket } from "lucide-react";
+import { Plus, Edit, Trash2, Ticket, ChevronDown, Check, ShoppingBag, Truck } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import {
   Dialog,
@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTranslation } from "react-i18next";
 import { safeText } from "@/lib/i18nUtils";
 
@@ -25,6 +26,7 @@ const Vouchers = () => {
   const [deleteDialog, setDeleteDialog] = useState({ open: false, voucher: null });
   const [categories, setCategories] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
+  const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -308,12 +310,19 @@ const Vouchers = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {Array.isArray(vouchers) && vouchers.map((voucher) => (
+              {Array.isArray(vouchers) && vouchers.map((voucher) => {
+                // Kiểm tra voucher vận chuyển: categories rỗng hoặc không có
+                const isShippingVoucher = !voucher?.categories?.length;
+                return (
                 <div key={voucher._id || voucher.id} className="border rounded-lg p-4 hover:shadow-md transition">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3 flex-1">
-                      <div className="p-2 bg-color4/10 rounded-lg">
-                        <Ticket className="w-6 h-6 text-color4" />
+                      <div className={`p-2 rounded-lg ${isShippingVoucher ? 'bg-color3/10' : 'bg-color4/10'}`}>
+                        {isShippingVoucher ? (
+                          <Truck className="w-6 h-6 text-color3" />
+                        ) : (
+                          <ShoppingBag className="w-6 h-6 text-color4" />
+                        )}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -364,7 +373,8 @@ const Vouchers = () => {
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -375,39 +385,48 @@ const Vouchers = () => {
         open={formDialog.open}
         onOpenChange={(open) => setFormDialog({ open, voucher: null })}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>
                 {formDialog.voucher ? "Sửa voucher" : "Thêm voucher mới"}
               </DialogTitle>
+              <DialogDescription>
+                {formDialog.voucher 
+                  ? "Cập nhật thông tin voucher của bạn." 
+                  : "Điền thông tin để tạo voucher mới."}
+              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tên voucher <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="VD: Giảm 29.900đ cho đơn hàng đầu tiên"
-                  required
-                />
+            <div className="space-y-5 py-4">
+              {/* Row 1: Tên và Mã voucher */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tên voucher <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="VD: Giảm 29.900đ cho đơn hàng đầu tiên"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mã voucher <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={formData.code}
+                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                    placeholder="VD: WILDSTEPWELCOME"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Mã sẽ tự động chuyển thành chữ hoa</p>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mã voucher <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                  placeholder="VD: WILDSTEPWELCOME"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">Mã sẽ tự động chuyển thành chữ hoa</p>
-              </div>
-
+              {/* Row 2: Mô tả */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Mô tả
@@ -417,10 +436,11 @@ const Vouchers = () => {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Mô tả chi tiết về voucher"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-color4 focus:border-color4"
-                  rows={3}
+                  rows={2}
                 />
               </div>
 
+              {/* Row 3: Giảm giá và Giá trị đơn hàng tối thiểu */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -453,6 +473,7 @@ const Vouchers = () => {
                 </div>
               </div>
 
+              {/* Row 4: Ngày bắt đầu và Ngày hết hạn */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -479,6 +500,7 @@ const Vouchers = () => {
                 </div>
               </div>
 
+              {/* Row 5: Danh mục áp dụng */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Danh mục áp dụng
@@ -486,29 +508,121 @@ const Vouchers = () => {
                 <p className="text-xs text-gray-500 mb-2">
                   Chọn danh mục để voucher áp dụng. Để trống = voucher vận chuyển
                 </p>
-                <div className="border rounded-md p-3 max-h-48 overflow-y-auto">
-                  {categoryOptions.length === 0 ? (
-                    <p className="text-sm text-gray-500">Đang tải danh mục...</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {categoryOptions.map((cat) => (
-                        <label key={cat.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                          <input
-                            type="checkbox"
-                            checked={formData.categories?.includes(cat.id)}
-                            onChange={() => handleCategoryChange(cat.id)}
-                            className="rounded border-gray-300 text-color4 focus:ring-color4"
-                          />
-                          <span className="text-sm">{cat.name}</span>
-                        </label>
-                      ))}
+                <Popover open={categoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-between text-left font-normal"
+                    >
+                      <span className="truncate">
+                        {formData.categories?.length > 0
+                          ? `Đã chọn ${formData.categories.length} danh mục`
+                          : "Chọn danh mục áp dụng"}
+                      </span>
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <div className="max-h-60 overflow-y-auto">
+                      {categories.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-gray-500">
+                          Đang tải danh mục...
+                        </div>
+                      ) : (
+                        <div className="p-2">
+                          {categories.map((parent) => {
+                            if (!Array.isArray(parent.children) || parent.children.length === 0) {
+                              return null;
+                            }
+                            const parentName = safeText(parent.name, i18n.language, 'N/A');
+                            return (
+                              <div key={parent._id || parent.id} className="mb-3 last:mb-0">
+                                <div className="px-2 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 rounded mb-1">
+                                  {parentName}
+                                </div>
+                                <div className="ml-2 space-y-0.5">
+                                  {parent.children.map((child) => {
+                                    const childId = child.id || child._id;
+                                    const childName = safeText(child.name, i18n.language, 'N/A');
+                                    const isSelected = formData.categories?.includes(childId);
+                                    return (
+                                      <label
+                                        key={childId}
+                                        className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleCategoryChange(childId);
+                                        }}
+                                      >
+                                        <div className="flex items-center justify-center w-4 h-4 border-2 rounded border-gray-300 bg-white">
+                                          {isSelected && (
+                                            <Check className="h-3 w-3 text-color4" />
+                                          )}
+                                        </div>
+                                        <span className="text-sm flex-1">{childName}</span>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                    {formData.categories?.length > 0 && (
+                      <div className="border-t p-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-xs text-red-500 hover:text-red-600"
+                          onClick={() => {
+                            setFormData({ ...formData, categories: [] });
+                          }}
+                        >
+                          Xóa tất cả
+                        </Button>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
                 {formData.categories?.length > 0 && (
-                  <p className="text-xs text-color4 mt-2">
-                    Đã chọn {formData.categories.length} danh mục
-                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {formData.categories.map((catId) => {
+                      // Tìm category từ cấu trúc phân cấp
+                      let foundCat = null;
+                      for (const parent of categories) {
+                        if (Array.isArray(parent.children)) {
+                          const child = parent.children.find(
+                            (c) => (c.id || c._id) === catId
+                          );
+                          if (child) {
+                            const parentName = safeText(parent.name, i18n.language, 'N/A');
+                            const childName = safeText(child.name, i18n.language, 'N/A');
+                            foundCat = { name: `${parentName} / ${childName}` };
+                            break;
+                          }
+                        }
+                      }
+                      return foundCat ? (
+                        <span
+                          key={catId}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-color4/10 text-color4 rounded-md"
+                        >
+                          {foundCat.name}
+                          <button
+                            type="button"
+                            onClick={() => handleCategoryChange(catId)}
+                            className="hover:text-red-500"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
                 )}
               </div>
             </div>
