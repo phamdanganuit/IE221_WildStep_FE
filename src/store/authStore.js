@@ -38,7 +38,6 @@ export const useAuthStore = create((set, get) => ({
             set({ user: normalizedProfile });
           }
         } catch (error) {
-          console.error("Lỗi lấy profile:", error);
           // Nếu token không hợp lệ, clear auth
           clearStoredToken();
           set({ token: null, user: null, isAuthenticated: false });
@@ -75,7 +74,6 @@ export const useAuthStore = create((set, get) => ({
           set({ user: normalizedProfile });
         }
       } catch (error) {
-        console.error("Lỗi lấy profile:", error);
       }
     } else if (user && user.avatar) {
       // Normalize existing avatar URL if it's not already a full URL

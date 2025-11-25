@@ -56,7 +56,6 @@ function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
               error(result.error);
             }
           } catch (err) {
-            console.error("Lỗi xử lý Google login:", err);
             error(t('socialLogin.googleLoginError'));
           } finally {
             setIsLoading(prev => ({ ...prev, google: false }));
@@ -66,7 +65,6 @@ function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
 
       client.requestAccessToken();
     } catch (err) {
-      console.error("Lỗi Google OAuth:", err);
       error(t('socialLogin.googleOAuthError'));
       setIsLoading(prev => ({ ...prev, google: false }));
     }
@@ -117,7 +115,6 @@ function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
         }
       } catch (err) {
         // Silent fail - FB đã init rồi
-        console.log('FB already initialized or init failed silently');
       }
 
       window.FB.login((response) => {
@@ -141,7 +138,6 @@ function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
                 error(result.error);
               }
             } catch (err) {
-              console.error("Lỗi xử lý Facebook login:", err);
               error(t('socialLogin.facebookLoginError'));
             } finally {
               setIsLoading(prev => ({ ...prev, facebook: false }));
@@ -155,7 +151,6 @@ function SocialLoginButtons({ buttonBg, buttonHoverBg }) {
         }
       }, { scope: 'email,public_profile' });
     } catch (err) {
-      console.error("Lỗi Facebook OAuth:", err);
       error(t('socialLogin.facebookOAuthError'));
       setIsLoading(prev => ({ ...prev, facebook: false }));
     }

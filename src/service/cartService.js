@@ -27,7 +27,6 @@ export const getMyCard = async () => {
       data,
     };
   } catch (error) {
-    console.log("Không thể lấy giỏ hàng: ", error);
     return {
       success: false,
       error: error.message || "Đã xảy ra lỗi khi lấy giỏ hàng",
@@ -74,12 +73,6 @@ export const addToCart = async (productId, quantity, size, color) => {
       color: String(color).trim(),
     };
 
-    console.log('AddToCart API Request:', {
-      url: `${base_url}/cart/items`,
-      method: 'POST',
-      body: requestBody
-    });
-
     const res = await fetch(`${base_url}/cart/items`, {
       method: "POST",
       headers: {
@@ -87,12 +80,6 @@ export const addToCart = async (productId, quantity, size, color) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(requestBody),
-    });
-
-    console.log('AddToCart API Response:', {
-      status: res.status,
-      statusText: res.statusText,
-      ok: res.ok
     });
 
     if (!res.ok) {
@@ -107,8 +94,6 @@ export const addToCart = async (productId, quantity, size, color) => {
         errorData = { detail: `HTTP ${res.status}: ${res.statusText}` };
       }
       
-      console.error('AddToCart API Error:', errorData);
-      
       const errorMessage = errorData.detail || 
                           errorData.message || 
                           `Không thể thêm sản phẩm vào giỏ hàng (${res.status})`;
@@ -116,7 +101,6 @@ export const addToCart = async (productId, quantity, size, color) => {
     }
     
     const data = await res.json();
-    console.log('AddToCart API Success:', data);
     
     return {
       success: true,
@@ -124,7 +108,6 @@ export const addToCart = async (productId, quantity, size, color) => {
       message: data.message || "Đã thêm sản phẩm vào giỏ hàng",
     };
   } catch (error) {
-    console.error("Không thể thêm sản phẩm vào giỏ hàng: ", error);
     return {
       success: false,
       error: error.message || "Đã xảy ra lỗi khi thêm sản phẩm vào giỏ hàng",
@@ -163,7 +146,6 @@ export const updateCartItemQuantity = async (cartItemId, quantity) => {
       message: data.message || "Đã cập nhật số lượng thành công",
     };
   } catch (error) {
-    console.log("Không thể cập nhật số lượng: ", error);
     return {
       success: false,
       error: error.message || "Đã xảy ra lỗi khi cập nhật số lượng",
@@ -199,7 +181,6 @@ export const removeFromCart = async (cartItemId) => {
       message: data.message || "Xóa sản phẩm khỏi giỏ hàng thành công!",
     };
   } catch (error) {
-    console.log("Không thể xóa sản phẩm khỏi giỏ hàng: ", error);
     return {
       success: false,
       error: error.message || "Đã xảy ra lỗi khi xóa sản phẩm khỏi giỏ hàng",
@@ -233,7 +214,6 @@ export const clearCart = async () => {
       message: data.message || "Đã xóa tất cả sản phẩm khỏi giỏ hàng",
     };
   } catch (error) {
-    console.log("Không thể xóa giỏ hàng: ", error);
     return {
       success: false,
       error: error.message || "Đã xảy ra lỗi khi xóa giỏ hàng",
@@ -267,7 +247,6 @@ export const getCartCount = async () => {
       count: data.count || 0,
     };
   } catch (error) {
-    console.log("Không thể lấy số lượng giỏ hàng: ", error);
     return {
       success: false,
       error: error.message || "Đã xảy ra lỗi khi lấy số lượng giỏ hàng",

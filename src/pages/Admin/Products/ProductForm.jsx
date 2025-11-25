@@ -333,7 +333,6 @@ const ProductForm = () => {
         setProductImageUrl("");
       }
     } catch (error) {
-      console.error("Error loading image from URL:", error);
       addToast({ type: "error", message: "Không thể tải ảnh từ URL này" });
     }
   };
@@ -484,7 +483,6 @@ const ProductForm = () => {
       
       addToast({ type: "success", message: "Đã tải ảnh từ URL" });
     } catch (error) {
-      console.error("Error loading image from URL:", error);
       addToast({ type: "error", message: "Không thể tải ảnh từ URL này" });
     }
   };

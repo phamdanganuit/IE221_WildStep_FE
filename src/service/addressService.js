@@ -34,7 +34,6 @@ export const getAddresses = async () => {
       data: data,
     };
   } catch (err) {
-    console.error("Lỗi lấy danh sách địa chỉ:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi lấy danh sách địa chỉ",
@@ -75,7 +74,6 @@ export const createAddress = async (addressData) => {
       message: "Thêm địa chỉ thành công!",
     };
   } catch (err) {
-    console.error("Lỗi thêm địa chỉ:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi thêm địa chỉ",
@@ -122,7 +120,6 @@ export const updateAddress = async (addressId, addressData) => {
       message: "Cập nhật địa chỉ thành công!",
     };
   } catch (err) {
-    console.error("Lỗi cập nhật địa chỉ:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi cập nhật địa chỉ",
@@ -161,7 +158,6 @@ export const setDefaultAddress = async (addressId) => {
       message: "Đặt địa chỉ mặc định thành công!",
     };
   } catch (err) {
-    console.error("Lỗi đặt địa chỉ mặc định:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi đặt địa chỉ mặc định",
@@ -198,7 +194,6 @@ export const deleteAddress = async (addressId) => {
       message: "Xóa địa chỉ thành công!",
     };
   } catch (err) {
-    console.error("Lỗi xóa địa chỉ:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi xóa địa chỉ",

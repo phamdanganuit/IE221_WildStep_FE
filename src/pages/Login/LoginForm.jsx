@@ -51,7 +51,6 @@ function LoginForm() {
         error(result.error);
       }
     } catch (err) {
-      console.error("Lỗi đăng nhập:", err);
       error("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);

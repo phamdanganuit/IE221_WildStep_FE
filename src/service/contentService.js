@@ -45,7 +45,6 @@ const makeRequest = async (endpoint, options = {}) => {
     const data = await res.json().catch(() => null);
     return { success: true, data };
   } catch (error) {
-    console.error("Public API Error:", error);
     return { success: false, error: "Có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng." };
   }
 };

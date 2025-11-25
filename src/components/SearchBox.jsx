@@ -50,7 +50,6 @@ const SearchBox = ({ className = "", isMobile = false, onClose }) => {
           setSuggestions([]);
         }
       } catch (error) {
-        console.error("Error fetching autocomplete:", error);
         setSuggestions([]);
       } finally {
         setIsLoading(false);

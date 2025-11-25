@@ -128,7 +128,6 @@ function LinkAccount() {
               error(result.error);
             }
           } catch (err) {
-            console.error("Lỗi liên kết Google:", err);
             error(t('common.error'));
           } finally {
             setIsLinking(prev => ({ ...prev, google: false }));
@@ -138,7 +137,6 @@ function LinkAccount() {
 
       client.requestAccessToken();
     } catch (err) {
-      console.error("Lỗi Google OAuth:", err);
       error(t('profile.linkAccountPage.googleOAuthError'));
       setIsLinking(prev => ({ ...prev, google: false }));
     }
@@ -177,7 +175,6 @@ function LinkAccount() {
                 error(result.error);
               }
             } catch (err) {
-              console.error("Lỗi liên kết Facebook:", err);
               error(t('common.error'));
             } finally {
               setIsLinking(prev => ({ ...prev, facebook: false }));
@@ -191,7 +188,6 @@ function LinkAccount() {
         }
       }, { scope: 'email,public_profile' });
     } catch (err) {
-      console.error("Lỗi Facebook OAuth:", err);
       error(t('profile.linkAccountPage.facebookOAuthError'));
       setIsLinking(prev => ({ ...prev, facebook: false }));
     }

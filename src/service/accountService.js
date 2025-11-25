@@ -50,7 +50,6 @@ export const changePassword = async (oldPassword, newPassword) => {
       message: data.message || "Đổi mật khẩu thành công!",
     };
   } catch (err) {
-    console.error("Lỗi đổi mật khẩu:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi đổi mật khẩu",
@@ -86,7 +85,6 @@ export const getSocialLinks = async () => {
       data: data,
     };
   } catch (err) {
-    console.error("Lỗi lấy thông tin liên kết:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi lấy thông tin liên kết",
@@ -128,7 +126,6 @@ export const linkGoogleAccount = async (accessToken) => {
       message: "Liên kết tài khoản Google thành công!",
     };
   } catch (err) {
-    console.error("Lỗi liên kết Google:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi liên kết tài khoản Google",
@@ -159,7 +156,6 @@ export const unlinkGoogleAccount = async () => {
       message: "Hủy liên kết tài khoản Google thành công!",
     };
   } catch (err) {
-    console.error("Lỗi hủy liên kết Google:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi hủy liên kết tài khoản Google",
@@ -201,7 +197,6 @@ export const linkFacebookAccount = async (accessToken) => {
       message: "Liên kết tài khoản Facebook thành công!",
     };
   } catch (err) {
-    console.error("Lỗi liên kết Facebook:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi liên kết tài khoản Facebook",
@@ -232,7 +227,6 @@ export const unlinkFacebookAccount = async () => {
       message: "Hủy liên kết tài khoản Facebook thành công!",
     };
   } catch (err) {
-    console.error("Lỗi hủy liên kết Facebook:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi hủy liên kết tài khoản Facebook",
@@ -268,7 +262,6 @@ export const getNotificationSettings = async () => {
       data: data,
     };
   } catch (err) {
-    console.error("Lỗi lấy cài đặt thông báo:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi lấy cài đặt thông báo",
@@ -309,7 +302,6 @@ export const updateNotificationSettings = async (settings) => {
       message: "Cập nhật cài đặt thông báo thành công!",
     };
   } catch (err) {
-    console.error("Lỗi cập nhật cài đặt thông báo:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi cập nhật cài đặt thông báo",

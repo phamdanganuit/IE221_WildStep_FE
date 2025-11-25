@@ -23,6 +23,7 @@ const ProductInfo = ({
   currentLang = 'vi',
   quantity = 1,
   setQuantity,
+  addToCartButtonRef,
 }) => {
 
   return (
@@ -103,6 +104,7 @@ const ProductInfo = ({
 
         <section className="grid grid-cols-2 justify-center items-center mt-6 w-full gap-10 text-xl leading-tight max-md:max-w-full">
           <button
+            ref={addToCartButtonRef}
             onClick={onAddToCart}
             disabled={stock === 0}
             className="flex w-full overflow-hidden justify-center items-center self-stretch px-12 py-4 my-auto font-semibold text-white bg-color4 rounded-lg max-md:px-5 hover:bg-hover4 focus:outline-none focus:ring-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"

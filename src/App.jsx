@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { ToastProvider, useToast } from "./contexts/ToastContext";
 import { MobileMenuProvider } from "./contexts/MobileMenuContext";
+import { CartAnimationProvider } from "./contexts/CartAnimationContext";
 import ToastContainer from "./components/Toast";
 import { useAuthStore } from "./store/authStore";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -93,7 +94,9 @@ export default function App() {
   return (
     <ToastProvider>
       <MobileMenuProvider>
-        <AppContent />
+        <CartAnimationProvider>
+          <AppContent />
+        </CartAnimationProvider>
       </MobileMenuProvider>
     </ToastProvider>
   );

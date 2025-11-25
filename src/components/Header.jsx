@@ -15,8 +15,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useMobileMenu } from "@/contexts/MobileMenuContext";
+import { useCartAnimation } from "@/contexts/CartAnimationContext";
 import SearchBox from "@/components/SearchBox";
 import { getCartCount } from "@/service/cartService";
+import CartAnimation from "@/components/Cart/CartAnimation";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -26,9 +28,10 @@ const Header = () => {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const { showMobileMenu, setShowMobileMenu } = useMobileMenu();
   const [avatarLoading, setAvatarLoading] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
+  const { cartCount, updateCartCount } = useCartAnimation();
   const userMenuRef = useRef(null);
   const languageMenuRef = useRef(null);
+  const cartIconRef = useRef(null);
   const { t, i18n } = useTranslation();
 
   // Check if we're on Profile page
@@ -118,10 +121,10 @@ const Header = () => {
       if (isAuthenticated) {
         const result = await getCartCount();
         if (result.success) {
-          setCartCount(result.count || 0);
+          updateCartCount(result.count || 0);
         }
       } else {
-        setCartCount(0);
+        updateCartCount(0);
       }
     };
     fetchCartCount();
@@ -190,18 +193,23 @@ const Header = () => {
               {/* Search Bar */}
               <SearchBox className="hidden lg:flex" />
               {/* Cart Icon */}
-              <div onClick={()=>navigate("/cart")} className="hidden md:inline-flex relative w-[3rem] h-[3rem] rounded-[30px] items-center justify-center hover:bg-gray-700 transition cursor-pointer">
+              <div 
+                ref={cartIconRef}
+                onClick={()=>navigate("/cart")} 
+                className="hidden md:inline-flex relative w-[3rem] h-[3rem] rounded-[30px] items-center justify-center hover:bg-gray-700 transition cursor-pointer"
+              >
                 <img
                   src="/icon/mdi_cart-outline.svg"
                   alt="Cart"
                   className="w-6 h-6"
                 />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
                     {cartCount > 99 ? '99+' : cartCount}
                   </span>
                 )}
               </div>
+              <CartAnimation cartIconRef={cartIconRef} />
 
               {/* Wishlist Icon */}
               <div className="hidden md:inline-flex w-[3rem] h-[3rem] rounded-[30px] items-center justify-center hover:bg-gray-700 transition cursor-pointer">

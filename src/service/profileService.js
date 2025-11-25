@@ -37,7 +37,6 @@ export const getProfile = async () => {
       data: data,
     };
   } catch (err) {
-    console.error("Lỗi lấy thông tin người dùng:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi lấy thông tin người dùng",
@@ -78,7 +77,6 @@ export const updateProfile = async (profileData) => {
       message: "Cập nhật thông tin thành công!",
     };
   } catch (err) {
-    console.error("Lỗi cập nhật profile:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi cập nhật thông tin",
@@ -131,7 +129,6 @@ export const uploadAvatar = async (file) => {
       message: "Cập nhật ảnh đại diện thành công!",
     };
   } catch (err) {
-    console.error("Lỗi upload avatar:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi upload ảnh",
@@ -168,7 +165,6 @@ export const deleteAccount = async (password = null) => {
       message: "Xóa tài khoản thành công",
     };
   } catch (err) {
-    console.error("Lỗi xóa tài khoản:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi xóa tài khoản",

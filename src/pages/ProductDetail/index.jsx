@@ -17,9 +17,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductDescription from "@/components/ProductDetail/ProductDescription";
 import ProductDetail from "@/components/ProductDetail/ProductDetail";
 import { getProductDetail } from "@/service/contentService";
-import { addToCart } from "@/service/cartService";
+import { addToCart, getCartCount } from "@/service/cartService";
 import { safeText, createSlugFromText, parseMultiLanguageSlug } from "@/lib/i18nUtils";
 import { useToast } from "@/contexts/ToastContext";
+import { useCartAnimation } from "@/contexts/CartAnimationContext";
 
 const ChiTietSanPham = () => {
   const { id } = useParams(); // Get product ID or slug from URL
@@ -44,7 +45,9 @@ const ChiTietSanPham = () => {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const { success, error: showError } = useToast();
+  const { error: showError } = useToast();
+  const { triggerAnimation, incrementCartCount, updateCartCount } = useCartAnimation();
+  const addToCartButtonRef = React.useRef(null);
 
   // Fetch product data from API
   useEffect(() => {
@@ -94,7 +97,6 @@ const ChiTietSanPham = () => {
           setError(result.error || "Không thể tải thông tin sản phẩm");
         }
       } catch (err) {
-        console.error("Error fetching product:", err);
         setError("Có lỗi xảy ra");
       } finally {
         setLoading(false);
@@ -146,20 +148,37 @@ const ChiTietSanPham = () => {
       );
 
       if (res.success) {
-        success(res.message || "Đã thêm sản phẩm vào giỏ hàng");
+        // Trigger animation instead of toast
+        if (addToCartButtonRef.current) {
+          const buttonRect = addToCartButtonRef.current.getBoundingClientRect();
+          const startX = buttonRect.left + buttonRect.width / 2;
+          const startY = buttonRect.top + buttonRect.height / 2;
+          
+          // Get product image
+          const productImage = images && images.length > 0 ? images[0] : null;
+          
+          if (productImage) {
+            triggerAnimation({ x: startX, y: startY }, productImage);
+          }
+          
+          // Update cart count from API
+          const countResult = await getCartCount();
+          if (countResult.success) {
+            updateCartCount(countResult.count || 0);
+          }
+        }
+        
         // Reset quantity về 1 sau khi thêm vào giỏ hàng thành công
         setQuantity(1);
       } else {
         showError(res.error || "Không thể thêm sản phẩm vào giỏ hàng");
       }
     } catch (err) {
-      console.error("Error adding to cart:", err);
       showError(err.message || "Đã xảy ra lỗi khi thêm sản phẩm vào giỏ hàng");
     }
   };
 
   const handleBuyNow = () => {
-    console.log("Buy now:", { selectedColor, selectedSize });
     // TODO: Implement buy now logic (navigate to checkout with this product)
     // For now, just add to cart and navigate
     handleAddToCart().then(() => {
@@ -357,6 +376,7 @@ const ChiTietSanPham = () => {
                 currentLang={i18n.language}
                 quantity={quantity}
                 setQuantity={setQuantity}
+                addToCartButtonRef={addToCartButtonRef}
               />
             </div>
           </div>

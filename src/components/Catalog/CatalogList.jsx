@@ -407,7 +407,6 @@ function CatalogList({ filters, setFilters }) {
           }
         }
       } catch (err) {
-        console.error("Error fetching category name:", err);
         setCategoryName('');
       }
     };
@@ -531,7 +530,6 @@ function CatalogList({ filters, setFilters }) {
         if (lastRequestParamsRef.current !== requestParamsKey) {
           return;
         }
-        console.error("Error fetching products:", err);
         setError("Có lỗi xảy ra khi tải sản phẩm");
         setProducts([]);
       } finally {

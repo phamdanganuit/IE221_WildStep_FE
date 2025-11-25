@@ -100,7 +100,6 @@ function RegisterForm() {
         error(result.error);
       }
     } catch (err) {
-      console.error("Lỗi đăng ký:", err);
       error("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);

@@ -67,7 +67,6 @@ export const login = async (email, password, rememberMe = false) => {
       type: "success"
     };
   } catch (e) {
-    console.log("Lỗi đăng nhập: ", e);
     return {
       success: false,
       error: "Có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng.",
@@ -122,7 +121,6 @@ export const register = async (email, password, displayName, admin_key = null) =
       type: "success"
     };
   } catch (e) {
-    console.log("Lỗi đăng ký: ", e);
     return {
       success: false,
       error: "Có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng.",
@@ -134,8 +132,6 @@ export const register = async (email, password, displayName, admin_key = null) =
 // 3. Đăng nhập bằng Google OAuth
 export const loginWithGoogle = async (accessToken, rememberMe = false) => {
   try {
-    console.log("Sending Google OAuth request with access_token:", accessToken);
-    
     const res = await fetch(`${base_url}/oauth/google`, {
       method: "POST",
       headers: {
@@ -143,8 +139,6 @@ export const loginWithGoogle = async (accessToken, rememberMe = false) => {
       },
       body: JSON.stringify({ access_token: accessToken }),
     });
-
-    console.log("Google OAuth response status:", res.status);
 
     if (!res.ok) {
       if (res.status === 401) {
@@ -182,7 +176,6 @@ export const loginWithGoogle = async (accessToken, rememberMe = false) => {
       type: "success"
     };
   } catch (e) {
-    console.log("Lỗi đăng nhập Google: ", e);
     return {
       success: false,
       error: "Có lỗi xảy ra khi đăng nhập Google. Vui lòng thử lại.",
@@ -238,7 +231,6 @@ export const loginWithFacebook = async (accessToken, rememberMe = false) => {
       type: "success"
     };
   } catch (e) {
-    console.log("Lỗi đăng nhập Facebook: ", e);
     return {
       success: false,
       error: "Có lỗi xảy ra khi đăng nhập Facebook. Vui lòng thử lại.",
@@ -272,7 +264,6 @@ export const getProfile = async (token) => {
     const data = await res.json();
     return data;
   } catch (err) {
-    console.error("Lỗi lấy thông tin người dùng:", err);
     return null;
   }
 };

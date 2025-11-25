@@ -52,7 +52,6 @@ const makeAuthRequest = async (endpoint, options = {}) => {
       data,
     };
   } catch (error) {
-    console.error("API Error:", error);
     return {
       success: false,
       error: "Có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng.",

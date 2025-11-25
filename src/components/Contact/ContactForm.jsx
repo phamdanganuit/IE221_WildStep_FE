@@ -46,7 +46,6 @@ export const contactMessage = async ({
       message: data.message || "Gửi tin nhắn thành công!",
     };
   } catch (error) {
-    console.error("Lỗi gửi tin nhắn liên hệ:", err);
     return {
       success: false,
       error: err.message || "Có lỗi xảy ra khi gửi tin nhắn liên hệ",
@@ -82,7 +81,6 @@ export function ContactForm({ className }) {
         error(result.error);
       }
     } catch (err) {
-      console.error("Lỗi gửi tin nhắn:", err);
       error("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setLoading(false);
