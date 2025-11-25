@@ -258,6 +258,8 @@ const ChiTietSanPham = () => {
     categorySlug = createSlugFromText(categoryName);
   }
   const description = safeText(product.description, i18n.language, '');
+  const rawProductId = product?.id ?? product?._id ?? product?.slug ?? "";
+  const normalizedProductId = rawProductId ? String(rawProductId) : "";
 
   return (
     <div className="flex overflow-hidden flex-col pb-20 bg-white">
@@ -415,7 +417,7 @@ const ChiTietSanPham = () => {
           className="object-contain w-full max-md:max-w-full"
         />
 
-        <ReviewSection />
+        <ReviewSection productId={normalizedProductId} />
 
         <img
           src="https://api.builder.io/api/v1/image/assets/7e6ace8706ad423985a91f95c2918220/2c690c8f3c4b63372042985765f6e103dad8f008?placeholderIfAbsent=true"

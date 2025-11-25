@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   FiPackage,
   FiTruck,
@@ -15,6 +15,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Header from "@/components/Header";
 import { getOrderDetail, cancelOrder } from "@/service/orderService";
+import ReviewDialog from "@/components/Order/ReviewDialog";
+import StarRating from "@/components/ProductDetail/StarRating";
+import {
+  getReviewableItems,
+  submitOrderReviews,
+  updateOrderReview,
+} from "@/service/reviewService";
 import { useToast } from "@/contexts/ToastContext";
 
 const statusSteps = [
@@ -94,12 +101,52 @@ const transformOrder = (apiOrder) => {
   };
 };
 
+const normalizeExistingReview = (review) => {
+  if (!review) return null;
+  return {
+    reviewId: review.reviewId || review.review_id || review.id || review._id,
+    rating: review.rating || 0,
+    comment: review.comment || review.content || "",
+    images: Array.isArray(review.images) ? review.images : [],
+    order_item_id: review.order_item_id,
+    product_id: review.product_id,
+    created_at: review.created_at || review.createdAt,
+    updated_at: review.updated_at || review.updatedAt,
+  };
+};
+
+const normalizeReviewableItem = (item) => {
+  const existingReview = normalizeExistingReview(
+    item.existingReview || item.review || item.current_review
+  );
+  const reviewId =
+    item.reviewId ||
+    item.review_id ||
+    existingReview?.reviewId ||
+    item.review?._id ||
+    null;
+
+  return {
+    ...item,
+    reviewId,
+    existingReview,
+  };
+};
+
 export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reviewables, setReviewables] = useState([]);
+  const [reviewableMeta, setReviewableMeta] = useState(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reviewDialogMode, setReviewDialogMode] = useState("create");
+  const [selectedReviewItem, setSelectedReviewItem] = useState(null);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -121,6 +168,148 @@ export default function OrderDetailPage() {
     setLoading(false);
   };
 
+  const fetchReviewableItemsData = useCallback(async () => {
+    if (!order?.orderId) return;
+    setReviewLoading(true);
+    setReviewError("");
+
+    const result = await getReviewableItems(order.orderId);
+    if (result.success) {
+      const payload = result.data || {};
+      const normalizedItems = Array.isArray(payload.items)
+        ? payload.items.map(normalizeReviewableItem)
+        : [];
+      setReviewables(normalizedItems);
+      setReviewableMeta({
+        completed_at: payload.completed_at,
+        status: payload.status,
+        orderId: payload.orderId || order.orderId,
+      });
+    } else {
+      setReviewables([]);
+      setReviewError(
+        result.error || "Không thể tải danh sách sản phẩm cần đánh giá."
+      );
+    }
+    setReviewLoading(false);
+  }, [order?.orderId]);
+
+  useEffect(() => {
+    if (order?.orderId && order.status === "delivered") {
+      fetchReviewableItemsData();
+    } else {
+      setReviewables([]);
+      setReviewError("");
+      setReviewableMeta(null);
+    }
+  }, [order?.orderId, order?.status, fetchReviewableItemsData]);
+
+  const applyReviewToItem = (orderItemId, reviewData) => {
+    setReviewables((prev) =>
+      prev.map((item) =>
+        item.order_item_id === orderItemId
+          ? {
+              ...item,
+              isRated: true,
+              reviewId: reviewData?.reviewId || item.reviewId,
+              existingReview: reviewData || item.existingReview,
+            }
+          : item
+      )
+    );
+  };
+
+  const handleOpenReviewDialog = (item, mode) => {
+    setSelectedReviewItem(item);
+    setReviewDialogMode(mode);
+    setReviewDialogOpen(true);
+  };
+
+  const handleDialogOpenChange = (nextOpen) => {
+    setReviewDialogOpen(nextOpen);
+    if (!nextOpen) {
+      setSelectedReviewItem(null);
+      setReviewDialogMode("create");
+      setReviewSubmitting(false);
+    }
+  };
+
+  const handleSubmitReview = async (formValues) => {
+    if (!selectedReviewItem || !order?.orderId) return;
+
+    setReviewSubmitting(true);
+    const basePayload = {
+      rating: formValues.rating,
+      comment: formValues.comment,
+      images: formValues.images,
+    };
+
+    let result;
+    if (reviewDialogMode === "edit" && selectedReviewItem.reviewId) {
+      result = await updateOrderReview(
+        order.orderId,
+        selectedReviewItem.reviewId,
+        basePayload
+      );
+
+      if (result.success) {
+        const normalizedReview =
+          normalizeExistingReview(result.data?.review) || {
+            ...basePayload,
+            reviewId: selectedReviewItem.reviewId,
+            order_item_id: selectedReviewItem.order_item_id,
+            product_id: selectedReviewItem.product_id,
+          };
+        applyReviewToItem(selectedReviewItem.order_item_id, normalizedReview);
+        addToast({
+          type: "success",
+          message: "Cập nhật đánh giá thành công.",
+        });
+      } else {
+        addToast({
+          type: "error",
+          message: result.error || "Không thể cập nhật đánh giá.",
+        });
+      }
+    } else {
+      result = await submitOrderReviews(order.orderId, [
+        {
+          order_item_id: selectedReviewItem.order_item_id,
+          product_id: selectedReviewItem.product_id,
+          ...basePayload,
+        },
+      ]);
+
+      if (result.success) {
+        const createdReview = Array.isArray(result.data?.created)
+          ? result.data.created[0]
+          : null;
+        const normalizedReview =
+          normalizeExistingReview(createdReview) || {
+            ...basePayload,
+            reviewId: createdReview?.reviewId || selectedReviewItem.reviewId,
+            order_item_id: selectedReviewItem.order_item_id,
+            product_id: selectedReviewItem.product_id,
+          };
+        applyReviewToItem(selectedReviewItem.order_item_id, normalizedReview);
+        addToast({
+          type: "success",
+          message: "Đã gửi đánh giá sản phẩm.",
+        });
+      } else {
+        addToast({
+          type: "error",
+          message: result.error || "Không thể gửi đánh giá.",
+        });
+      }
+    }
+
+    setReviewSubmitting(false);
+    if (result?.success) {
+      handleDialogOpenChange(false);
+    }
+  };
+
   if (loading) return <div className="text-center py-10">Đang tải...</div>;
   if (!order)
     return (
@@ -131,6 +320,7 @@ export default function OrderDetailPage() {
 
   const currentStep = statusSteps.findIndex((s) => s.key === order.status);
   const isCancelled = order.status === "cancelled";
+  const canReview = order.status === "delivered";
 
   const formatAddress = () => {
     if (!order.selectedAddress) return "Chưa có địa chỉ";
@@ -165,7 +355,8 @@ export default function OrderDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 w-full">
+    <>
+      <div className="min-h-screen bg-gray-50 w-full">
       <Header />
       <div className="max-w-[90%] mx-auto p-4 md:p-6 space-y-8">
         {/* Header */}
@@ -388,7 +579,122 @@ export default function OrderDetailPage() {
             </div>
           </div>
         </div>
+
+        {canReview && (
+          <section className="bg-white p-5 rounded-xl shadow-sm space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="font-semibold text-lg">Đánh giá sản phẩm đã mua</h3>
+                <p className="text-sm text-gray-500">
+                  Đơn hoàn tất:&nbsp;
+                  {reviewableMeta?.completed_at
+                    ? new Date(reviewableMeta.completed_at).toLocaleDateString(
+                        "vi-VN"
+                      )
+                    : "Đang xác minh"}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchReviewableItemsData}
+                disabled={reviewLoading}
+              >
+                Làm mới
+              </Button>
+            </div>
+
+            {reviewLoading && (
+              <div className="text-center text-gray-500 py-6">
+                Đang kiểm tra sản phẩm đủ điều kiện đánh giá...
+              </div>
+            )}
+
+            {!reviewLoading && reviewError && (
+              <div className="text-center text-red-500 py-6">{reviewError}</div>
+            )}
+
+            {!reviewLoading && !reviewError && reviewables.length === 0 && (
+              <div className="text-center text-gray-500 py-6">
+                Không có sản phẩm nào đủ điều kiện đánh giá trong đơn này.
+              </div>
+            )}
+
+            {!reviewLoading && !reviewError && reviewables.length > 0 && (
+              <div className="space-y-4">
+                {reviewables.map((item) => {
+                  const existingReview = item.existingReview;
+                  return (
+                    <div
+                      key={item.order_item_id}
+                      className="flex flex-col md:flex-row gap-4 border rounded-lg p-4"
+                    >
+                      <div className="flex gap-4 flex-1">
+                        <img
+                          src={
+                            item.product_image ||
+                            "https://via.placeholder.com/80?text=IMG"
+                          }
+                          alt={item.product_name}
+                          className="w-20 h-20 object-cover rounded-lg border"
+                        />
+                        <div className="flex-1">
+                          <p className="font-semibold">{item.product_name}</p>
+                          <p className="text-sm text-gray-600">
+                            Màu: {item.color || "N/A"} • Size:{" "}
+                            {item.size || "N/A"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Số lượng: {item.quantity || 1}
+                          </p>
+                          {existingReview && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                              <StarRating rating={existingReview.rating} />
+                              <span>{existingReview.rating}/5</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end justify-between gap-3">
+                        <span
+                          className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                            item.isRated
+                              ? "bg-green-100 text-green-700"
+                              : "bg-orange-50 text-orange-600"
+                          }`}
+                        >
+                          {item.isRated ? "Đã đánh giá" : "Chưa đánh giá"}
+                        </span>
+                        <Button
+                          variant={item.isRated ? "outline" : "default"}
+                          onClick={() =>
+                            handleOpenReviewDialog(
+                              item,
+                              item.isRated ? "edit" : "create"
+                            )
+                          }
+                        >
+                          {item.isRated ? "Chỉnh sửa đánh giá" : "Viết đánh giá"}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
       </div>
-    </div>
+      </div>
+      <ReviewDialog
+      open={reviewDialogOpen}
+      onOpenChange={handleDialogOpenChange}
+      item={selectedReviewItem}
+      mode={reviewDialogMode}
+      onSubmit={handleSubmitReview}
+      loading={reviewSubmitting}
+      />
+    </>
   );
 }
