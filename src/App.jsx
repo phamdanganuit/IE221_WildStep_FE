@@ -34,6 +34,7 @@ import CustomerDetail from "./pages/Admin/Customers/CustomerDetail";
 import Categories from "./pages/Admin/Categories";
 import Brands from "./pages/Admin/Brands";
 import Banners from "./pages/Admin/Banners";
+import Vouchers from "./pages/Admin/Vouchers";
 
 function AppContent() {
   const { toasts, removeToast } = useToast();
@@ -79,6 +80,7 @@ function AppContent() {
             <Route path="categories" element={<Categories />} />
             <Route path="brands" element={<Brands />} />
             <Route path="banners" element={<Banners />} />
+            <Route path="vouchers" element={<Vouchers />} />
           </Route>
         </Route>
       </Routes>

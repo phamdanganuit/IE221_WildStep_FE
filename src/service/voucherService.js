@@ -1,34 +1,86 @@
-const base_url = import.meta.env.VITE_BACKEND_URL;
 import { getStoredToken } from "./authService";
+
+const base_url = import.meta.env.VITE_BACKEND_URL;
+
+// Helper function to make authenticated requests
+const makeAuthRequest = async (endpoint, options = {}) => {
+  const token = getStoredToken();
+  
+  const headers = {
+    ...options.headers,
+  };
+
+  // Only add Content-Type if not FormData
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  try {
+    const res = await fetch(`${base_url}${endpoint}`, {
+      ...options,
+      headers,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      return {
+        success: false,
+        error: errorData.error?.message || errorData.message || `Request failed with status ${res.status}`,
+        status: res.status,
+      };
+    }
+
+    // Handle No Content (e.g., DELETE 204)
+    if (res.status === 204) {
+      return { success: true, data: null };
+    }
+
+    // Some backends may return empty body with 200/202
+    const contentLength = res.headers.get("content-length");
+    const contentType = res.headers.get("content-type") || "";
+    if (contentLength === "0" || contentType.indexOf("application/json") === -1) {
+      return { success: true, data: null };
+    }
+
+    const data = await res.json().catch(() => null);
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    console.error("API Error:", error);
+    return {
+      success: false,
+      error: "Có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng.",
+    };
+  }
+};
 
 export const addVoucherIntoMyList = async (code) => {
   try {
-    const token = getStoredToken();
-    const res = await fetch(`${base_url}/addVoucher`, {
+    const result = await makeAuthRequest("/addVoucher", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code: code.trim().toUpperCase() }),
     });
-    if (!res.ok) {
-      if (res.status === 400) {
-        throw new Error("Mã giảm giá không hợp lệ hoặc đã hết hạn");
-      }
-      if (res.status === 401) {
-        throw new Error("Token không hợp lệ hoặc đã hết hạn");
-      }
-      if (res.status === 409) {
-        throw new Error("Mã giảm giá đã được sử dụng");
-      }
-      throw new Error("Không thể thêm mã giảm giá.");
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || "Mã giảm giá không hợp lệ hoặc đã hết hạn",
+      };
     }
-    const data = await res.json();
+
+    // Transform response data to match expected format
+    const voucherData = result.data?.voucher || result.data;
+    
     return {
       success: true,
       message: "Thêm mã giảm giá thành công!",
-      data,
+      data: voucherData,
     };
   } catch (error) {
     console.log("Đã xảy ra lỗi khi thêm voucher: ", error);
@@ -41,23 +93,36 @@ export const addVoucherIntoMyList = async (code) => {
 
 export const getMyVouchersList = async () => {
   try {
-    const token = getStoredToken();
-    const res = await fetch(`${base_url}/vouchers`, {
+    const result = await makeAuthRequest("/vouchers", {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
-    if (!res.ok) {
-      if (res.status === 401) {
-        throw new Error("Token không hợp lệ hoặc đã hết hạn");
-      }
-      throw new Error("Không thể lấy danh sách mã giảm giá");
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || "Không thể lấy danh sách mã giảm giá",
+      };
     }
-    const data = await res.json();
+
+    // Transform response data to match expected format
+    const vouchers = result.data?.data || result.data || [];
+    
+    // Map backend format to frontend format (if needed)
+    const transformedVouchers = vouchers.map((v) => {
+      const voucher = v.voucher || v;
+      return {
+        ...voucher,
+        // Map field names if backend uses different names
+        start: voucher.start_date || voucher.start,
+        expired: voucher.expired_date || voucher.expired,
+        minValue: voucher.min_value || voucher.minValue,
+        category: voucher.categories || voucher.category || [],
+      };
+    });
+
     return {
       success: true,
-      data,
+      data: transformedVouchers,
     };
   } catch (error) {
     console.log("Không thể lấy danh sách mã giảm giá: ", error);
@@ -70,27 +135,24 @@ export const getMyVouchersList = async () => {
 
 export const removeVoucherFromList = async (voucherId) => {
   try {
-    const token = getStoredToken();
-    const res = await fetch(`${base_url}/removeVoucher`, {
+    const result = await makeAuthRequest("/removeVoucher", {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify({ voucherId }),
     });
-    if (!res.ok) {
-      if (res.status === 401) {
-        throw new Error("Token không hợp lệ hoặc đã hết hạn");
-      }
-      throw new Error("Không thể lấy xóa mã giảm giá");
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || "Không thể xóa mã giảm giá",
+      };
     }
+
     return {
       success: true,
       message: "Xóa mã giảm giá thành công!",
     };
   } catch (error) {
-    console.log("Không thể lấy xóa mã giảm giá: ", error);
+    console.log("Không thể xóa mã giảm giá: ", error);
     return {
       success: false,
       error: error.message || "Đã xảy ra lỗi khi xóa mã giảm giá",

@@ -7,6 +7,7 @@ import {
   FolderTree, 
   Award,
   Image as ImageIcon,
+  Ticket,
   LogOut,
   Menu,
   X
@@ -29,6 +30,7 @@ const AdminLayout = () => {
     { icon: Users, label: t('admin.customers.title'), path: "/admin/customers" },
     { icon: FolderTree, label: t('admin.categories.title'), path: "/admin/categories" },
     { icon: Award, label: t('admin.brands.title'), path: "/admin/brands" },
+    { icon: Ticket, label: "Vouchers", path: "/admin/vouchers" },
     { icon: ImageIcon, label: t('admin.banners.title'), path: "/admin/banners" },
   ];
 
@@ -65,8 +67,8 @@ const AdminLayout = () => {
                     : "text-gray-300 hover:bg-color2"
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                <span>{item.label}</span>
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
               </button>
             );
           })}

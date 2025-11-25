@@ -304,3 +304,42 @@ export const uploadAdminBannerImage = async (bannerId, file) => {
   });
 };
 
+// ==================== VOUCHERS (ADMIN) ====================
+
+export const getVouchers = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  
+  Object.keys(params).forEach(key => {
+    if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
+      queryParams.append(key, params[key]);
+    }
+  });
+
+  const queryString = queryParams.toString();
+  return makeAuthRequest(`/admin/vouchers${queryString ? `?${queryString}` : ""}`);
+};
+
+export const getVoucher = async (id) => {
+  return makeAuthRequest(`/admin/vouchers/${id}`);
+};
+
+export const createVoucher = async (voucherData) => {
+  return makeAuthRequest("/admin/vouchers", {
+    method: "POST",
+    body: JSON.stringify(voucherData),
+  });
+};
+
+export const updateVoucher = async (id, voucherData) => {
+  return makeAuthRequest(`/admin/vouchers/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(voucherData),
+  });
+};
+
+export const deleteVoucher = async (id) => {
+  return makeAuthRequest(`/admin/vouchers/${id}`, {
+    method: "DELETE",
+  });
+};
+
