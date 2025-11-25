@@ -12,6 +12,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { createAddress, updateAddress, deleteAddress as deleteAddressAPI } from "@/service/addressService";
+import { useToast } from "@/contexts/ToastContext";
+
+// Helper function to get address ID (supports both 'id' and '_id')
+const getAddressId = (address) => {
+  if (!address) return null;
+  return address.id || address._id || null;
+};
+
+// Helper function to compare address IDs
+const compareAddressIds = (id1, id2) => {
+  if (!id1 || !id2) return false;
+  return String(id1) === String(id2);
+};
 
 export default function ShippingInfo({
   addresses,
@@ -21,6 +35,8 @@ export default function ShippingInfo({
 }) {
   const [open, setOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { success: showSuccess, error: showError } = useToast();
   const [form, setForm] = useState({
     receiver: "",
     detail: "",
@@ -49,32 +65,89 @@ export default function ShippingInfo({
     setOpen(true);
   };
 
-  const saveAddress = () => {
-    if (!form.receiver || !form.phone || !form.detail || !form.province) return;
-
-    if (editingAddress) {
-      setAddresses((prev) =>
-        prev.map((a) =>
-          a._id === editingAddress._id ? { ...form, _id: a._id } : a
-        )
-      );
-    } else {
-      setAddresses((prev) => [
-        ...prev,
-        {
-          ...form,
-          _id: `addr_${Date.now()}`,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+  const saveAddress = async () => {
+    if (!form.receiver || !form.phone || !form.detail || !form.province) {
+      showError("Vui lòng điền đầy đủ thông tin bắt buộc");
+      return;
     }
-    setOpen(false);
+
+    setIsSaving(true);
+    try {
+      const addressData = {
+        receiver: form.receiver,
+        detail: form.detail,
+        ward: form.ward,
+        district: form.district,
+        province: form.province,
+        phone: form.phone,
+        is_default: form.default,
+      };
+
+      if (editingAddress) {
+        // Update existing address
+        const editingId = getAddressId(editingAddress);
+        if (!editingId) {
+          showError("Không tìm thấy ID địa chỉ");
+          setIsSaving(false);
+          return;
+        }
+        const result = await updateAddress(editingId, addressData);
+        if (result.success) {
+          setAddresses((prev) =>
+            prev.map((a) =>
+              compareAddressIds(getAddressId(a), editingId) ? result.data : a
+            )
+          );
+          if (compareAddressIds(getAddressId(selectedAddress), editingId)) {
+            setSelectedAddress(result.data);
+          }
+          showSuccess(result.message || "Cập nhật địa chỉ thành công!");
+          setOpen(false);
+        } else {
+          showError(result.error || "Không thể cập nhật địa chỉ");
+        }
+      } else {
+        // Create new address
+        const result = await createAddress(addressData);
+        if (result.success) {
+          setAddresses((prev) => [...prev, result.data]);
+          showSuccess(result.message || "Thêm địa chỉ thành công!");
+          setOpen(false);
+        } else {
+          showError(result.error || "Không thể thêm địa chỉ");
+        }
+      }
+    } catch (err) {
+      showError(err.message || "Đã xảy ra lỗi");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const deleteAddress = (id) => {
-    setAddresses((prev) => prev.filter((a) => a._id !== id));
-    if (selectedAddress?._id === id) {
-      setSelectedAddress(addresses.find((a) => a._id !== id) || null);
+  const deleteAddress = async (addr) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) {
+      return;
+    }
+
+    try {
+      const addrId = getAddressId(addr);
+      if (!addrId) {
+        showError("Không tìm thấy ID địa chỉ");
+        return;
+      }
+      const result = await deleteAddressAPI(addrId);
+      if (result.success) {
+        setAddresses((prev) => prev.filter((a) => !compareAddressIds(getAddressId(a), addrId)));
+        if (compareAddressIds(getAddressId(selectedAddress), addrId)) {
+          const remaining = addresses.filter((a) => !compareAddressIds(getAddressId(a), addrId));
+          setSelectedAddress(remaining.length > 0 ? remaining[0] : null);
+        }
+        showSuccess(result.message || "Xóa địa chỉ thành công!");
+      } else {
+        showError(result.error || "Không thể xóa địa chỉ");
+      }
+    } catch (err) {
+      showError(err.message || "Đã xảy ra lỗi khi xóa địa chỉ");
     }
   };
 
@@ -94,57 +167,69 @@ export default function ShippingInfo({
       </p>
 
       <div className="space-y-4">
-        {addresses.map((addr) => (
-          <div
-            key={addr._id}
-            className={`p-4 border rounded-lg cursor-pointer transition-all ${
-              selectedAddress?._id === addr._id
-                ? "border-color4 bg-teal-50"
-                : "hover:border-gray-400"
-            }`}
-            onClick={() => setSelectedAddress(addr)}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-medium">{addr.receiver}</h4>
-                  {addr.isDefault && (
-                    <span className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded">
-                      Mặc định
-                    </span>
-                  )}
+        {addresses.map((addr) => {
+          // Use helper function to compare IDs (supports both 'id' and '_id')
+          const addrId = getAddressId(addr);
+          const selectedId = getAddressId(selectedAddress);
+          const isSelected = compareAddressIds(addrId, selectedId);
+          
+          return (
+            <div
+              key={addrId || Math.random()}
+              className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                isSelected
+                  ? "border-color4 bg-teal-50"
+                  : "hover:border-gray-400"
+              }`}
+              onClick={() => {
+                // Ensure we're setting a complete address object
+                if (addr && addrId) {
+                  setSelectedAddress(addr);
+                }
+              }}
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-medium">{addr.receiver}</h4>
+                    {addr.isDefault && (
+                      <span className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded">
+                        Mặc định
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600">{addr.phone}</p>
+                  <p className="text-sm mt-1">{formatAddress(addr)}</p>
                 </div>
-                <p className="text-sm text-gray-600">{addr.phone}</p>
-                <p className="text-sm mt-1">{formatAddress(addr)}</p>
+                <div className="flex gap-2 ml-4">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openDialog(addr);
+                    }}
+                    className="text-gray-600 hover:text-color4"
+                  >
+                    <FiEdit />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteAddress(addr);
+                    }}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <FiTrash2 />
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2 ml-4">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openDialog(addr);
-                  }}
-                  className="text-gray-600 hover:text-color4"
-                >
-                  <FiEdit />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteAddress(addr.id);
-                  }}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <FiTrash2 />
-                </button>
-              </div>
+              {isSelected && (
+                <div className="mt-3 flex items-center text-teal-600">
+                  <FiCheck className="mr-1" /> Đã chọn
+                </div>
+              )}
             </div>
-            {selectedAddress?._id === addr._id && (
-              <div className="mt-3 flex items-center text-teal-600">
-                <FiCheck className="mr-1" /> Đã chọn
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -238,10 +323,12 @@ export default function ShippingInfo({
           </div>
 
           <DialogFooter className="mt-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={isSaving}>
               Hủy
             </Button>
-            <Button onClick={saveAddress}>Lưu</Button>
+            <Button onClick={saveAddress} disabled={isSaving}>
+              {isSaving ? "Đang lưu..." : "Lưu"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

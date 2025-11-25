@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import AddressCard from "./AddressCard";
 import AddressDialog from "./AddressDialog";
 import { Plus } from "lucide-react";
@@ -11,6 +11,7 @@ function Address() {
   const [addressList, setAddressList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { success, error } = useToast();
+  const hasLoadedRef = useRef(false);
 
   const fetchAddresses = async () => {
     setIsLoading(true);
@@ -24,7 +25,14 @@ function Address() {
   };
 
   useEffect(() => {
+    // Prevent double calls in React StrictMode
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
     fetchAddresses();
+    
+    return () => {
+      hasLoadedRef.current = false;
+    };
   }, []);
 
   const handleAdd = async (newAddress) => {

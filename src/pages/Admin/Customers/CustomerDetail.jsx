@@ -152,13 +152,13 @@ const CustomerDetail = () => {
                       onClick={() => navigate(`/admin/orders/${order._id}`)}
                     >
                       <div>
-                        <p className="font-medium text-gray-900">#{order.orderNumber}</p>
+                        <p className="font-medium text-gray-900">#{order.order_number || order.orderNumber}</p>
                         <p className="text-sm text-gray-500">
-                          {new Date(order.createdAt).toLocaleDateString("vi-VN")}
+                          {new Date(order.created_at || order.createdAt).toLocaleDateString("vi-VN")}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-900">{formatCurrency(order.total)}</p>
+                        <p className="font-semibold text-gray-900">{formatCurrency(order.total_price || order.total || 0)}</p>
                         <p className="text-sm text-gray-500">
                           {order.status === "pending" ? "Chờ xử lý" :
                            order.status === "processing" ? "Đang xử lý" :

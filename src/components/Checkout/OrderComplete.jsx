@@ -18,7 +18,7 @@ export default function OrderComplete({
   subtotal,
   shipping,
   discount,
-  appliedVoucher,
+  appliedVouchers = [],
 }) {
   const navigate = useNavigate();
   return (
@@ -128,12 +128,22 @@ export default function OrderComplete({
               <span>Phí vận chuyển</span>
               <span>{shipping.toLocaleString()} VND</span>
             </div>
-            {discount > 0 && appliedVoucher && (
-              <div className="flex justify-between text-red-600">
-                <span>Voucher từ WildStep</span>
-                <span className="text-red-600">
-                  -{discount.toLocaleString()} VND
-                </span>
+            {discount > 0 && appliedVouchers.length > 0 && (
+              <div className="space-y-1">
+                {appliedVouchers.map((voucher) => (
+                  <div key={voucher._id || voucher.code} className="flex justify-between text-red-600 text-xs">
+                    <span>{voucher.name || voucher.code}</span>
+                    <span className="text-red-600">
+                      -{((voucher.discount_amount || 0)).toLocaleString()} VND
+                    </span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-red-600 font-medium">
+                  <span>Tổng giảm giá</span>
+                  <span className="text-red-600">
+                    -{discount.toLocaleString()} VND
+                  </span>
+                </div>
               </div>
             )}
             

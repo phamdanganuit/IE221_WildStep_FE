@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import {
   FiShoppingBag,
   FiTruck,
@@ -20,107 +21,91 @@ import Stepper from "@/components/Checkout/Stepper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
+import { getMyCard } from "@/service/cartService";
+import { getAddresses } from "@/service/addressService";
+import { validateVoucher, getMyVouchersList } from "@/service/voucherService";
+import { createOrder } from "@/service/orderService";
+import { getProductDetail } from "@/service/contentService";
+import { useToast } from "@/contexts/ToastContext";
 
-const mockCartItems = [
-  {
-    id: 1,
-    image:
-      "https://shoeshop.blob.core.windows.net/media/products/69110ac083c5c6519af1ec97_37accb34.avif",
-    name: "Cloud Shift Lightweight Runner Pro Edition",
-    color: "White/Brown",
-    size: "EU37",
-    price: 120000,
-    qty: 1,
-  },
-  {
-    id: 2,
-    image:
-      "https://shoeshop.blob.core.windows.net/media/products/69110ac083c5c6519af1ec97_37accb34.avif",
-    name: "Cloud Shift Lightweight Runner Pro Edition",
-    color: "White/Brown",
-    size: "EU37",
-    price: 120000,
-    qty: 1,
-  },
-  {
-    id: 3,
-    image:
-      "https://shoeshop.blob.core.windows.net/media/products/69110ac083c5c6519af1ec97_37accb34.avif",
-    name: "Cloud Shift Lightweight Runner Pro Edition",
-    color: "White/Brown",
-    size: "EU37",
-    price: 120000,
-    qty: 1,
-  },
-];
+// Helper function to get address ID (supports both 'id' and '_id')
+const getAddressId = (address) => {
+  if (!address) return null;
+  return address.id || address._id || null;
+};
 
-const mockAddresses = [
-  {
-    _id: "addr_001",
-    receiver: "Hac Thien Cau",
-    detail: "Khu phố 34",
-    ward: "Phường Linh Xuân",
-    district: "Quận Thủ Đức",
-    province: "Thành phố Hồ Chí Minh",
-    phone: "+84 779765688",
-    default: true,
-    createdAt: "2025-11-14T00:00:00.000Z",
-  },
-  {
-    _id: "addr_002",
-    receiver: "Jeroen",
-    detail: "1016 DW Keizersgracht 172",
-    ward: "",
-    district: "Centrum",
-    province: "Amsterdam",
-    phone: "+31612345678",
-    default: false,
-    createdAt: "2025-01-12T00:00:00.000Z",
-  },
-];
+// Helper function to compare address IDs
+const compareAddressIds = (id1, id2) => {
+  if (!id1 || !id2) return false;
+  return String(id1) === String(id2);
+};
 
-const vouchers = [
-  {
-    _id: "voucher_001",
-    name: "Giảm 29.900đ cho đơn hàng đầu tiên",
-    code: "WILDSTEPWELCOME",
-    description:
-      "Giảm 29.900đ cho đơn hàng đầu tiên. - Áp dụng cho tất cả sản phẩm.",
-    discount: 29900,
-    minValue: null,
-    maxDiscount: 29900,
-    start: "2025-01-01T00:00:00.000Z",
-    expired: "2025-12-31T23:59:59.000Z",
-  },
-  {
-    _id: "voucher_002",
-    name: "Giảm 10% tối đa 50k cho đơn từ 300k",
-    code: "SAVE10",
-    description:
-      "Giảm 10% tối đa 50.000đ. - Áp dụng cho đơn từ 300k. - Áp dụng cho tất cả sản phẩm. - Không áp dụng cùng các chương trình khuyến mãi khác.",
-    discount: 0.1,
-    minValue: "300000",
-    maxDiscount: 50000,
-    start: "2025-01-01T00:00:00.000Z",
-    expired: "2025-12-31T23:59:59.000Z",
-  },
-  {
-    _id: "voucher_003",
-    name: "Giảm 20% tối đa 100k cho đơn từ 800k",
-    code: "WILD20",
-    description:
-      "Giảm 20% cho đơn từ 800k. - Áp dụng cho tất cả sản phẩm. - Không áp dụng cùng các chương trình khuyến mãi khác.",
-    discount: 0.2,
-    minValue: "800000",
-    start: "2024-01-01T00:00:00.000Z",
-    expired: "2024-12-31T23:59:59.000Z",
-  },
-];
+// Helper function to transform cart API response to UI format
+// Now fetches product details for each product_id
+const transformCartItems = async (cartData) => {
+  if (!cartData || !cartData.products || cartData.products.length === 0) {
+    return [];
+  }
+
+  // Fetch product details for all products in parallel
+  const productPromises = cartData.products.map(async (item, index) => {
+    try {
+      const productResult = await getProductDetail(item.product_id);
+      const product = productResult.success && productResult.data ? productResult.data : {};
+      
+      const productName = product.name || {};
+      const name = typeof productName === 'string' 
+        ? productName 
+        : productName.vi || productName.en || 'Sản phẩm';
+      
+      const images = product.images || [];
+      const image = images.length > 0 
+        ? (images[0].startsWith('http') ? images[0] : `${import.meta.env.VITE_BACKEND_URL}${images[0]}`)
+        : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+      
+      // Calculate price - use discountPrice if available, otherwise originalPrice
+      const price = product.discountPrice || product.price || product.originalPrice || 0;
+      
+      return {
+        id: index, // Use index as ID - this is the cartItemId for API
+        originalIndex: index, // Store original index from API response
+        product_id: item.product_id,
+        image,
+        name,
+        color: item.color || 'Mặc định',
+        size: item.size || '',
+        price,
+        qty: item.quantity || 1,
+        category_id: product.category?._id || product.category_id,
+      };
+    } catch (error) {
+      console.error(`Error fetching product ${item.product_id}:`, error);
+      // Return item with default values if product fetch fails
+      return {
+        id: index,
+        originalIndex: index,
+        product_id: item.product_id,
+        image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=',
+        name: 'Sản phẩm',
+        color: item.color || 'Mặc định',
+        size: item.size || '',
+        price: 0,
+        qty: item.quantity || 1,
+        category_id: null,
+      };
+    }
+  });
+
+  return await Promise.all(productPromises);
+};
 
 export default function CheckoutPage() {
+  const location = useLocation();
   const [step, setStep] = useState(1);
-  const [cart, setCart] = useState(mockCartItems);
-  const [addresses, setAddresses] = useState(mockAddresses);
+  const [cart, setCart] = useState([]);
+  const [fullCart, setFullCart] = useState([]); // Store full cart from API
+  const [selectedCartItems, setSelectedCartItems] = useState(null); // Selected items from cart page
+  const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [cardDetails, setCardDetails] = useState({
@@ -131,28 +116,207 @@ export default function CheckoutPage() {
   });
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherError, setVoucherError] = useState("");
-  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [appliedVouchers, setAppliedVouchers] = useState([]); // Changed to array for multi-select
+  const [availableVouchers, setAvailableVouchers] = useState([]); // Vouchers from wallet
+  const [showVoucherList, setShowVoucherList] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState("");
+  const { success: showSuccess, error: showError } = useToast();
+  const hasLoadedRef = React.useRef(false); // Prevent double API calls
 
-  useEffect(() => {
-    const saved = localStorage.getItem("checkoutState");
-    if (saved) {
-      const data = JSON.parse(saved);
-      setStep(data.step ?? 1);
-      setCart(data.cart ?? mockCartItems);
-      setAddresses(data.addresses ?? mockAddresses);
-      setSelectedAddress(data.selectedAddress ?? null);
-      setPaymentMethod(data.paymentMethod ?? null);
-      setCardDetails(
-        data.cardDetails ?? { number: "", name: "", expiry: "", cvv: "" }
-      );
-      setVoucherCode(data.voucherCode ?? "");
-      setAppliedVoucher(data.appliedVoucher ?? null);
+  // Function to filter cart by selected items
+  const filterCartBySelected = (transformedCart, selectedItems) => {
+    if (!selectedItems || selectedItems.length === 0) {
+      return transformedCart;
     }
-  }, []);
+
+    // Filter cart to only include selected items
+    // Match by product_id + size + color (unique combination)
+    return transformedCart.filter((item) => {
+      return selectedItems.some((selected) => {
+        const productIdMatch = String(selected.productId) === String(item.product_id);
+        const sizeMatch = String(selected.size || "") === String(item.size || "");
+        const colorMatch = String(selected.color || "") === String(item.color || "");
+        
+        // Match by product_id + size + color
+        return productIdMatch && sizeMatch && colorMatch;
+      });
+    });
+  };
+
+  // Refs to avoid dependency issues
+  const selectedCartItemsRef = React.useRef(null);
+  const showErrorRef = React.useRef(showError);
+  
+  // Update ref when showError changes
+  useEffect(() => {
+    showErrorRef.current = showError;
+  }, [showError]);
+
+  // Function to reload cart - exported for manual refresh if needed
+  const reloadCart = useCallback(async (selectedItems = null) => {
+    const itemsToUse = selectedItems !== null ? selectedItems : selectedCartItemsRef.current;
+    const cartResult = await getMyCard();
+    if (cartResult.success && cartResult.data) {
+      const transformedCart = await transformCartItems(cartResult.data);
+      setFullCart(transformedCart);
+      
+      // Filter cart based on selected items if coming from cart page
+      if (itemsToUse && itemsToUse.length > 0) {
+        const filteredCart = filterCartBySelected(transformedCart, itemsToUse);
+        setCart(filteredCart);
+      } else {
+        // If no selected items, show full cart
+        setCart(transformedCart);
+      }
+    } else {
+      showErrorRef.current(cartResult.error || "Không thể tải giỏ hàng");
+    }
+  }, []); // No dependencies - use refs instead
+
+  // Load cart and addresses on mount - only when location.state changes
+  useEffect(() => {
+    // Prevent double calls in React StrictMode
+    if (hasLoadedRef.current) return;
+    
+    // Get selected items from navigation state
+    const stateSelectedItems = location.state?.selectedCartItems;
+    if (stateSelectedItems) {
+      selectedCartItemsRef.current = stateSelectedItems;
+      setSelectedCartItems(stateSelectedItems);
+    } else {
+      selectedCartItemsRef.current = null;
+    }
+
+    const loadData = async () => {
+      hasLoadedRef.current = true;
+      setIsLoadingData(true);
+      
+      // Load cart inline to avoid dependency issues
+      const itemsToUse = selectedCartItemsRef.current;
+      const cartResult = await getMyCard();
+      if (cartResult.success && cartResult.data) {
+        const transformedCart = await transformCartItems(cartResult.data);
+        setFullCart(transformedCart);
+        
+        // Filter cart based on selected items if coming from cart page
+        if (itemsToUse && itemsToUse.length > 0) {
+          const filteredCart = filterCartBySelected(transformedCart, itemsToUse);
+          setCart(filteredCart);
+        } else {
+          setCart(transformedCart);
+        }
+      } else {
+        showErrorRef.current(cartResult.error || "Không thể tải giỏ hàng");
+      }
+
+      // Load addresses
+      const addressResult = await getAddresses();
+      if (addressResult.success && addressResult.data) {
+        const addressList = Array.isArray(addressResult.data) 
+          ? addressResult.data 
+          : addressResult.data.data || [];
+        setAddresses(addressList);
+        
+        // Set default address if available
+        const defaultAddr = addressList.find(addr => addr.is_default || addr.default);
+        if (defaultAddr) {
+          setSelectedAddress(defaultAddr);
+        }
+      } else {
+        showErrorRef.current(addressResult.error || "Không thể tải danh sách địa chỉ");
+      }
+
+      // Load available vouchers from wallet
+      const vouchersResult = await getMyVouchersList();
+      if (vouchersResult.success && vouchersResult.data) {
+        setAvailableVouchers(vouchersResult.data);
+      }
+
+      setIsLoadingData(false);
+    };
+
+    loadData();
+    
+    // Reset ref when component unmounts or location.state changes
+    return () => {
+      hasLoadedRef.current = false;
+    };
+  }, [location.state?.selectedCartItems]); // Only depend on location.state
+
+  // Update cart when selectedCartItems or fullCart changes
+  useEffect(() => {
+    if (fullCart.length > 0) {
+      if (selectedCartItems && selectedCartItems.length > 0) {
+        const filteredCart = filterCartBySelected(fullCart, selectedCartItems);
+        setCart(filteredCart);
+      } else {
+        setCart(fullCart);
+      }
+    }
+  }, [selectedCartItems, fullCart]);
+
+  // Ensure selectedAddress is still valid when addresses change
+  useEffect(() => {
+    if (addresses.length === 0) {
+      // If no addresses, clear selected address
+      if (selectedAddress) {
+        setSelectedAddress(null);
+      }
+      return;
+    }
+    
+    // Use helper to get current selectedAddress ID (supports both 'id' and '_id')
+    const currentSelectedId = getAddressId(selectedAddress);
+    
+    if (currentSelectedId) {
+      // Check if selectedAddress still exists in addresses list by ID
+      const addressExists = addresses.some(addr => 
+        compareAddressIds(getAddressId(addr), currentSelectedId)
+      );
+      
+      if (!addressExists) {
+        // Selected address no longer exists, find default or first address
+        const defaultAddr = addresses.find(addr => addr.is_default || addr.default || addr.isDefault);
+        const newAddress = defaultAddr || addresses[0];
+        if (newAddress && getAddressId(newAddress)) {
+          setSelectedAddress(newAddress);
+        }
+      } else {
+        // Selected address exists - verify it's the same object or update if needed
+        // Only update if the address was edited (same ID but different data)
+        // Don't update if it's the same object to avoid unnecessary re-renders
+        const updatedAddress = addresses.find(addr => 
+          compareAddressIds(getAddressId(addr), currentSelectedId)
+        );
+        
+        if (updatedAddress && selectedAddress) {
+          // Only update if critical fields changed (receiver, phone, detail, province)
+          const criticalFields = ['receiver', 'phone', 'detail', 'province', 'district', 'ward'];
+          const hasChanged = criticalFields.some(field => 
+            selectedAddress[field] !== updatedAddress[field]
+          );
+          
+          if (hasChanged) {
+            // Update with latest data
+            setSelectedAddress(updatedAddress);
+          }
+          // Otherwise, keep the current selectedAddress to maintain user selection
+        }
+      }
+    } else if (addresses.length > 0 && !selectedAddress) {
+      // No address selected, set default or first address (only if not already selected)
+      const defaultAddr = addresses.find(addr => addr.is_default || addr.default || addr.isDefault);
+      const newAddress = defaultAddr || addresses[0];
+      if (newAddress && getAddressId(newAddress)) {
+        setSelectedAddress(newAddress);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addresses]); // Only depend on addresses to avoid loops
 
   useEffect(() => {
     const state = {
@@ -163,7 +327,7 @@ export default function CheckoutPage() {
       paymentMethod,
       cardDetails,
       voucherCode,
-      appliedVoucher,
+      appliedVouchers,
     };
     localStorage.setItem("checkoutState", JSON.stringify(state));
   }, [
@@ -174,130 +338,334 @@ export default function CheckoutPage() {
     paymentMethod,
     cardDetails,
     voucherCode,
-    appliedVoucher,
+    appliedVouchers,
   ]);
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const shipping = 32000;
+  const shipping = 30000; // Default shipping fee from API
 
-  const applyVoucher = () => {
+  // Apply voucher by code (manual input)
+  const applyVoucher = async () => {
     setVoucherError("");
-    setAppliedVoucher(null);
 
     const code = voucherCode.trim().toUpperCase();
-    if (!code) return;
-
-    const voucher = vouchers.find((v) => v.code === code);
-    if (!voucher) {
-      setVoucherError("Voucher không khả dụng");
+    if (!code) {
+      setVoucherError("Vui lòng nhập mã voucher");
       return;
     }
 
-    const now = new Date();
-    const start = new Date(voucher.start);
-    const expired = new Date(voucher.expired);
-
-    if (now < start) {
-      setVoucherError("Voucher chưa có hiệu lực");
-      return;
-    }
-    if (now > expired) {
-      setVoucherError("Voucher đã hết hạn");
+    // Check if voucher already applied
+    if (appliedVouchers.some(v => v.code === code)) {
+      setVoucherError("Voucher này đã được áp dụng");
       return;
     }
 
-    // Kiểm tra minValue (nếu có)
-    if (voucher.minValue !== null) {
-      const min = Number(voucher.minValue);
-      if (subtotal < min) {
-        setVoucherError(`Cần mua từ ${min.toLocaleString()}đ để dùng mã`);
-        return;
+    setIsLoading(true);
+    try {
+      // Prepare cart items for validation
+      const cartItems = cart.map(item => ({
+        category_id: item.category_id,
+      }));
+
+      const result = await validateVoucher(code, subtotal, cartItems);
+      
+      if (result.success && result.valid) {
+        // Determine discount_type: if discount is between 0 and 1, it's percentage
+        const discount = result.voucher.discount;
+        let discountType = result.voucher.discount_type;
+        if (!discountType && typeof discount === "number") {
+          if (discount > 0 && discount < 1) {
+            discountType = 'percentage';
+          } else {
+            discountType = 'fixed';
+          }
+        }
+        
+        const newVoucher = {
+          _id: result.voucher._id,
+          code: result.voucher.code,
+          name: result.voucher.name,
+          discount: discount,
+          discount_type: discountType,
+          discount_amount: result.discount_amount,
+          min_value: result.voucher.min_value || result.voucher.minValue,
+          max_discount: result.voucher.max_discount || result.voucher.maxDiscount,
+          categories: result.voucher.categories || [],
+        };
+        
+        setAppliedVouchers(prev => [...prev, newVoucher]);
+        setVoucherCode("");
+        setVoucherError("");
+        showSuccess(result.message || "Áp dụng voucher thành công!");
+      } else {
+        setVoucherError(result.message || result.error || "Voucher không hợp lệ");
       }
+    } catch (err) {
+      setVoucherError(err.message || "Đã xảy ra lỗi khi validate voucher");
+    } finally {
+      setIsLoading(false);
     }
-
-    setAppliedVoucher(voucher);
   };
 
-  // TÍNH GIẢM GIÁ
-  const discount = React.useMemo(() => {
-    if (!appliedVoucher) return 0;
+  // Toggle voucher selection from wallet
+  const toggleVoucher = async (voucher) => {
+    // Check if already applied
+    const isApplied = appliedVouchers.some(v => v._id === voucher._id || v.code === voucher.code);
+    
+    if (isApplied) {
+      // Remove voucher
+      setAppliedVouchers(prev => prev.filter(v => v._id !== voucher._id && v.code !== voucher.code));
+      showSuccess("Đã bỏ chọn voucher");
+      return;
+    }
 
-    let rawDiscount = 0;
+    // Validate and add voucher
+    setIsLoading(true);
+    try {
+      const cartItems = cart.map(item => ({
+        category_id: item.category_id,
+      }));
 
-    if (typeof appliedVoucher.discount === "number") {
-      if (appliedVoucher.discount < 1) {
-        // % discount
-        rawDiscount = subtotal * appliedVoucher.discount;
+      const result = await validateVoucher(voucher.code, subtotal, cartItems);
+      
+      if (result.success && result.valid) {
+        // Determine discount_type: if discount is between 0 and 1, it's percentage
+        const discount = result.voucher.discount;
+        let discountType = result.voucher.discount_type;
+        if (!discountType && typeof discount === "number") {
+          if (discount > 0 && discount < 1) {
+            discountType = 'percentage';
+          } else {
+            discountType = 'fixed';
+          }
+        }
+        
+        const newVoucher = {
+          _id: result.voucher._id,
+          code: result.voucher.code,
+          name: result.voucher.name,
+          discount: discount,
+          discount_type: discountType,
+          discount_amount: result.discount_amount,
+          min_value: result.voucher.min_value || result.voucher.minValue,
+          max_discount: result.voucher.max_discount || result.voucher.maxDiscount,
+          categories: result.voucher.categories || [],
+        };
+        
+        setAppliedVouchers(prev => [...prev, newVoucher]);
+        showSuccess("Áp dụng voucher thành công!");
       } else {
-        // fixed amount
-        rawDiscount = appliedVoucher.discount;
+        showError(result.message || result.error || "Voucher không hợp lệ");
       }
+    } catch (err) {
+      showError(err.message || "Đã xảy ra lỗi khi validate voucher");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Remove voucher
+  const removeVoucher = (voucherId) => {
+    setAppliedVouchers(prev => prev.filter(v => v._id !== voucherId));
+    showSuccess("Đã bỏ chọn voucher");
+  };
+
+  // TÍNH GIẢM GIÁ - Hỗ trợ multi voucher và phân biệt shipping vs subtotal
+  // Note: Frontend calculates discount for all vouchers for display
+  // But backend only applies the first voucher when creating order
+  const { discount: subtotalDiscount, shippingDiscount } = React.useMemo(() => {
+    if (!appliedVouchers || appliedVouchers.length === 0) {
+      return { discount: 0, shippingDiscount: 0 };
     }
 
-    // Áp dụng maxDiscount nếu có
-    if (
-      appliedVoucher.maxDiscount !== undefined &&
-      appliedVoucher.maxDiscount !== null
-    ) {
-      rawDiscount = Math.min(rawDiscount, appliedVoucher.maxDiscount);
-    }
+    let subtotalDiscountTotal = 0;
+    let shippingDiscountTotal = 0;
 
-    return rawDiscount;
-  }, [appliedVoucher, subtotal]);
+    appliedVouchers.forEach(voucher => {
+      // Check if voucher is for shipping (categories = []) or subtotal (categories has values)
+      const isShippingVoucher = !voucher.categories || voucher.categories.length === 0;
+      
+      // Always calculate discount based on discount and discount_type
+      // Don't rely on discount_amount from API as it may be outdated or incorrect
+      let voucherDiscount = 0;
+      
+      if (typeof voucher.discount === "number") {
+        // Determine discount type
+        // If discount is between 0 and 1 (exclusive), it's ALWAYS percentage (0.5 = 50%)
+        // This overrides discount_type from API to prevent errors
+        // Otherwise, use discount_type from API or default to 'fixed'
+        let discountType;
+        
+        if (voucher.discount > 0 && voucher.discount < 1) {
+          // Always treat values between 0 and 1 as percentage
+          discountType = 'percentage';
+        } else {
+          // Use discount_type from API, or default to 'fixed' for values >= 1
+          discountType = voucher.discount_type || 'fixed';
+        }
+        
+        if (discountType === 'percentage') {
+          // Percentage discount: 0.5 = 50%, 0.1 = 10%
+          if (isShippingVoucher) {
+            voucherDiscount = shipping * voucher.discount;
+          } else {
+            voucherDiscount = subtotal * voucher.discount;
+          }
+        } else {
+          // Fixed amount discount
+          voucherDiscount = voucher.discount;
+        }
 
-  const total = subtotal - discount + shipping;
+        // Apply maxDiscount if available
+        const maxDiscount = voucher.max_discount || voucher.maxDiscount;
+        if (maxDiscount !== undefined && maxDiscount !== null && maxDiscount > 0) {
+          voucherDiscount = Math.min(voucherDiscount, maxDiscount);
+        }
+      }
+
+      // Apply discount to appropriate category
+      if (isShippingVoucher) {
+        shippingDiscountTotal += voucherDiscount;
+      } else {
+        subtotalDiscountTotal += voucherDiscount;
+      }
+    });
+
+    return {
+      discount: subtotalDiscountTotal,
+      shippingDiscount: shippingDiscountTotal,
+    };
+  }, [appliedVouchers, subtotal, shipping]);
+
+  const total = subtotal - subtotalDiscount + shipping - shippingDiscount;
 
   const validateStep = () => {
     if (step === 1) return cart.length > 0;
-    if (step === 2) return !!selectedAddress;
+    if (step === 2) {
+      // More thorough validation: check if selectedAddress exists and has id
+      // Also verify it exists in addresses list
+      const selectedId = getAddressId(selectedAddress);
+      if (!selectedAddress || !selectedId) {
+        return false;
+      }
+      // Double check: verify the selected address still exists in addresses list
+      const addressExists = addresses.some(addr => 
+        compareAddressIds(getAddressId(addr), selectedId)
+      );
+      return addressExists;
+    }
     if (step === 3) return !!paymentMethod;
     return true;
   };
 
   const goToStep = (newStep) => {
-    if (newStep < step || (newStep > step && validateStep())) {
+    if (newStep < step) {
+      // Going back - always allow
       setError("");
       setStep(newStep);
+    } else if (newStep > step) {
+      // Going forward - validate first
+      if (validateStep()) {
+        setError("");
+        setStep(newStep);
+      } else {
+        // Set appropriate error message based on current step
+        if (step === 1) {
+          setError("Giỏ hàng trống");
+        } else if (step === 2) {
+          setError("Vui lòng chọn địa chỉ giao hàng");
+        } else if (step === 3) {
+          setError("Vui lòng chọn phương thức thanh toán");
+        }
+      }
     }
   };
 
   const handlePlaceOrder = async () => {
+    // Validate and find selected address - with fallback
+    let addressToUse = selectedAddress;
+    
+    // If selectedAddress is null but addresses exist, try to find default or first address
+    if (!addressToUse && addresses.length > 0) {
+      const defaultAddr = addresses.find(addr => addr.is_default || addr.default || addr.isDefault);
+      addressToUse = defaultAddr || addresses[0];
+      // Update state to reflect the address being used
+      if (addressToUse) {
+        setSelectedAddress(addressToUse);
+      }
+    }
+    
+    const addressId = getAddressId(addressToUse);
+    if (!addressToUse || !addressId) {
+      setError("Vui lòng chọn địa chỉ giao hàng");
+      // Force user back to step 2 to select address
+      setStep(2);
+      return;
+    }
+
+    if (!paymentMethod) {
+      setError("Vui lòng chọn phương thức thanh toán");
+      setStep(3);
+      return;
+    }
+
+    if (cart.length === 0) {
+      setError("Giỏ hàng trống");
+      return;
+    }
+
     setIsLoading(true);
+    setError("");
+    
     try {
-      await new Promise((r) => setTimeout(r, 1800));
-
-      const newOrderId = `ORDER-${Date.now()}`;
-      setOrderId(newOrderId);
-
-      // LƯU TOÀN BỘ DỮ LIỆU ĐƠN HÀNG
-      const orderData = {
-        orderId: newOrderId,
-        cart,
-        selectedAddress,
-        paymentMethod,
-        subtotal,
-        shipping,
-        discount,
-        total,
-        appliedVoucher,
-        createdAt: new Date().toISOString(),
-        status: "placed", // trạng thái ban đầu
-        estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0], // +5 ngày
+      // Map payment method to API format
+      const paymentMethodMap = {
+        'COD': 'cod',
+        'card': 'credit_card',
+        'wallet': 'e_wallet',
       };
+      const apiPaymentMethod = paymentMethodMap[paymentMethod] || paymentMethod.toLowerCase();
 
-      // Lưu vào localStorage
-      localStorage.setItem(`order_${newOrderId}`, JSON.stringify(orderData));
+      // Get voucher IDs
+      // Note: Backend API currently supports single voucher_id
+      // If multiple vouchers are selected, only the first one will be sent
+      // Frontend calculates discount for all vouchers for display, but backend applies only one
+      const voucherIds = appliedVouchers.length > 0 
+        ? appliedVouchers.map(v => v._id).filter(Boolean)
+        : null;
 
-      // Cập nhật danh sách đơn hàng
-      const myOrders = JSON.parse(localStorage.getItem("myOrders") || "[]");
-      myOrders.unshift(orderData);
-      localStorage.setItem("myOrders", JSON.stringify(myOrders));
+      // Warn user if multiple vouchers selected (backend only supports one)
+      if (appliedVouchers.length > 1) {
+        const confirmMessage = `Bạn đã chọn ${appliedVouchers.length} vouchers. Hệ thống chỉ có thể áp dụng 1 voucher cho đơn hàng. Bạn có muốn tiếp tục với voucher đầu tiên?`;
+        if (!window.confirm(confirmMessage)) {
+          setIsLoading(false);
+          return;
+        }
+      }
 
-      setIsOrderPlaced(true);
+      const result = await createOrder(
+        addressId, // Use addressId from helper function
+        voucherIds, // Array will be handled by service (sends first voucher)
+        apiPaymentMethod,
+        null // notes - can be added later if needed
+      );
+
+      if (result.success) {
+        const orderData = result.data;
+        setOrderId(orderData._id || orderData.order_number || `ORDER-${Date.now()}`);
+        showSuccess(result.message || "Đặt hàng thành công!");
+        setIsOrderPlaced(true);
+        
+        // Clear cart from localStorage state
+        localStorage.removeItem("checkoutState");
+      } else {
+        setError(result.error || "Đặt hàng thất bại");
+        showError(result.error || "Đặt hàng thất bại");
+      }
     } catch (err) {
-      setError("Đặt hàng thất bại.");
+      const errorMsg = err.message || "Đặt hàng thất bại";
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -323,7 +691,8 @@ export default function CheckoutPage() {
       <h3 className="font-semibold text-lg mb-4">Đơn hàng của bạn</h3>
 
       {step === 1 && (
-        <div className="mb-4">
+        <div className="mb-4 space-y-3">
+          {/* Manual voucher input */}
           <div className="flex gap-2">
             <Input
               value={voucherCode}
@@ -335,12 +704,116 @@ export default function CheckoutPage() {
               className="flex h-10 text-[1rem]"
               onKeyDown={(e) => e.key === "Enter" && applyVoucher()}
             />
-            <Button onClick={applyVoucher} className="h-10 flex flex-1">
-              Sử dụng
+            <Button 
+              onClick={applyVoucher} 
+              className="h-10 flex flex-1"
+              disabled={isLoading}
+            >
+              {isLoading ? "Đang kiểm tra..." : "Sử dụng"}
             </Button>
           </div>
           {voucherError && (
             <p className="text-xs text-red-600 mt-1">{voucherError}</p>
+          )}
+
+          {/* Voucher from wallet */}
+          {availableVouchers.length > 0 && (
+            <div>
+              <Button
+                variant="outline"
+                onClick={() => setShowVoucherList(!showVoucherList)}
+                className="w-full text-sm"
+              >
+                {showVoucherList ? "Ẩn" : "Chọn từ ví voucher"} ({availableVouchers.length})
+              </Button>
+              
+              {showVoucherList && (
+                <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                  {availableVouchers.map((voucher) => {
+                    const isApplied = appliedVouchers.some(v => v._id === voucher._id || v.code === voucher.code);
+                    const isShippingVoucher = !voucher.categories || voucher.categories.length === 0;
+                    const discountType = voucher.discount_type || (voucher.discount < 1 && voucher.discount > 0 ? 'percentage' : 'fixed');
+                    const discountText = discountType === 'percentage' 
+                      ? `${(voucher.discount * 100).toFixed(0)}%` 
+                      : `${voucher.discount.toLocaleString()}đ`;
+                    
+                    return (
+                      <div
+                        key={voucher._id || voucher.code}
+                        className={cn(
+                          "p-2 border rounded-lg cursor-pointer transition-colors",
+                          isApplied 
+                            ? "bg-teal-50 border-teal-300" 
+                            : "bg-white border-gray-200 hover:border-teal-300"
+                        )}
+                        onClick={() => toggleVoucher(voucher)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isApplied}
+                                onChange={() => toggleVoucher(voucher)}
+                                className="mt-1"
+                              />
+                              <div>
+                                <p className="font-medium text-sm">{voucher.name || voucher.code}</p>
+                                <p className="text-xs text-gray-600">
+                                  {isShippingVoucher ? "Giảm phí ship" : "Giảm giá sản phẩm"} - {discountText}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Applied vouchers list */}
+          {appliedVouchers.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-700">Voucher đã áp dụng:</p>
+              {appliedVouchers.map((voucher, index) => {
+                const isShippingVoucher = !voucher.categories || voucher.categories.length === 0;
+                const isFirstVoucher = index === 0;
+                return (
+                  <div
+                    key={voucher._id || voucher.code}
+                    className={cn(
+                      "flex items-center justify-between p-2 rounded text-xs",
+                      isFirstVoucher 
+                        ? "bg-teal-50 border border-teal-200" 
+                        : "bg-yellow-50 border border-yellow-200"
+                    )}
+                  >
+                    <div className="flex-1">
+                      <span className={isFirstVoucher ? "text-teal-700" : "text-yellow-700"}>
+                        {voucher.name || voucher.code}
+                      </span>
+                      {!isFirstVoucher && (
+                        <span className="ml-1 text-yellow-600 text-[10px]">(Chỉ hiển thị, không áp dụng)</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => removeVoucher(voucher._id)}
+                      className="text-red-600 hover:text-red-800 ml-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+              {appliedVouchers.length > 1 && (
+                <p className="text-xs text-yellow-600 mt-1 px-2">
+                  ⚠️ Chỉ voucher đầu tiên sẽ được áp dụng khi đặt hàng
+                </p>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -377,11 +850,20 @@ export default function CheckoutPage() {
           <span>{shipping.toLocaleString()} VND</span>
         </div>
 
-        {appliedVoucher && (
+        {subtotalDiscount > 0 && (
           <div className="flex justify-between text-red-600">
-            <span>Voucher từ WildStep</span>
+            <span>Giảm giá sản phẩm</span>
             <span className="text-red-600">
-              -{discount.toLocaleString()} VND
+              -{subtotalDiscount.toLocaleString()} VND
+            </span>
+          </div>
+        )}
+
+        {shippingDiscount > 0 && (
+          <div className="flex justify-between text-red-600">
+            <span>Giảm phí vận chuyển</span>
+            <span className="text-red-600">
+              -{shippingDiscount.toLocaleString()} VND
             </span>
           </div>
         )}
@@ -418,6 +900,40 @@ export default function CheckoutPage() {
     </div>
   );
 
+  if (isLoadingData) {
+    return (
+      <div className="min-h-screen bg-gray-50 w-full">
+        <Header />
+        <div className="max-w-[95%] mx-auto p-4 md:p-5">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-color4 mx-auto mb-4"></div>
+              <p className="text-gray-600">Đang tải dữ liệu...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (cart.length === 0 && !isOrderPlaced) {
+    return (
+      <div className="min-h-screen bg-gray-50 w-full">
+        <Header />
+        <div className="max-w-[95%] mx-auto p-4 md:p-5">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <p className="text-gray-600 text-lg mb-4">Giỏ hàng trống</p>
+              <Button onClick={() => window.location.href = '/'}>
+                Tiếp tục mua sắm
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 w-full">
       <Header />
@@ -435,8 +951,10 @@ export default function CheckoutPage() {
                 <OrderSummary
                   cart={cart}
                   setCart={setCart}
+                  reloadCart={reloadCart}
+                  fullCart={fullCart}
                   subtotal={subtotal}
-                  discount={discount}
+                  discount={subtotalDiscount + shippingDiscount}
                   shipping={shipping}
                   total={total}
                 />
@@ -466,9 +984,44 @@ export default function CheckoutPage() {
                   total={total}
                   subtotal={subtotal}
                   shipping={shipping}
-                  discount={discount}
-                  appliedVoucher={appliedVoucher}
+                  discount={subtotalDiscount + shippingDiscount}
+                  appliedVouchers={appliedVouchers}
                 />
+              )}
+              {step === 4 && !orderId && (
+                <div className="space-y-6">
+                  <div className="text-center py-8">
+                    <h2 className="text-xl font-semibold mb-4">Xác nhận đơn hàng</h2>
+                    <p className="text-gray-600 mb-6">
+                      Vui lòng xác nhận để hoàn tất đơn hàng
+                    </p>
+                    <div className="flex justify-center gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => goToStep(3)}
+                        className="flex items-center gap-1"
+                      >
+                        <MdOutlineWest className="w-4 h-4" />
+                        Quay lại
+                      </Button>
+                      <Button
+                        onClick={handlePlaceOrder}
+                        disabled={isLoading}
+                        className="flex items-center gap-1"
+                      >
+                        {isLoading ? (
+                          <>Đang xử lý...</>
+                        ) : (
+                          <>
+                            Xác nhận đặt hàng
+                            <FiCheckCircle className="w-4 h-4 ml-1" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    {error && <p className="mt-4 text-red-600">{error}</p>}
+                  </div>
+                </div>
               )}
             </div>
 

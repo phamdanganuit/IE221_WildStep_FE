@@ -155,3 +155,65 @@ export const removeVoucherFromList = async (voucherId) => {
     };
   }
 };
+
+/**
+ * Validate voucher code cho checkout
+ * @param {string} code - Mã voucher
+ * @param {number} subtotal - Tổng tiền đơn hàng (optional)
+ * @param {Array} cartItems - Danh sách sản phẩm trong giỏ hàng với category_id (optional)
+ * @returns {Promise<{success: boolean, valid?: boolean, voucher?: object, discount_amount?: number, message?: string, error?: string}>}
+ */
+export const validateVoucher = async (code, subtotal = null, cartItems = []) => {
+  try {
+    const requestBody = {
+      code: code.trim().toUpperCase(),
+    };
+
+    if (subtotal !== null && subtotal !== undefined) {
+      requestBody.subtotal = subtotal;
+    }
+
+    if (cartItems && cartItems.length > 0) {
+      requestBody.cart_items = cartItems.map(item => ({
+        category_id: item.category_id || item.categoryId || item.category?._id
+      })).filter(item => item.category_id);
+    }
+
+    const result = await makeAuthRequest("/vouchers/validate", {
+      method: "POST",
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!result.success) {
+      return {
+        success: false,
+        valid: false,
+        error: result.error || "Không thể validate voucher",
+      };
+    }
+
+    const data = result.data;
+    
+    if (data.valid) {
+      return {
+        success: true,
+        valid: true,
+        voucher: data.voucher,
+        discount_amount: data.discount_amount || 0,
+        message: data.message || "Voucher hợp lệ",
+      };
+    } else {
+      return {
+        success: true,
+        valid: false,
+        message: data.message || "Voucher không hợp lệ hoặc đã hết hạn",
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      valid: false,
+      error: error.message || "Đã xảy ra lỗi khi validate voucher",
+    };
+  }
+};

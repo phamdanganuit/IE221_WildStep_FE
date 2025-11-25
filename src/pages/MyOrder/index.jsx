@@ -11,6 +11,8 @@ import { BiCategory } from "react-icons/bi";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Header from "@/components/Header";
+import { getOrders } from "@/service/orderService";
+import { useToast } from "@/contexts/ToastContext";
 
 const STATUS_TABS = [
   { key: "all", label: "Tất cả", icon: BiCategory },
@@ -49,181 +51,104 @@ const STATUS_CONFIG = {
   },
 };
 
-const mockOrders = [
-  {
-    orderId: "ORDER-20251115001",
-    status: "pending",
-    createdAt: "2025-11-15T10:00:00.000Z",
-    estimatedDelivery: "2025-11-18",
-    total: 492000,
-    subtotal: 360000,
-    shipping: 32000,
-    discount: 29900,
-    appliedVoucher: { name: "Giảm 29.900đ cho đơn hàng đầu tiên" },
-    selectedAddress: {
-      receiver: "Nguyễn Văn A",
-      phone: "09102345678",
-      detail: "123 Đường ABC",
-      ward: "Phường Linh Xuân",
-      district: "Quận Thủ Đức",
-      province: "TP. Hồ Chí Minh",
-    },
-    cart: [
-      {
-        image:
-          "https://shoeshop.blob.core.windows.net/media/products/69110ac083c5c6519af1ec97_37accb34.avif",
-        name: "Cloud Shift Lightweight Runner Pro Edition",
-        color: "White/Brown",
-        size: "EU37",
-        price: 120000,
-        qty: 3,
-      },
-    ],
-  },
-  {
-    orderId: "ORDER-20251114002",
-    status: "shipping",
-    createdAt: "2025-11-14T08:30:00.000Z",
-    estimatedDelivery: "2025-11-16",
-    total: 780000,
-    subtotal: 720000,
-    shipping: 60000,
-    discount: 0,
-    selectedAddress: {
-      receiver: "Trần Thị B",
-      phone: "0909123456",
-      detail: "456 Đường XYZ",
-      ward: "Phường 5",
-      district: "Quận 3",
-      province: "TP. Hồ Chí Minh",
-    },
-    cart: [
-      {
-        image:
-          "https://shoeshop.blob.core.windows.net/media/products/69110ac083c5c6519af1ec97_37accb34.avif",
-        name: "Cloud Shift Lightweight Runner Pro Edition",
-        color: "Black/Red",
-        size: "EU39",
-        price: 240000,
-        qty: 3,
-      },
-    ],
-  },
-  {
-    orderId: "ORDER-20251113003",
-    status: "delivered",
-    createdAt: "2025-11-13T14:20:00.000Z",
-    estimatedDelivery: "2025-11-15",
-    total: 360000,
-    subtotal: 360000,
-    shipping: 32000,
-    discount: 32000,
-    appliedVoucher: { name: "Giảm 32.000đ phí ship" },
-    selectedAddress: {
-      receiver: "Lê Văn C",
-      phone: "0987654321",
-      detail: "789 Đường DEF",
-      ward: "Phường Bến Nghé",
-      district: "Quận 1",
-      province: "TP. Hồ Chí Minh",
-    },
-    cart: [
-      {
-        image:
-          "https://shoeshop.blob.core.windows.net/media/products/69110ac083c5c6519af1ec97_37accb34.avif",
-        name: "Cloud Shift Lightweight Runner Pro Edition",
-        color: "Navy Blue",
-        size: "EU40",
-        price: 180000,
-        qty: 2,
-      },
-    ],
-  },
-  {
-    orderId: "ORDER-20251112004",
-    status: "cancelled",
-    createdAt: "2025-11-12T09:15:00.000Z",
-    cancelledAt: "2025-11-12T09:45:00.000Z",
-    total: 600000,
-    subtotal: 600000,
-    shipping: 32000,
-    discount: 32000,
-    selectedAddress: {
-      receiver: "Phạm Thị D",
-      phone: "0938123456",
-      detail: "101 Đường GHI",
-      ward: "Phường Tân Định",
-      district: "Quận 1",
-      province: "TP. Hồ Chí Minh",
-    },
-    cart: [
-      {
-        image:
-          "https://shoeshop.blob.core.windows.net/media/products/69110ac083c5c6519af1ec97_37accb34.avif",
-        name: "Cloud Shift Lightweight Runner Pro Edition",
-        color: "Gray",
-        size: "EU38",
-        price: 300000,
-        qty: 2,
-      },
-    ],
-  },
-  {
-    orderId: "ORDER-20251111005",
-    status: "placed",
-    createdAt: "2025-11-11T16:00:00.000Z",
-    estimatedDelivery: "2025-11-19",
-    total: 240000,
-    subtotal: 240000,
-    shipping: 32000,
-    discount: 32000,
-    selectedAddress: {
-      receiver: "Hoàng Văn E",
-      phone: "0977123456",
-      detail: "202 Đường JKL",
-      ward: "Phường 12",
-      district: "Quận 10",
-      province: "TP. Hồ Chí Minh",
-    },
-    cart: [
-      {
-        image:
-          "https://shoeshop.blob.core.windows.net/media/products/69110ac083c5c6519af1ec97_37accb34.avif",
-        name: "Cloud Shift Lightweight Runner Pro Edition",
-        color: "White",
-        size: "EU36",
-        price: 120000,
-        qty: 2,
-      },
-    ],
-  },
-];
+// Map status từ API sang status hiển thị
+const mapApiStatusToDisplay = (apiStatus) => {
+  const statusMap = {
+    pending: "pending",
+    processing: "pending",
+    shipping: "shipping",
+    completed: "delivered",
+    cancelled: "cancelled",
+    placed: "placed",
+  };
+  return statusMap[apiStatus] || apiStatus;
+};
 
-// Lưu vào localStorage
-localStorage.setItem("myOrders", JSON.stringify(mockOrders));
-
-// Lưu từng đơn hàng riêng (để OrderDetailPage đọc)
-mockOrders.forEach((order) => {
-  localStorage.setItem(`order_${order.orderId}`, JSON.stringify(order));
-});
+// Transform order từ API sang format UI
+const transformOrder = (apiOrder) => {
+  // Tính subtotal từ items nếu subtotal không có hoặc = 0
+  let subtotal = apiOrder.subtotal || 0;
+  if (subtotal === 0 && apiOrder.items && apiOrder.items.length > 0) {
+    subtotal = apiOrder.items.reduce((sum, item) => {
+      const itemTotal = item.total || (item.price * (item.quantity || 0));
+      return sum + itemTotal;
+    }, 0);
+  }
+  
+  const shipping = apiOrder.shipping_fee || apiOrder.shippingFee || 0;
+  const discount = apiOrder.discount || 0;
+  
+  // Tính total từ total_price, nếu không có hoặc = 0 thì tính từ subtotal + shipping - discount
+  let total = apiOrder.total_price || apiOrder.total;
+  if (!total || total === 0) {
+    total = subtotal + shipping - discount;
+    // Đảm bảo total không âm
+    if (total < 0) total = 0;
+  }
+  
+  return {
+    orderId: apiOrder._id || apiOrder.id || apiOrder.order_number || apiOrder.orderNumber,
+    orderNumber: apiOrder.order_number || apiOrder.orderNumber,
+    status: mapApiStatusToDisplay(apiOrder.status),
+    createdAt: apiOrder.created_at || apiOrder.createdAt,
+    estimatedDelivery: apiOrder.estimated_delivery || apiOrder.estimatedDelivery,
+    total: total,
+    subtotal: subtotal,
+    shipping: shipping,
+    discount: discount,
+    appliedVoucher: apiOrder.voucher || apiOrder.appliedVoucher,
+    selectedAddress: (apiOrder.shippingAddress || (apiOrder.address && typeof apiOrder.address === 'object')) ? {
+      receiver: (apiOrder.shippingAddress || apiOrder.address)?.fullName || (apiOrder.shippingAddress || apiOrder.address)?.receiver,
+      phone: (apiOrder.shippingAddress || apiOrder.address)?.phone,
+      detail: (apiOrder.shippingAddress || apiOrder.address)?.address || (apiOrder.shippingAddress || apiOrder.address)?.detail,
+      ward: (apiOrder.shippingAddress || apiOrder.address)?.ward,
+      district: (apiOrder.shippingAddress || apiOrder.address)?.district,
+      province: (apiOrder.shippingAddress || apiOrder.address)?.province,
+    } : null,
+    cart: (apiOrder.items || []).map(item => ({
+      image: item.product_image || item.product?.images?.[0] || item.product?.image || "",
+      name: item.product_name || item.product?.name?.vi || item.product?.name || item.productName?.vi || item.productName || "Sản phẩm",
+      color: item.color || "",
+      size: item.size || "",
+      price: item.price || 0,
+      qty: item.quantity || 0,
+    })),
+    cancelledAt: apiOrder.cancelled_at || apiOrder.cancelledAt,
+    paymentMethod: apiOrder.payment_method || apiOrder.paymentMethod,
+  };
+};
 
 export default function MyOrdersPage() {
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState("all");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem("myOrders");
-    if (saved) {
-      const data = JSON.parse(saved);
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    const result = await getOrders();
+    
+    if (result.success && result.data) {
+      const ordersArray = Array.isArray(result.data) ? result.data : (result.data.orders || []);
+      const transformedOrders = ordersArray.map(transformOrder);
       // Sắp xếp theo ngày đặt (mới nhất trước)
       setOrders(
-        data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        transformedOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       );
+    } else {
+      addToast({
+        type: "error",
+        message: result.error || "Không thể tải danh sách đơn hàng",
+      });
+      setOrders([]);
     }
     setLoading(false);
-  }, []);
+  };
 
   const filteredOrders = orders.filter((order) => {
     if (activeTab === "all") return true;
@@ -298,7 +223,7 @@ export default function MyOrdersPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 justify-between text-sm">
                       <span className="font-mono text-color4">
-                        MÃ ĐƠN HÀNG|{order.orderId}
+                        MÃ ĐƠN HÀNG|{order.orderNumber || order.orderId}
                       </span>
                       <div className="flex justify-center items-center gap-1">
                         {/* <span className="text-gray-400 text-center flex justify-center items-start">

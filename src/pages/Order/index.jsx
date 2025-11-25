@@ -14,6 +14,8 @@ import { HiOutlineInboxArrowDown, HiOutlineNewspaper } from "react-icons/hi2";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Header from "@/components/Header";
+import { getOrderDetail, cancelOrder } from "@/service/orderService";
+import { useToast } from "@/contexts/ToastContext";
 
 const statusSteps = [
   { key: "placed", label: "Đơn hàng đã đặt", icon: HiOutlineNewspaper },
@@ -25,20 +27,99 @@ const statusSteps = [
 
 const CANCELLABLE_STATUSES = ["placed", "pending"];
 
+// Map status từ API sang status hiển thị
+const mapApiStatusToDisplay = (apiStatus) => {
+  const statusMap = {
+    pending: "pending",
+    processing: "pending",
+    shipping: "shipping",
+    completed: "delivered",
+    cancelled: "cancelled",
+    placed: "placed",
+  };
+  return statusMap[apiStatus] || apiStatus;
+};
+
+// Transform order từ API sang format UI
+const transformOrder = (apiOrder) => {
+  // Tính subtotal từ items nếu subtotal không có hoặc = 0
+  let subtotal = apiOrder.subtotal || 0;
+  if (subtotal === 0 && apiOrder.items && apiOrder.items.length > 0) {
+    subtotal = apiOrder.items.reduce((sum, item) => {
+      const itemTotal = item.total || (item.price * (item.quantity || 0));
+      return sum + itemTotal;
+    }, 0);
+  }
+  
+  const shipping = apiOrder.shipping_fee || apiOrder.shippingFee || 0;
+  const discount = apiOrder.discount || 0;
+  
+  // Tính total từ total_price, nếu không có hoặc = 0 thì tính từ subtotal + shipping - discount
+  let total = apiOrder.total_price || apiOrder.total;
+  if (!total || total === 0) {
+    total = subtotal + shipping - discount;
+    // Đảm bảo total không âm
+    if (total < 0) total = 0;
+  }
+  
+  return {
+    orderId: apiOrder._id || apiOrder.id || apiOrder.order_number || apiOrder.orderNumber,
+    orderNumber: apiOrder.order_number || apiOrder.orderNumber,
+    status: mapApiStatusToDisplay(apiOrder.status),
+    createdAt: apiOrder.created_at || apiOrder.createdAt,
+    estimatedDelivery: apiOrder.estimated_delivery || apiOrder.estimatedDelivery,
+    total: total,
+    subtotal: subtotal,
+    shipping: shipping,
+    discount: discount,
+    appliedVoucher: apiOrder.voucher || apiOrder.appliedVoucher,
+    selectedAddress: (apiOrder.shippingAddress || (apiOrder.address && typeof apiOrder.address === 'object')) ? {
+      receiver: (apiOrder.shippingAddress || apiOrder.address)?.fullName || (apiOrder.shippingAddress || apiOrder.address)?.receiver,
+      phone: (apiOrder.shippingAddress || apiOrder.address)?.phone,
+      detail: (apiOrder.shippingAddress || apiOrder.address)?.address || (apiOrder.shippingAddress || apiOrder.address)?.detail,
+      ward: (apiOrder.shippingAddress || apiOrder.address)?.ward,
+      district: (apiOrder.shippingAddress || apiOrder.address)?.district,
+      province: (apiOrder.shippingAddress || apiOrder.address)?.province,
+    } : null,
+    cart: (apiOrder.items || []).map(item => ({
+      image: item.product_image || item.product?.images?.[0] || item.product?.image || "",
+      name: item.product_name || item.product?.name?.vi || item.product?.name || item.productName?.vi || item.productName || "Sản phẩm",
+      color: item.color || "",
+      size: item.size || "",
+      price: item.price || 0,
+      qty: item.quantity || 0,
+    })),
+    cancelledAt: apiOrder.cancelled_at || apiOrder.cancelledAt,
+    paymentMethod: apiOrder.payment_method || apiOrder.paymentMethod,
+  };
+};
+
 export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem(`order_${id}`);
-    if (saved) {
-      const data = JSON.parse(saved);
-      setOrder(data);
+    fetchOrder();
+  }, [id]);
+
+  const fetchOrder = async () => {
+    setLoading(true);
+    const result = await getOrderDetail(id);
+    
+    if (result.success && result.data) {
+      const transformedOrder = transformOrder(result.data);
+      setOrder(transformedOrder);
+    } else {
+      addToast({
+        type: "error",
+        message: result.error || "Không thể tải chi tiết đơn hàng",
+      });
     }
     setLoading(false);
-  }, [id]);
+  };
 
   if (loading) return <div className="text-center py-10">Đang tải...</div>;
   if (!order)
@@ -63,26 +144,23 @@ export default function OrderDetailPage() {
       .join(", ");
   };
 
-  const handleCancelOrder = () => {
+  const handleCancelOrder = async () => {
     if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng?")) return;
 
-    const updatedOrder = {
-      ...order,
-      status: "cancelled",
-      cancelledAt: new Date().toISOString(),
-    };
-
-    localStorage.setItem(
-      `order_${order.orderId}`,
-      JSON.stringify(updatedOrder)
-    );
-    setOrder(updatedOrder);
-
-    const myOrders = JSON.parse(localStorage.getItem("myOrders") || "[]");
-    const index = myOrders.findIndex((o) => o.orderId === order.orderId);
-    if (index !== -1) {
-      myOrders[index] = updatedOrder;
-      localStorage.setItem("myOrders", JSON.stringify(myOrders));
+    const result = await cancelOrder(id);
+    
+    if (result.success) {
+      addToast({
+        type: "success",
+        message: result.message || "Hủy đơn hàng thành công",
+      });
+      // Refresh order data
+      await fetchOrder();
+    } else {
+      addToast({
+        type: "error",
+        message: result.error || "Không thể hủy đơn hàng",
+      });
     }
   };
 
@@ -210,7 +288,7 @@ export default function OrderDetailPage() {
             <div className="space-y-3 text-sm font-medium">
               <div className="flex justify-between">
                 <span className="text-[#939393]">Mã đơn hàng</span>
-                <span className="font-mono">{order.orderId}</span>
+                <span className="font-mono">{order.orderNumber || order.orderId}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#939393]">Ngày đặt</span>

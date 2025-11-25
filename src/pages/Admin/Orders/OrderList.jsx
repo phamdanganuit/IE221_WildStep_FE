@@ -240,7 +240,7 @@ const OrderList = () => {
                     {orders.map((order) => (
                       <tr key={order._id} className="border-b hover:bg-gray-50">
                         <td className="py-3 px-4 text-sm font-medium text-color4">
-                          {order.orderNumber}
+                          {order.order_number || order.orderNumber}
                         </td>
                         <td className="py-3 px-4">
                           <div>
@@ -249,12 +249,12 @@ const OrderList = () => {
                           </div>
                         </td>
                         <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                          {formatCurrency(order.total)}
+                          {formatCurrency(order.total_price || order.total || 0)}
                         </td>
                         <td className="py-3 px-4">{getStatusBadge(order.status)}</td>
                         <td className="py-3 px-4">{getPaymentStatusBadge(order.paymentStatus)}</td>
                         <td className="py-3 px-4 text-sm text-gray-500">
-                          {new Date(order.createdAt).toLocaleDateString("vi-VN")}
+                          {new Date(order.created_at || order.createdAt).toLocaleDateString("vi-VN")}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-end">

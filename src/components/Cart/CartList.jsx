@@ -215,8 +215,34 @@ function CartList() {
   };
 
   const handleCheckout = () => {
-    // navigate to checkout page
-    // TODO: Implement checkout navigation
+    if (selected.length === 0) {
+      error("Vui lòng chọn ít nhất một sản phẩm để thanh toán");
+      return;
+    }
+
+    // Prepare selected items data for checkout
+    // Use product_id + size + color as unique identifier since cart items don't have _id
+    const selectedItems = selected.map(({ item, index }) => {
+      const productId = item.product_id || item.product?._id || item.product?.id;
+      const size = item.size || "";
+      const color = item.color || "";
+      
+      return {
+        productId: String(productId),
+        size: String(size),
+        color: String(color),
+        quantity: item.quantity || 1,
+        index: index, // Keep index as fallback
+      };
+    });
+
+    // Navigate to checkout with selected items
+    navigate("/checkout", {
+      state: {
+        selectedCartItems: selectedItems,
+        fromCart: true,
+      },
+    });
   };
 
   useEffect(() => {

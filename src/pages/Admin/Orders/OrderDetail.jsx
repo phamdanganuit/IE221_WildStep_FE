@@ -131,13 +131,13 @@ const OrderDetail = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Đơn hàng #{order.orderNumber}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Đơn hàng #{order.order_number || order.orderNumber}</h1>
             <p className="text-gray-600 mt-1">Chi tiết đơn hàng</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {getStatusBadge(order.status)}
-          {getPaymentStatusBadge(order.paymentStatus)}
+          {getPaymentStatusBadge(order.payment_status || order.paymentStatus)}
         </div>
       </div>
 
@@ -151,30 +151,42 @@ const OrderDetail = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {order.items?.map((item, index) => (
-                  <div key={index} className="flex items-center gap-4 pb-4 border-b last:border-b-0">
-                    {item.product?.images?.[0] ? (
-                      <img
-                        src={item.product.images[0]}
-                        alt={item.product.name}
-                        className="w-20 h-20 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
-                        <span className="text-gray-400 text-xs">{t('common.noImage')}</span>
+                {order.items?.map((item, index) => {
+                  const productImage = item.product_image || item.product?.images?.[0] || item.product?.image;
+                  const productName = item.product_name || item.product?.name || "Sản phẩm";
+                  
+                  return (
+                    <div key={index} className="flex items-center gap-4 pb-4 border-b last:border-b-0">
+                      {productImage ? (
+                        <img
+                          src={productImage}
+                          alt={productName}
+                          className="w-20 h-20 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">{t('common.noImage')}</span>
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{productName}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {formatCurrency(item.price)} x {item.quantity}
+                        </p>
+                        {(item.color || item.size) && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            {item.color && `Màu: ${item.color}`}
+                            {item.color && item.size && " • "}
+                            {item.size && `Size: ${item.size}`}
+                          </p>
+                        )}
                       </div>
-                    )}
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{item.product?.name}</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {formatCurrency(item.price)} x {item.quantity}
+                      <p className="font-semibold text-gray-900">
+                        {formatCurrency(item.total || (item.price * item.quantity))}
                       </p>
                     </div>
-                    <p className="font-semibold text-gray-900">
-                      {formatCurrency(item.price * item.quantity)}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Order Summary */}
@@ -185,7 +197,7 @@ const OrderDetail = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Phí vận chuyển:</span>
-                  <span className="text-gray-900">{formatCurrency(order.shippingFee || 0)}</span>
+                  <span className="text-gray-900">{formatCurrency(order.shipping_fee || order.shippingFee || 0)}</span>
                 </div>
                 {order.discount > 0 && (
                   <div className="flex justify-between text-sm">
@@ -195,7 +207,7 @@ const OrderDetail = () => {
                 )}
                 <div className="flex justify-between text-base font-bold pt-2 border-t">
                   <span className="text-gray-900">Tổng cộng:</span>
-                  <span className="text-color4">{formatCurrency(order.total)}</span>
+                  <span className="text-color4">{formatCurrency(order.total_price || order.total || 0)}</span>
                 </div>
               </div>
             </CardContent>
@@ -293,21 +305,21 @@ const OrderDetail = () => {
               <div>
                 <span className="text-sm text-gray-600">Ngày đặt:</span>
                 <p className="text-sm text-gray-900 mt-1">
-                  {new Date(order.createdAt).toLocaleString("vi-VN")}
+                  {new Date(order.created_at || order.createdAt).toLocaleString("vi-VN")}
                 </p>
               </div>
-              {order.completedDate && (
+              {(order.completed_date || order.completedDate) && (
                 <div>
                   <span className="text-sm text-gray-600">Ngày hoàn thành:</span>
                   <p className="text-sm text-gray-900 mt-1">
-                    {new Date(order.completedDate).toLocaleString("vi-VN")}
+                    {new Date(order.completed_date || order.completedDate).toLocaleString("vi-VN")}
                   </p>
                 </div>
               )}
               <div>
                 <span className="text-sm text-gray-600">Cập nhật lần cuối:</span>
                 <p className="text-sm text-gray-900 mt-1">
-                  {new Date(order.updatedAt).toLocaleString("vi-VN")}
+                  {new Date(order.updated_at || order.updatedAt).toLocaleString("vi-VN")}
                 </p>
               </div>
             </CardContent>

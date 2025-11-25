@@ -214,14 +214,14 @@ const Dashboard = () => {
                     {stats.recentOrders.map((order) => (
                       <tr key={order._id} className="hover:bg-gray-50">
                         <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
-                          <div className="text-xs sm:text-sm font-medium text-color4">{order.orderNumber}</div>
+                          <div className="text-xs sm:text-sm font-medium text-color4">{order.order_number || order.orderNumber}</div>
                           <div className="text-xs text-gray-500 sm:hidden mt-1">{order.customerName}</div>
                         </td>
                         <td className="px-3 py-3 sm:px-4 whitespace-nowrap hidden sm:table-cell">
                           <div className="text-xs sm:text-sm text-gray-900">{order.customerName}</div>
                         </td>
                         <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
-                          <div className="text-xs sm:text-sm text-gray-900">{formatCurrency(order.total)}</div>
+                          <div className="text-xs sm:text-sm text-gray-900">{formatCurrency(order.total_price || order.total || 0)}</div>
                         </td>
                         <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
@@ -236,7 +236,7 @@ const Dashboard = () => {
                         </td>
                         <td className="px-3 py-3 sm:px-4 whitespace-nowrap hidden md:table-cell">
                           <div className="text-xs sm:text-sm text-gray-500">
-                            {new Date(order.createdAt).toLocaleDateString("vi-VN")}
+                            {new Date(order.created_at || order.createdAt).toLocaleDateString("vi-VN")}
                           </div>
                         </td>
                       </tr>

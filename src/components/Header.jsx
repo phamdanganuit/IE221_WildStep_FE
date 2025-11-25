@@ -110,26 +110,47 @@ const Header = () => {
     }
   }, [user?.avatar]);
 
+  // Ref to prevent duplicate API calls
+  const fetchingCartCountRef = useRef(false);
+  const lastFetchKeyRef = useRef('');
+  
   // Fetch cart count when authenticated or location changes
   useEffect(() => {
+    // Skip if already fetching
+    if (fetchingCartCountRef.current) return;
+    
+    // Create a unique key for this fetch condition
+    const fetchKey = `${isAuthenticated}-${location.pathname}`;
+    
+    // Skip if we already fetched for this exact condition
+    if (lastFetchKeyRef.current === fetchKey) return;
+    
     const fetchCartCount = async () => {
       // Skip fetching count when on cart page (CartList already has cart data)
       if (isCartPage) {
+        lastFetchKeyRef.current = fetchKey;
         return;
       }
       
-      if (isAuthenticated) {
-        const result = await getCartCount();
-        if (result.success) {
-          updateCartCount(result.count || 0);
+      fetchingCartCountRef.current = true;
+      
+      try {
+        if (isAuthenticated) {
+          const result = await getCartCount();
+          if (result.success) {
+            updateCartCount(result.count || 0);
+          }
+        } else {
+          updateCartCount(0);
         }
-      } else {
-        updateCartCount(0);
+        lastFetchKeyRef.current = fetchKey;
+      } finally {
+        fetchingCartCountRef.current = false;
       }
     };
+    
     fetchCartCount();
-    // No interval polling - only fetch when route or auth state changes
-  }, [isAuthenticated, location.pathname, isCartPage]);
+  }, [isAuthenticated, location.pathname, isCartPage, updateCartCount]);
 
   return (
     <>
