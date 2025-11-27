@@ -37,8 +37,8 @@ const OrderList = () => {
     const result = await getOrders(filters);
 
     if (result.success) {
-      setOrders(result.data.orders || []);
-      setTotalPages(result.data.totalPages || 1);
+      setOrders(result.data.data || []);
+      setTotalPages(result.data.pagination?.totalPages || 1);
       setStats(result.data.stats || {});
     } else {
       addToast({
@@ -238,30 +238,30 @@ const OrderList = () => {
                   </thead>
                   <tbody>
                     {orders.map((order) => (
-                      <tr key={order._id} className="border-b hover:bg-gray-50">
+                      <tr key={order.id} className="border-b hover:bg-gray-50">
                         <td className="py-3 px-4 text-sm font-medium text-color4">
-                          {order.order_number || order.orderNumber}
+                          {order.orderNumber}
                         </td>
                         <td className="py-3 px-4">
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{order.customerName}</p>
-                            <p className="text-xs text-gray-500">{order.customerEmail}</p>
+                            <p className="text-sm font-medium text-gray-900">{order.customer?.name}</p>
+                            <p className="text-xs text-gray-500">{order.customer?.email}</p>
                           </div>
                         </td>
                         <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                          {formatCurrency(order.total_price || order.total || 0)}
+                          {formatCurrency(order.total || 0)}
                         </td>
                         <td className="py-3 px-4">{getStatusBadge(order.status)}</td>
                         <td className="py-3 px-4">{getPaymentStatusBadge(order.paymentStatus)}</td>
                         <td className="py-3 px-4 text-sm text-gray-500">
-                          {new Date(order.created_at || order.createdAt).toLocaleDateString("vi-VN")}
+                          {new Date(order.orderDate).toLocaleDateString("vi-VN")}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-end">
                             <Button
                               size="icon-sm"
                               variant="ghost"
-                              onClick={() => navigate(`/admin/orders/${order._id}`)}
+                              onClick={() => navigate(`/admin/orders/${order.id}`)}
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
