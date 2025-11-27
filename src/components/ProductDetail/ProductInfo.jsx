@@ -2,6 +2,8 @@ import React from "react";
 import ColorSelector from "./ColorSelector";
 import SizeSelector from "./SizeSelector";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Minus, Plus } from "lucide-react";
 
 const ProductInfo = ({
   title,
@@ -20,7 +22,32 @@ const ProductInfo = ({
   productColors,
   productSizes,
   currentLang = 'vi',
+  quantity = 1,
+  setQuantity,
+  addingToCart = false,
 }) => {
+  const handleQuantityChange = (newQuantity) => {
+    if (newQuantity < 1) return;
+    if (newQuantity > stock) {
+      newQuantity = stock;
+    }
+    if (setQuantity) {
+      setQuantity(newQuantity);
+    }
+  };
+
+  const incrementQuantity = () => {
+    handleQuantityChange(quantity + 1);
+  };
+
+  const decrementQuantity = () => {
+    handleQuantityChange(quantity - 1);
+  };
+
+  const handleQuantityInput = (e) => {
+    const value = parseInt(e.target.value) || 1;
+    handleQuantityChange(value);
+  };
   return (
     <div className="flex flex-col w-full max-md:max-w-full">
       <h1 className="self-start text-4xl font-bold tracking-normal leading-tight text-slate-900">
@@ -85,14 +112,54 @@ const ProductInfo = ({
           </span>
         </div>
 
+        {/* Quantity selector */}
+        {setQuantity && (
+          <div className="mt-4 flex items-center gap-4">
+            <span className="text-sm font-medium text-gray-700">Số lượng:</span>
+            <div className="flex items-center gap-2 border border-gray-300 rounded-lg">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={decrementQuantity}
+                disabled={quantity <= 1 || stock === 0}
+                className="h-8 w-8"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <Input
+                type="number"
+                min={1}
+                max={stock}
+                value={quantity}
+                onChange={handleQuantityInput}
+                className="w-16 text-center border-0 focus-visible:ring-0"
+                disabled={stock === 0}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={incrementQuantity}
+                disabled={quantity >= stock || stock === 0}
+                className="h-8 w-8"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
         <section className="grid grid-cols-2 justify-center items-center mt-6 w-full gap-10 text-xl leading-tight max-md:max-w-full">
           <button
             onClick={onAddToCart}
-            disabled={stock === 0}
+            disabled={stock === 0 || addingToCart || !selectedSize || !selectedColor}
             className="flex w-full overflow-hidden justify-center items-center self-stretch px-12 py-4 my-auto font-semibold text-white bg-color4 rounded-lg max-md:px-5 hover:bg-hover4 focus:outline-none focus:ring-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             aria-label="Add product to shopping cart"
           >
-            <span className="self-stretch my-auto">Thêm vào giỏ hàng</span>
+            <span className="self-stretch my-auto">
+              {addingToCart ? "Đang thêm..." : "Thêm vào giỏ hàng"}
+            </span>
           </button>
 
           <Button

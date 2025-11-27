@@ -18,6 +18,8 @@ import ProductDescription from "@/components/ProductDetail/ProductDescription";
 import ProductDetail from "@/components/ProductDetail/ProductDetail";
 import { getProductDetail } from "@/service/contentService";
 import { safeText, createSlugFromText, parseMultiLanguageSlug } from "@/lib/i18nUtils";
+import { addToCart } from "@/service/cartService";
+import { useToast } from "@/contexts/ToastContext";
 
 const ChiTietSanPham = () => {
   const { id } = useParams(); // Get product ID or slug from URL
@@ -41,6 +43,9 @@ const ChiTietSanPham = () => {
 
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const { success, error } = useToast();
 
   // Fetch product data from API
   useEffect(() => {
@@ -105,9 +110,45 @@ const ChiTietSanPham = () => {
     ? product.images 
     : ["https://via.placeholder.com/400"];
 
-  const handleAddToCart = () => {
-    console.log("Adding to cart:", { selectedColor, selectedSize });
-    // Add to cart logic here
+  const handleAddToCart = async () => {
+    // Validate selections
+    if (!selectedSize) {
+      error("Vui lòng chọn size");
+      return;
+    }
+    if (!selectedColor) {
+      error("Vui lòng chọn màu sắc");
+      return;
+    }
+    if (!product || !product._id) {
+      error("Thông tin sản phẩm không hợp lệ");
+      return;
+    }
+    if (quantity < 1) {
+      error("Số lượng phải lớn hơn 0");
+      return;
+    }
+
+    setAddingToCart(true);
+    try {
+      const result = await addToCart(
+        product._id,
+        quantity,
+        selectedSize,
+        selectedColor
+      );
+
+      if (result.success) {
+        success(result.message || "Đã thêm sản phẩm vào giỏ hàng");
+      } else {
+        error(result.error || "Không thể thêm sản phẩm vào giỏ hàng");
+      }
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+      error("Đã xảy ra lỗi khi thêm sản phẩm vào giỏ hàng");
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   const handleBuyNow = () => {
@@ -302,6 +343,9 @@ const ChiTietSanPham = () => {
                 productColors={product.specifications?.colors || []}
                 productSizes={product.specifications?.sizes || []}
                 currentLang={i18n.language}
+                quantity={quantity}
+                setQuantity={setQuantity}
+                addingToCart={addingToCart}
               />
             </div>
           </div>
