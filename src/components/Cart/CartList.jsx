@@ -10,7 +10,7 @@ import RemoveDialog from "./RemoveDialog";
 import { ScrollArea } from "../ui/scroll-area";
 import { MdOutlineShoppingCartCheckout } from "react-icons/md";
 import { useToast } from "@/contexts/ToastContext";
-import { getMyCard } from "@/service/cartService";
+import { getMyCard, updateCartItemQuantity } from "@/service/cartService";
 import { useTranslation } from "react-i18next";
 import { safeText } from "@/lib/i18nUtils";
 
@@ -28,6 +28,8 @@ function ProductCardCart({ isSelected, selectProduct, cp, updateQuantity }) {
       10 * 24 * 60 * 60 * 1000
     : false;
   const brandName = safeText(product?.brandId?.name, i18n.language, '');
+  const productName = safeText(product?.name, i18n.language, 'N/A');
+  const colorName = safeText(option?.color?.colorName, i18n.language, option?.color?.colorName || 'N/A');
 
   const setQuantity = (quantity) => {
     updateQuantity(cp._id, quantity);
@@ -80,7 +82,7 @@ function ProductCardCart({ isSelected, selectProduct, cp, updateQuantity }) {
                 className="text-[1rem] lg:text-[1.2rem] font-semibold text-wrap hover:underline cursor-pointer"
                 onClick={() => navigate(`/product/${product._id}`)}
               >
-                {product?.name}
+                {productName}
               </p>
               <p className="text-[0.8rem] lg:text-[0.9rem] mr-5">
                 {brandName}
@@ -91,8 +93,8 @@ function ProductCardCart({ isSelected, selectProduct, cp, updateQuantity }) {
           {/*User Option*/}
           <div className="flex flex-row md:flex-col space-x-2 md:w-1/3 space-y-1 md:justify-items-center">
             <p className="text-[0.8rem] font-semibold">Phân loại:</p>
-            <p className="text-[0.9rem]">{option?.color.colorName},</p>
-            <p className="text-[0.9rem]">{option?.size.name}</p>
+            <p className="text-[0.9rem]">{colorName},</p>
+            <p className="text-[0.9rem]">{option?.size?.name || 'N/A'}</p>
           </div>
         </div>
         <div className="flex items-center w-1/2 justify-end">
@@ -110,7 +112,7 @@ function ProductCardCart({ isSelected, selectProduct, cp, updateQuantity }) {
             />
           </div>
           <p className="w-1/3 text-center flex justify-center">
-            <RemoveDialog cp={cp} />
+            <RemoveDialog cp={cp} onRemoveSuccess={fetchCart} />
           </p>
         </div>
       </CardContent>
@@ -151,7 +153,8 @@ function CartList() {
     );
   };
 
-  const updateQuantity = (id, newQuantity) => {
+  const updateQuantity = async (id, newQuantity) => {
+    // Optimistic update
     setList((prev) =>
       prev.map((cp) =>
         cp._id === id
@@ -166,18 +169,44 @@ function CartList() {
           : cp
       )
     );
+
+    // Call API
+    try {
+      const result = await updateCartItemQuantity(id, newQuantity);
+      if (!result.success) {
+        // Revert on error
+        error(result.error || "Không thể cập nhật số lượng");
+        // Refresh cart to get correct data
+        const res = await getMyCard();
+        if (res.success) {
+          setList(res?.data?.cart_products || []);
+        }
+      }
+    } catch (err) {
+      console.error("Error updating quantity:", err);
+      error("Đã xảy ra lỗi khi cập nhật số lượng");
+      // Refresh cart to get correct data
+      const res = await getMyCard();
+      if (res.success) {
+        setList(res?.data?.cart_products || []);
+      }
+    }
   };
 
   const handleCheckout = () => {
     // navigate to checkout page
   };
 
+  const fetchCart = async () => {
+    const res = await getMyCard();
+    if (res.success) {
+      setList(res?.data?.cart_products || []);
+    } else {
+      error(res?.error || "Đã xảy ra lỗi khi lấy giỏ hàng");
+    }
+  };
+
   useEffect(() => {
-    const fetchCart = async () => {
-      const res = await getMyCard();
-      if (res.success) setList(res?.data?.cart_products);
-      else error(res?.message || "Đã xảy ra lỗi khi lấy giỏ hàng");
-    };
     fetchCart();
   }, []);
 
